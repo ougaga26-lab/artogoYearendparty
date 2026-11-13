@@ -395,11 +395,11 @@
     },
 
     // 金雞獨立：手機握在胸前單腳站，晃太大就出局。分數 = 撐住的秒數（撐滿 60 秒再比誰晃得少）
-    async S1() {
+    async S1(R, variant, goal) {
       const o = overlay();
       await GAMES.S_ready(o, '🦩 金雞獨立', '手機握在胸前，單腳站好，手機晃太大就出局！');
       const STEPS = [[0, '單腳站好！', '🦩'], [15, '閉上眼睛！', '🙈'], [30, '另一隻手摸鼻子！', '👃'], [45, '踮腳尖！', '🩰']];
-      const LIMIT = 60, TH = 3.2, GRACE = 2.5;
+      const LIMIT = goal || 60, TH = 3.2, GRACE = 2.5; // 單人救援：撐到過關秒數就結束
       o.innerHTML = head('🦩 金雞獨立', '手機晃太大就出局') + `<div class="mg-bar"><i></i></div><div class="mg-body">
         <div style="font-size:70px;line-height:1" id="s1i">🦩</div><div class="mg-big" id="s1s">單腳站好！</div>
         <div class="mg-count" style="flex:none;font-size:90px" id="s1t">0.0</div>
@@ -415,10 +415,10 @@
           if (out) return; out = true; clearInterval(iv);
           const t = Math.min(LIMIT, (now() - t0) / 1000);
           const avg = n ? sum / n : 0;
-          const score = t >= LIMIT ? r2(LIMIT + Math.max(0, 5 - avg) / 10) : r1(t);
+          const score = t >= LIMIT ? (goal ? goal : r2(LIMIT + Math.max(0, 5 - avg) / 10)) : r1(t);
           report({ s1: why, t: r1(t), wob: ema });
           if (why === 'out') { vib([300, 100, 300]); beep(220, 0.5, 'sawtooth'); }
-          o.querySelector('#s1s').textContent = why === 'full' ? '撐滿 60 秒！太強了' : why === 'out' ? '晃太大，出局！' : '落地了！';
+          o.querySelector('#s1s').textContent = why === 'full' ? (goal ? `撐滿 ${goal} 秒，過關！` : '撐滿 60 秒！太強了') : why === 'out' ? '晃太大，出局！' : '落地了！';
           setTimeout(() => res(score), 1200);
         };
         o.querySelector('#s1d').onclick = () => end('down');
@@ -442,7 +442,7 @@
     },
 
     // 搖手機耐力賽：60 秒，搖越多下越好
-    async S2() {
+    async S2(R, variant, goal) {
       const o = overlay();
       await GAMES.S_ready(o, '📱 搖手機耐力賽', '60 秒用力搖，搖到手痠也不能停！');
       const LIMIT = 60000;
@@ -467,6 +467,7 @@
           o.querySelector('.mg-bar i').style.width = (left / LIMIT * 100) + '%';
           if (left <= 10000 && left > 0 && Math.ceil(left / 1000) !== Math.ceil((left + 100) / 1000)) beep(990, 0.08);
           report({ n: cnt, left: left / LIMIT, last10: left <= 10000 });
+          if (goal && cnt >= goal) { clearInterval(iv); if (window.Shake) Shake.off(); o.onpointerdown = null; o.querySelector('#s2h').textContent = `搖滿 ${goal} 下，過關！`; vib([200, 80, 200]); setTimeout(() => res(cnt), 900); return; } // 單人救援：搖到門檻就結束
           if (left <= 0) { clearInterval(iv); if (window.Shake) Shake.off(); o.onpointerdown = null; vib([200, 80, 200]); res(cnt); }
         }, 100);
       });
@@ -489,7 +490,7 @@
       state = { game: code }; emit = opts.onProgress || null; lastSent = 0;
       if (!/^S/.test(code)) await countdown(`${def.icon} ${def.name}`, opts.title || def.desc); // 感應遊戲自己有準備畫面
       let score;
-      try { score = await GAMES[code](R, opts.variant); }
+      try { score = await GAMES[code](R, opts.variant, opts.goal); }
       catch (e) { console.error(e); score = def.better === 'high' ? 0 : 99; }
       report({ stage: 'done', score }); flush();
       const shown = code === 'M9' ? Math.floor(score) : score;

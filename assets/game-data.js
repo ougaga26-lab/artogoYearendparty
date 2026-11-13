@@ -1,4 +1,4 @@
-window.APP_VER = '20261113j'; // 每次更新程式都改這個版本號，手機會自動要求重新整理
+window.APP_VER = '20261113l'; // 每次更新程式都改這個版本號，手機會自動要求重新整理
 
 /* =========================================================
    藝途發財夢 v2 — 遊戲內容設定檔
@@ -100,7 +100,7 @@ window.GAME = {
       { title: '第 8 版', text: '客戶：「我們覺得第一版最好，但可以把第七版的顏色加進去嗎？」恭喜，這是第 8 版', effect: { coins: -40 }, bad: true, rescue: 'M1', rescueText: '設計重做，對準顏色就免罰' },
       { title: '明天就要上線', text: '週五晚上六點，客戶來電：「那個……明天早上可以上線嗎？」', effect: { coins: -40 }, bad: true, rescue: 'M7', rescueText: '抓準 Deadline' },
       { title: '展間破圖', text: '驗收當天，虛擬展間的一面牆突然消失，觀眾直接走進了外太空', effect: { coins: -40 }, bad: true, rescue: 'M3', rescueText: '把 Bug 找出來' },
-      { title: '規格書打架', text: '規格書第 3 版說要藍色，第 5 版說要「不是那種藍的藍」', effect: { coins: -30 }, bad: true, rescue: 'M8', rescueText: '把需求對齊' },
+      { title: '規格書打架', text: '規格書第 3 版說要藍色，第 5 版說要「不是那種藍的藍」', effect: { coins: -30 }, bad: true, rescue: 'S1', rescueText: '在兩版需求之間保持平衡：單腳站撐 30 秒就免罰' },
       { title: '一次驗收通過', text: '專案一次驗收通過，客戶只說了兩個字：「完美。」你決定把這兩個字裱起來', effect: { item: 'lock', alt: { coins: 40 } } },
       { title: '感謝信', text: '客戶寫了一封超長的感謝信給老闆，老闆轉寄全公司，主旨只有三個驚嘆號', effect: { coins: 50 } },
     ] },
@@ -113,7 +113,7 @@ window.GAME = {
       { title: '藝術家點名感謝', text: '藝術家致詞時說：「最想感謝的是……你！」全場鼓掌，每位玩家付你 5 幣當紅包', effect: { collectAll: 5 } },
     ] },
     admin: { name: '行政', icon: '📮', color: 'red', events: [
-      { title: '跑郵局', text: '老闆要寄 200 封邀請函，你在郵局待到連號碼牌的叫號聲都會唱了', effect: { coins: -40 }, bad: true, rescue: 'M4', rescueText: '把地址打對' },
+      { title: '跑郵局', text: '老闆要寄 200 封邀請函，你在郵局待到連號碼牌的叫號聲都會唱了', effect: { coins: -40 }, bad: true, rescue: 'S1', rescueText: '排隊排到腳痠：單腳站撐 30 秒就免罰' },
       { title: '採購螢幕', text: '老闆說要買新螢幕：「要大、要好、要便宜。」你比價比到懷疑人生', effect: { coins: -50 }, bad: true, rescue: 'M2', rescueText: '比價算對就免罰' },
       { title: '公文漏蓋章', text: '補助公文送出去才發現漏蓋一個章，承辦人很溫柔地說：「麻煩再跑一趟喔～」', effect: { coins: -20 }, bad: true, rescue: 'M8', rescueText: '印章蓋正就免罰' },
       { title: '郵局阿姨', text: '郵局阿姨已經認得你了，一看到你就說「又是你喔～」順手幫你先處理', effect: { drawChance: true } },
@@ -135,7 +135,7 @@ window.GAME = {
       { title: '貼文爆紅', text: '小編隨手發的幕後花絮爆紅，留言區都在問：「請問你們還有在徵人嗎？」', effect: { coins: 50 } },
       { title: '小編發錯圖', text: '展覽貼文配錯圖，發成同事的午餐便當照，還拿到三百個讚', effect: { coins: -30 }, bad: true, rescue: 'M8', rescueText: '重新排版' },
       { title: '網紅來打卡', text: '網紅來看展拍了限動，還標記一位同事。選一位被標記的同事，你們各 +20', effect: { together: 20 } },
-      { title: '觸及掉光', text: '演算法又改了，貼文觸及只剩 12 人，其中 8 個是同事', effect: { coins: -40 }, bad: true, rescue: 'M5', rescueText: '狂按讚衝觸及' },
+      { title: '觸及掉光', text: '演算法又改了，貼文觸及只剩 12 人，其中 8 個是同事', effect: { coins: -40 }, bad: true, rescue: 'S2', rescueText: '全身搖手機衝觸及：60 秒搖滿 350 下就免罰' },
     ] },
     tea: { name: '茶水間', icon: '☕', color: 'lilac', events: [
       { title: '咖啡機罷工', text: '咖啡機罷工，只剩最後一杯！全場搶按：最快 3 人 +20，最慢 3 人 −10', effect: { rush: { label: '搶最後一杯咖啡！', top: 3, topCoins: 20, bottom: 3, bottomCoins: -10 } } },
@@ -203,7 +203,7 @@ window.GAME = {
     { title: '尾牙主揪', text: '你自告奮勇當尾牙主揪，結果手搖飲要自己先墊。付給每位玩家 5 幣', effect: { payAll: 5 } },
     { title: '電腦藍屏', text: '做了一整天的檔案還沒存，電腦突然藍屏，畫面只剩一張哭臉。−40', effect: { coins: -40 }, bad: true, rescue: 'M5', rescueText: '狂按 Ctrl+S 搶救' },
     { title: '客戶尾款入帳', text: '拖了半年的尾款終於入帳！會計開心到請你喝飲料。+60', effect: { coins: 60 } },
-    { title: '硬碟掛了', text: '外接硬碟發出「喀、喀」兩聲，然後就再也沒醒來。−50', effect: { coins: -50 }, bad: true, rescue: 'M9', rescueText: '憑記憶重建' },
+    { title: '硬碟掛了', text: '外接硬碟發出「喀、喀」兩聲，然後就再也沒醒來。−50', effect: { coins: -50 }, bad: true, rescue: 'S2', rescueText: '把硬碟搖醒：60 秒搖滿 350 下就免罰' },
     { title: '颱風假', text: '宣布放颱風假！你在家耍廢一整天，還領到 20 補助', effect: { coins: 20 } },
     { title: '開會開到天荒地老', text: '「十分鐘就好」的會開了三小時，午餐沒了只好叫外送。−30', effect: { coins: -30 }, bad: true, rescue: 'M6', rescueText: '趁空檔溜出會議室' },
     { title: '找到神隊友', text: '你在茶水間結交了一位神隊友，他說 PK 時可以幫你上場。得到代打卡', effect: { item: 'sub' } },
@@ -228,7 +228,7 @@ window.GAME = {
     M9: { name: '記憶', icon: '🧠', desc: '記住 4 件作品的位置，再擺回去', better: 'high', pass: 4, unit: ' 件' },
     M10: { name: '人流估算', icon: '👥', desc: '畫面出現一群人 4 秒，從 4 個數字選出正確人數', better: 'low', pass: 15, unit: '% 誤差' },
     S1: { name: '金雞獨立', icon: '🦩', desc: '手機握在胸前單腳站，手機晃太大就出局，最多 60 秒', better: 'high', pass: 30, unit: ' 秒', body: true },
-    S2: { name: '搖手機耐力賽', icon: '📱', desc: '60 秒用力搖手機，搖越多下越好', better: 'high', pass: 150, unit: ' 下', body: true },
+    S2: { name: '搖手機耐力賽', icon: '📱', desc: '60 秒用力搖手機，搖越多下越好', better: 'high', pass: 350, unit: ' 下', body: true },
     R1: { name: '比腕力', icon: '💪', desc: '兩人現場比腕力', real: true, body: true },
     R2: { name: '柔軟度', icon: '🤸', desc: '站姿體前彎，誰的手摸得比較低', real: true, body: true },
   },

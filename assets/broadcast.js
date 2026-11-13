@@ -76,7 +76,7 @@
         if (d.sensor === 'count' && !d.s1) return `<div class="bc-huge">${d.count}</div>`;
         const pct = Math.min(100, (d.wob || 0) / (d.th || 3.2) * 80);
         const out = d.s1 === 'out' || d.s1 === 'down';
-        return `<div class="bc-mid">${out ? '😵 出局！' : d.s1 === 'full' ? '🏆 撐滿 60 秒！' : esc(d.inst || '')}</div><div class="bc-huge" style="${out ? 'color:var(--red)' : ''}">${(d.t || 0).toFixed(1)}<span style="font-size:.35em">秒</span></div>
+        return `<div class="bc-mid">${out ? '😵 出局！' : d.s1 === 'full' ? '🏆 撐滿了！' : esc(d.inst || '')}</div><div class="bc-huge" style="${out ? 'color:var(--red)' : ''}">${(d.t || 0).toFixed(1)}<span style="font-size:.35em">秒</span></div>
           <div class="bc-meter"><i style="width:${pct}%;background:${pct > 60 ? 'var(--red)' : pct > 35 ? 'var(--yellow)' : 'var(--green)'}"></i></div><div class="bc-sub">晃動量</div>`;
       }
       case 'S2':
