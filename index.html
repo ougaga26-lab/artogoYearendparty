@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>藝觸即發｜主畫面</title>
-<link rel="stylesheet" href="assets/style.css?v=20261113q">
+<link rel="stylesheet" href="assets/style.css?v=20261113r">
 <style>
   body { overflow: hidden; height: 100vh; }
 
@@ -370,6 +370,15 @@
   .ggame .ic { font-size: 34px; } .ggame .t { font-weight: 900; font-size: 16px; } .ggame .k { font-size: 12px; font-weight: 900; margin-top: 4px; display: inline-block; padding: 0 6px; border-radius: 6px; border: 2px solid var(--ink); }
   .ggame .k.body { background: var(--peach); } .ggame .k.ph { background: var(--sky); }
   .gend { text-align: center; }
+
+  /* ---------- 乾杯動畫 ---------- */
+  .cheers { position: absolute; inset: 0; z-index: 12; display: grid; place-items: center; pointer-events: none; background: radial-gradient(circle, rgba(255,250,235,.9) 0 32%, rgba(255,250,235,0) 62%); }
+  .cheers .in { text-align: center; }
+  .cheers .who { font-size: 3.4cqw; font-weight: 900; }
+  .cheers .n { font-size: 15cqw; font-weight: 900; line-height: 1; color: var(--yellow); -webkit-text-stroke: 1.1cqw var(--ink); paint-order: stroke fill; text-shadow: 0 1cqw 0 var(--ink); animation: pop .3s ease; }
+  .cheers .n.go { color: #ff6b5a; }
+  .cheers .glass { font-size: 11cqw; line-height: 1; animation: clink .5s ease 2; }
+  @keyframes clink { 50% { transform: rotate(-14deg) scale(1.15); } }
   .hidden { display: none !important; }
 </style>
 </head>
@@ -479,9 +488,9 @@
 
 <script src="https://unpkg.com/mqtt@5.10.1/dist/mqtt.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-<script src="assets/game-data.js?v=20261113q"></script>
-<script src="assets/net.js?v=20261113q"></script>
-<script src="assets/broadcast.js?v=20261113q"></script>
+<script src="assets/game-data.js?v=20261113r"></script>
+<script src="assets/net.js?v=20261113r"></script>
+<script src="assets/broadcast.js?v=20261113r"></script>
 <script>
 const G = window.GAME;
 const N = G.tiles.length;
@@ -730,7 +739,7 @@ function startGame() {
   if (!S.order.length) { toast('還沒有玩家加入喔'); return; }
   cancelChain();
   for (let i = S.order.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [S.order[i], S.order[j]] = [S.order[j], S.order[i]]; }
-  for (const p of Object.values(S.players)) Object.assign(p, { pos: 0, coins: G.startCoins, items: [], stats: { wins: 0, bad: 0, steals: 0, laps: 0 } });
+  for (const p of Object.values(S.players)) Object.assign(p, { pos: 0, coins: G.startCoins, items: [], drinks: null, stats: { wins: 0, bad: 0, steals: 0, laps: 0 } });
   // 禮物先裝進盒子，開場典禮再一盒一盒拆
   S.gifts = loadGifts().map((g) => Object.assign({}, g, { holder: null, steals: 0, locked: false }));
   const gs = shuffle(S.gifts.slice());
@@ -919,9 +928,10 @@ async function resolveCard(card, p, ctx) {
   // 壞事接著要選怎麼辦，選項出現前先讓大家看完；好事看完才發錢
   await readWait(card.bad ? Math.min(6000, readMs(card.text) - 1000) : readMs(card.text));
   if (card.bad) {
-    const saved = await rescue(p, card);
-    if (saved) return;
+    const r = await rescue(p, card);
+    if (r === true) return;
     p.stats.bad++;
+    if (r === 'drink') return applyEff(halfEff(card.effect), p, ctx);
   }
   await applyEff(card.effect, p, ctx);
 }
@@ -938,10 +948,19 @@ async function rescue(p, card) {
   const opts = [{ v: 'accept', label: `認了（${effText(card.effect)}）` }];
   if (p.items.includes('shield')) opts.push({ v: 'shield', label: '🛡️ 用免死金牌' });
   if (card.rescue) { const g = G.games[card.rescue]; opts.push({ v: 'game', label: `${g.icon} 挑戰「${g.name}」${card.rescueText ? '：' + card.rescueText : ''}` }); }
+  const left = drinksLeft(p);
+  if (left > 0) opts.push({ v: 'drink', label: `🍺 喝一杯酒，罰款減半（${effText(halfEff(card.effect))}）`, sub: `自願的・這輪還能用 ${left} 次` });
   const v = await ask({ kind: 'rescue', by: 'player', pid: p.pid, title: '遇到麻煩了！要怎麼辦？', options: opts }, 40000, 'accept');
   if (v === 'shield') {
     p.items.splice(p.items.indexOf('shield'), 1);
     setStatus('🛡️ 免死金牌生效！平安過關'); sfx('coin'); await sleep(1800); return true;
+  }
+  if (v === 'drink') {
+    const d = p.drinks && p.drinks.r === S.round ? p.drinks : (p.drinks = { r: S.round, n: 0 });
+    d.n++;
+    setStatus(`🍺 ${p.name} 選擇喝一杯，罰款減半！`);
+    await cheers(`🍺 ${p.name} 乾杯抵罰！`);
+    return 'drink';
   }
   if (v === 'game') {
     const ok = await playSolo(p, card.rescue, card.variant, card.rescueText);
@@ -949,6 +968,45 @@ async function rescue(p, card) {
     setStatus('沒過…只好認了'); sfx('bad'); await sleep(1500);
   }
   return false;
+}
+
+/* ---------- 尾牙喝酒（全部自願） ---------- */
+const drinksLeft = (p) => G.drink.perRound - (p.drinks && p.drinks.r === S.round ? p.drinks.n : 0);
+// 罰款減半：扣錢、付錢、繳稅都砍一半
+function halfEff(e) {
+  const h = Object.assign({}, e);
+  if (typeof h.coins === 'number') h.coins = Math.round(h.coins / 2);
+  ['taxPct', 'payPick', 'payAll'].forEach((k) => { if (h[k]) h[k] = Math.max(1, Math.round(h[k] / 2)); });
+  return h;
+}
+// 大螢幕乾杯動畫：3、2、1，乾！
+async function cheers(who) {
+  const el = document.createElement('div');
+  el.className = 'cheers';
+  $('board').appendChild(el);
+  try {
+    for (const n of ['3', '2', '1']) { el.innerHTML = `<div class="in"><div class="who">${esc(who)}</div><div class="n">${n}</div><div class="who">全場一起數！</div></div>`; tone(660, 0.15, 'square', 0.06); await sleep(800); }
+    el.innerHTML = `<div class="in"><div class="glass">🍻</div><div class="n go">乾！</div></div>`;
+    sfx('fanfare');
+    await sleep(1600);
+  } finally { el.remove(); }
+}
+// B：敬酒（對方可以婉拒，沒有任何懲罰）
+async function toastFlow(p) {
+  const cands = Object.values(S.players).filter((x) => x.pid !== p.pid && x.on);
+  if (!cands.length) { addCoins(p, G.drink.toastDecline); sync(); setStatus('沒有人可以敬，自己乾了！'); await sleep(1400); return; }
+  const v = await ask({ kind: 'pick', by: 'player', pid: p.pid, title: '🍺 要敬誰一杯？', options: cands.map((c) => ({ v: c.pid, label: `${c.avatar} ${c.name}`, sub: G.roles[c.role].name })) }, 30000, pickOne(cands).pid);
+  const t = P(v) || pickOne(cands);
+  setLive(`🍺 ${p.name} 舉杯敬 ${t.name}！`);
+  const a = await ask({ kind: 'pick', by: 'player', pid: t.pid, title: `🍺 ${p.name} 敬你一杯！`, options: [{ v: 'yes', label: '🍻 乾了！', sub: t.role === 'guest' ? `${p.name} +${G.drink.toastCoins}` : `兩人各 +${G.drink.toastCoins}` }, { v: 'no', label: '🙏 婉拒，心領了', sub: '不喝也完全沒關係' }] }, 25000, 'no');
+  if (a === 'yes') {
+    await cheers(`🍻 ${p.name} × ${t.name}`);
+    addCoins(p, G.drink.toastCoins); if (t.role !== 'guest') addCoins(t, G.drink.toastCoins);
+    sync(); setStatus(`🍻 乾杯！${p.name}${t.role !== 'guest' ? ` 和 ${t.name} 各` : ''} +${G.drink.toastCoins}`); await sleep(1800);
+  } else {
+    addCoins(p, G.drink.toastDecline); sync();
+    setStatus(`${t.name} 心領了～${p.name} 拿 +${G.drink.toastDecline} 誠意獎`); await sleep(1800);
+  }
 }
 
 /* ---------- 小遊戲 ---------- */
@@ -1113,8 +1171,17 @@ async function pkTile(p) {
   if (p.role === 'staff' && t.role === 'staff' && ga && gt && !gt.locked) opts.push({ v: 'gift', label: '🎁 賭禮物', sub: `你贏了可以拿${tierName(ga)}換他的${tierName(gt)}` });
   G.pkStakes.forEach((n) => opts.push({ v: String(n), label: `💰 賭 ${n} 幣`, sub: '贏的人從輸的人身上拿' }));
   const stake = await ask({ kind: 'pick', by: 'player', pid: p.pid, title: `要跟 ${t.name} 賭什麼？`, options: opts }, 30000, opts[0].v);
-  const stakeTxt = stake === 'gift' ? '🎁 禮物' : `💰 ${stake} 幣`;
+  let stakeTxt = stake === 'gift' ? '🎁 禮物' : `💰 ${stake} 幣`;
   if (S.card) { S.card.text = `${p.name} vs ${t.name}・賭注：${stakeTxt}`; sync(); }
+  // 加碼：輸的人喝一口酒，贏的人多拿錢。兩個人都同意才成立
+  let drinkBet = false;
+  const up = await ask({ kind: 'pick', by: 'player', pid: p.pid, title: '🍺 要不要加碼「輸的人喝一口酒」？', options: [{ v: 'yes', label: '🍺 加碼！', sub: `對方同意才成立・贏的人再 +${G.drink.pkBonus}` }, { v: 'no', label: '不用，照原本的比' }] }, 20000, 'no');
+  if (up === 'yes') {
+    const ok = await ask({ kind: 'pick', by: 'player', pid: t.pid, title: `🍺 ${p.name} 想加碼：輸的人喝一口酒！`, options: [{ v: 'yes', label: '🍺 接受加碼！', sub: `贏的人再 +${G.drink.pkBonus}` }, { v: 'no', label: '🙏 不加碼', sub: '照原本的賭注比，完全沒關係' }] }, 20000, 'no');
+    drinkBet = ok === 'yes';
+    setStatus(drinkBet ? `🍺 ${t.name} 接受加碼！輸的人要喝一口` : `${t.name} 不加碼，照原本的比`); await sleep(1500); setStatus(null);
+    if (drinkBet) { stakeTxt += '＋🍺 輸的喝一口'; if (S.card) { S.card.text = `${p.name} vs ${t.name}・賭注：${stakeTxt}`; sync(); } }
+  }
   // 抽 3 張遊戲卡，發起的人挑
   const cards = drawPkCards();
   sfx('card');
@@ -1138,6 +1205,11 @@ async function pkTile(p) {
   if (S.card) { S.card.title = `PK：${def(game).icon} ${def(game).name}`; S.card.text = `${p.name} vs ${t.name}・賭注：${stakeTxt}`; sync(); }
   const w = await pkFlow(p, t, game);
   const l = w === p ? t : p;
+  if (drinkBet) {
+    await cheers(`🍺 ${l.name} 願賭服輸，喝一口！`);
+    addCoins(w, G.drink.pkBonus); sync();
+    setStatus(`🍺 加碼獎金：${w.name} +${G.drink.pkBonus}`); await sleep(1500);
+  }
   if (stake !== 'gift') {
     const a = transfer(l, w, +stake);
     setStatus(`${w.name} 從 ${l.name} 手上贏走 ${a} 幣！`); await sleep(1800);
@@ -1203,6 +1275,7 @@ async function applyEff(eff, p, ctx) {
     const t = await pickPlayer(p, `要付 ${eff.payPick} 幣給誰？`, others);
     if (t) { const a = transfer(p, t, eff.payPick); setStatus(`${p.name} 付給 ${t.name} ${a} 幣`); await sleep(1500); }
   }
+  if (eff.toast) await toastFlow(p);
   if (eff.together) {
     const t = await pickPlayer(p, '選一位夥伴，你們兩人都加錢', others);
     if (t) { addCoins(p, eff.together); addCoins(t, eff.together); setStatus(`${p.name} 和 ${t.name} 各 +${eff.together}`); await sleep(1500); }
@@ -1950,6 +2023,7 @@ function buildGuide() {
           <div class="gopt"><div class="ic">😩</div><div class="t">認了</div><div class="d">乖乖扣錢</div></div>
           <div class="gopt"><div class="ic">🛡️</div><div class="t">免死金牌</div><div class="d">有的話直接抵銷</div></div>
           <div class="gopt"><div class="ic">🎮</div><div class="t">挑戰小遊戲</div><div class="d">過關就免罰<br>沒過還是要扣</div></div>
+          <div class="gopt"><div class="ic">🍺</div><div class="t">喝一杯酒</div><div class="d">罰款減半<br>每輪最多 ${G.drink.perRound} 次・自願</div></div>
         </div></div>
       <div class="card gbox2"><h3><span class="no">5</span>PK 怎麼打？</h3>
         <div class="gsteps">
@@ -1957,9 +2031,18 @@ function buildGuide() {
           <div><span>2</span><span>選<b>賭注</b>：🎁 禮物（兩人都是正式員工）或 💰 ${G.pkStakes.join('／')} 幣</span></div>
           <div><span>3</span><span>大螢幕翻 <b>3 張遊戲卡</b>，你挑一個項目</span></div>
           <div><span>4</span><span>對手可以花 <b>${G.pkSwapCost} 幣</b>換成另外兩張其中一張</span></div>
-          <div><span>5</span><span>有<b>代打卡</b>的人可以找人上場，開打！</span></div>
+          <div><span>5</span><span>可以加碼<b>輸的人喝一口酒</b>（雙方同意才算，贏的再 +${G.drink.pkBonus}）</span></div>
+          <div><span>6</span><span>有<b>代打卡</b>的人可以找人上場，開打！</span></div>
         </div></div>
     </div>
+
+    <div class="card gbox2"><h3><span class="no">🍻</span>尾牙限定：喝酒（全部自願，不喝也完全沒關係）</h3>
+      <div class="gopts">
+        <div class="gopt"><div class="ic">🍺</div><div class="t">乾杯抵罰</div><div class="d">遇到壞事喝一杯酒，罰款減半<br>每人每輪最多 ${G.drink.perRound} 次</div></div>
+        <div class="gopt"><div class="ic">🥂</div><div class="t">敬酒</div><div class="d">踩到敬酒事件，選一位同事敬一杯<br>乾了兩人各 +${G.drink.toastCoins}，婉拒你也有 +${G.drink.toastDecline}</div></div>
+        <div class="gopt"><div class="ic">⚔️</div><div class="t">PK 加碼</div><div class="d">輸的人喝一口<br>雙方都同意才成立</div></div>
+        <div class="gopt"><div class="ic">🚕</div><div class="t">喝酒不開車</div><div class="d">要開車的人<br>請選其他方式就好</div></div>
+      </div></div>
 
     <div><h3><span class="no">6</span>道具（每人最多 ${G.maxItems} 個）</h3>
       <div class="gitems">
@@ -2001,6 +2084,7 @@ function renderFinal() {
       ${f.awards.map((a) => { const p = P(a.pid); return `<div class="card finbox"><div class="t">${a.t}</div><div class="w">${p.avatar} ${esc(p.name)}</div><div class="d">${a.d}</div></div>`; }).join('')}
     </div>
     <div class="rest">${rk.slice(3).map((p, i) => `<span>${i + 4}. ${p.avatar} ${esc(p.name)} ${p.coins}</span>`).join('')}</div>
+    <div class="card" style="padding:10px 22px;font-weight:900;font-size:22px">🚕 喝酒不開車，記得叫車回家！</div>
     <div style="display:flex;gap:12px"><button class="btn" id="againBtn">同一批人再玩一局</button><button class="btn paper" id="newBtn">開新房間</button></div>
   </div>`;
   $('final').querySelectorAll('.gcard').forEach((c) => c.onclick = () => { c.classList.toggle('open'); sfx('coin'); });
