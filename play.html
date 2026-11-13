@@ -11,7 +11,7 @@
   header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
   header .logo { font-size: 26px; -webkit-text-stroke-width: 5px; text-shadow: 0 4px 0 var(--ink); }
   header .st { font-size: 12px; font-weight: 700; display: flex; align-items: center; gap: 6px; background: var(--paper); border: 2px solid var(--ink); border-radius: 99px; padding: 3px 10px; }
-  .card { padding: 18px; margin-bottom: 14px; }
+  .card { padding: 16px; margin-bottom: 14px; }
   h2 { margin: 0 0 12px; font-size: 22px; font-weight: 900; }
   label.f { display: block; font-weight: 900; margin: 14px 0 8px; }
   input.name { width: 100%; font: inherit; font-size: 22px; font-weight: 900; border: 3px solid var(--ink); border-radius: 12px; padding: 10px 14px; background: #fff; }
@@ -25,56 +25,57 @@
   .avs button.taken { opacity: .3; }
   .wide { width: 100%; font-size: 22px; padding: 14px; margin-top: 18px; }
 
-  .me { display: grid; grid-template-columns: 64px 1fr auto; gap: 12px; align-items: center; }
-  .me .avatar { width: 64px; height: 64px; font-size: 38px; }
-  .me .nm { font-size: 22px; font-weight: 900; line-height: 1.1; }
+  .me { display: grid; grid-template-columns: 60px 1fr auto; gap: 12px; align-items: center; }
+  .me .avatar { width: 60px; height: 60px; font-size: 36px; }
+  .me .nm { font-size: 21px; font-weight: 900; line-height: 1.1; }
   .me .sub { font-size: 13px; font-weight: 700; color: var(--muted); }
   .me .coins { text-align: right; }
-  .me .coins b { display: block; font-size: 34px; font-weight: 900; line-height: 1; }
+  .me .coins b { display: block; font-size: 32px; font-weight: 900; line-height: 1; }
   .me .coins span { font-size: 12px; font-weight: 700; }
-  .items { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+  .giftbox { margin-top: 12px; display: flex; align-items: center; gap: 10px; background: #fff; border: 2px solid var(--ink); border-radius: 12px; padding: 8px 12px; font-weight: 900; }
+  .giftbox .gi { font-size: 30px; }
+  .giftbox small { display: block; font-size: 12px; color: var(--muted); font-weight: 700; }
+  .items { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
   .item { border: 2px solid var(--ink); border-radius: 10px; background: #fff; padding: 4px 10px; font-weight: 900; font-size: 14px; }
-  .items .none { font-size: 13px; color: var(--muted); font-weight: 700; }
+  button.item { box-shadow: 0 3px 0 var(--ink); background: var(--sun); }
 
-  .action { text-align: center; min-height: 280px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; }
-  .action .big { font-size: 26px; font-weight: 900; line-height: 1.3; }
+  .action { text-align: center; min-height: 260px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; }
+  .action .big { font-size: 25px; font-weight: 900; line-height: 1.3; }
   .action .small { font-size: 15px; font-weight: 700; color: var(--muted); }
-  .dicebtn {
-    width: 220px; height: 220px; border-radius: 36px; border: 4px solid var(--ink); background: var(--red); color: #fff;
-    box-shadow: 0 10px 0 var(--ink); font-size: 34px; font-weight: 900; display: grid; place-items: center; animation: bob 1.2s ease-in-out infinite;
-  }
+  .dicebtn { width: 210px; height: 210px; border-radius: 36px; border: 4px solid var(--ink); background: var(--red); color: #fff; box-shadow: 0 10px 0 var(--ink); font-size: 32px; font-weight: 900; display: grid; place-items: center; animation: bob 1.2s ease-in-out infinite; }
   .dicebtn:active { transform: translateY(8px); box-shadow: 0 2px 0 var(--ink); animation: none; }
-  .dicebtn .ic { font-size: 80px; line-height: 1; display: block; }
-  .toggle { display: flex; align-items: center; gap: 8px; font-weight: 900; background: #fff; border: 2px solid var(--ink); border-radius: 12px; padding: 8px 14px; }
-  .toggle input { width: 22px; height: 22px; }
+  .dicebtn .ic { font-size: 76px; line-height: 1; display: block; }
   .opts { display: flex; flex-direction: column; gap: 10px; width: 100%; }
-  .opts .btn { width: 100%; font-size: 20px; padding: 14px; text-align: left; display: flex; justify-content: space-between; align-items: center; }
-  .opts .btn small { font-size: 14px; font-weight: 700; }
-  .cardmini { width: 100%; border: 3px solid var(--ink); border-radius: 14px; padding: 12px; background: #fff; }
+  .opts .btn { width: 100%; font-size: 18px; padding: 13px; text-align: left; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .opts .btn small { font-size: 13px; font-weight: 700; flex: none; }
+  .cardmini { width: 100%; border: 3px solid var(--ink); border-radius: 14px; padding: 12px; background: #fff; text-align: center; }
   .cardmini .t { font-weight: 900; font-size: 20px; }
   .cardmini .x { font-weight: 700; font-size: 15px; margin-top: 4px; }
-  .cardmini .live { margin-top: 8px; font-weight: 900; border-top: 2px dashed var(--ink); padding-top: 8px; }
+  .cardmini .live { margin-top: 8px; font-weight: 900; border-top: 2px dashed var(--ink); padding-top: 8px; white-space: pre-line; }
   .turnwho { display: flex; align-items: center; gap: 10px; justify-content: center; }
-  .turnwho .avatar { width: 48px; height: 48px; font-size: 28px; }
-  .cheer {
-    width: 170px; height: 170px; border-radius: 50%; border: 4px solid var(--ink); background: var(--yellow); box-shadow: 0 8px 0 var(--ink);
-    font-size: 24px; font-weight: 900; display: grid; place-items: center; line-height: 1.2;
-  }
-  .cheer .ic { font-size: 56px; display: block; }
-  .cheer:active { transform: translateY(6px) scale(.97); box-shadow: 0 2px 0 var(--ink); }
-  .cheercount { font-weight: 900; font-size: 15px; }
+  .turnwho .avatar { width: 46px; height: 46px; font-size: 26px; }
+  .fate3 { display: flex; gap: 12px; justify-content: center; }
+  .fate3 button { width: 92px; height: 130px; border: 3px solid var(--ink); border-radius: 12px; box-shadow: 0 5px 0 var(--ink); background: repeating-linear-gradient(45deg, var(--navy), var(--navy) 8px, #5583a8 8px, #5583a8 16px); color: #fff; font-size: 32px; font-weight: 900; }
+  .bigbtn { width: 180px; height: 180px; border-radius: 50%; border: 4px solid var(--ink); background: var(--yellow); box-shadow: 0 8px 0 var(--ink); font-size: 24px; font-weight: 900; display: grid; place-items: center; line-height: 1.2; }
+  .bigbtn .ic { font-size: 56px; display: block; }
+  .bigbtn:active { transform: translateY(6px) scale(.97); box-shadow: 0 2px 0 var(--ink); }
 
   .mini { display: flex; flex-direction: column; gap: 6px; }
-  .mini .r { display: grid; grid-template-columns: 26px 34px 1fr auto; gap: 8px; align-items: center; font-weight: 900; padding: 4px 6px; border-radius: 10px; }
+  .mini .r { display: grid; grid-template-columns: 24px 32px 1fr auto auto; gap: 8px; align-items: center; font-weight: 900; padding: 4px 6px; border-radius: 10px; font-size: 15px; }
   .mini .r.me2 { background: var(--yellow); }
-  .mini .avatar { width: 32px; height: 32px; font-size: 18px; }
-
+  .mini .avatar { width: 30px; height: 30px; font-size: 17px; }
+  .mini .g { font-size: 11px; border: 2px solid var(--ink); border-radius: 6px; padding: 0 4px; background: #fff; }
+  .bet { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .bet button { border: 3px solid var(--ink); border-radius: 12px; background: #fff; padding: 8px 4px; font-weight: 900; font-size: 14px; }
+  .bet button.on { background: var(--yellow); }
   .mcgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
   .mcgrid .btn { width: 100%; font-size: 17px; }
   .adj { display: grid; grid-template-columns: 1fr auto auto auto auto; gap: 6px; align-items: center; font-weight: 900; padding: 6px 0; border-bottom: 2px dashed rgba(31,42,58,.2); }
   .adj .btn { padding: 4px 8px; font-size: 13px; }
   .center { text-align: center; }
-  .rank { font-size: 64px; font-weight: 900; line-height: 1; }
+  .rank { font-size: 60px; font-weight: 900; line-height: 1; }
+  .modal { position: fixed; inset: 0; z-index: 120; background: rgba(31,42,58,.6); display: grid; place-items: center; padding: 20px; }
+  .modal .card { width: 100%; text-align: center; }
   .hidden { display: none !important; }
   .shake { animation: shake .4s ease 2; }
 </style>
@@ -85,10 +86,12 @@
   <div class="st"><span class="dot" id="dot"></span><span id="stTxt">連線中</span></div>
 </header>
 <main id="app"><div class="card center"><h2>連線中…</h2><p style="font-weight:700">正在找主畫面，請稍等</p></div></main>
+<div class="modal hidden" id="modal"></div>
 
 <script src="https://unpkg.com/mqtt@5.10.1/dist/mqtt.min.js"></script>
 <script src="assets/game-data.js"></script>
 <script src="assets/net.js"></script>
+<script src="assets/games.js"></script>
 <script>
 const G = window.GAME;
 const $ = (id) => document.getElementById(id);
@@ -102,13 +105,15 @@ function ls(k, v) { try { if (v === undefined) return localStorage.getItem(k); l
 let PID = ls('wy26_pid_' + ROOM);
 if (!PID) { PID = 'p' + Math.random().toString(36).slice(2, 10); ls('wy26_pid_' + ROOM, PID); }
 if (qs.get('t')) PID = 'test' + qs.get('t'); // 測試用：同一台電腦開多個分頁模擬多支手機
-let profile = null; try { profile = JSON.parse(ls('wy26_prof_' + ROOM)); } catch (e) {}
-let lastProfile = null; try { lastProfile = JSON.parse(ls('wy26_prof_last')); } catch (e) {}
+let profile = null; try { profile = JSON.parse(ls('wy26v2_prof_' + ROOM + PID)); } catch (e) {}
+let lastProfile = null; try { lastProfile = JSON.parse(ls('wy26v2_prof_last')); } catch (e) {}
+let peeks = {}; try { peeks = JSON.parse(ls('wy26v2_peek_' + ROOM + PID)) || {}; } catch (e) {}
 
-let S = null, net = null, joinSent = false;
+let S = null, net = null, joinSent = false, editingNow = false;
 let form = { name: (lastProfile && lastProfile.name) || '', role: (lastProfile && lastProfile.role) || 'staff', avatar: (lastProfile && lastProfile.avatar) || null };
-let useDouble = false, cheerTaps = 0, cheerTotal = 0, lastTurnKey = '', lastRenderKey = '';
-let busyChoice = null;
+let lastVib = '';
+const launched = {}, answered = {};
+let tipTaps = 0;
 
 if (!ROOM) {
   app.innerHTML = '<div class="card center"><h2>找不到房間</h2><p style="font-weight:700">請用手機相機掃主畫面上的 QR Code 進來喔！</p></div>';
@@ -118,124 +123,151 @@ if (!ROOM) {
     onStatus(s) {
       const m = { online: ['on', '已連線'], reconnecting: ['warn', '重連中'], offline: ['off', '離線'], error: ['off', '錯誤'] }[s] || ['', ''];
       $('dot').className = 'dot ' + m[0]; $('stTxt').textContent = `房號 ${ROOM}・${m[1]}`;
-      if (s === 'online') { send({ t: 'hello' }); if (profile) send(Object.assign({ t: 'join' }, profile)); }
+      if (s === 'online') { send({ t: 'hello' }); if (profile && !MC) send(Object.assign({ t: 'join' }, profile)); }
     },
     onMsg(m) {
-      if (m && m.t === 'state') {
-        const prevPhase = S && S.phase;
+      if (!m) return;
+      if (m.to) { if (m.to === PID) onPrivate(m); return; }
+      if (m.t === 'state') {
         S = m.s;
-        // 主畫面重開了新局，但我還沒登記 → 自動重新加入
-        if (profile && !S.players[PID] && !joinSent) { joinSent = true; send(Object.assign({ t: 'join' }, profile)); setTimeout(() => joinSent = false, 3000); }
-        render(prevPhase);
+        if (!MC && profile && !S.players[PID] && !joinSent) { joinSent = true; send(Object.assign({ t: 'join' }, profile)); setTimeout(() => joinSent = false, 3000); }
+        render();
       }
     },
   });
   setInterval(() => send({ t: 'ping' }), 8000);
-  setInterval(() => { if (cheerTaps) { send({ t: 'cheer', n: cheerTaps }); cheerTaps = 0; } }, 450);
+  setInterval(() => { if (tipTaps && S && S.pending && S.pending.kind === 'tip') { send({ t: 'tip', id: S.pending.id, n: tipTaps }); } tipTaps = 0; }, 450);
 }
 function send(o) { if (net) net.send(Object.assign({ pid: PID }, o)); }
-function esc(s) { return String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
+const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const av = (p, cls = '') => `<span class="avatar ${cls}" style="--c:${p.color}">${p.avatar}</span>`;
 const vib = (p) => { try { navigator.vibrate && navigator.vibrate(p); } catch (e) {} };
+const curPid = () => S.order.length ? S.order[S.turn % S.order.length] : null;
+const P = (pid) => S.players[pid];
+const boardPlayers = () => S.order.map(P).filter(Boolean);
+const ranked = () => boardPlayers().sort((a, b) => b.coins - a.coins);
+const giftOf = (pid) => S.gifts.find((g) => g.holder === pid);
+const tierName = (g) => G.tiers[g.tier].name;
+const giftName = (g) => g.name || peeks[g.id] || null;
+const inGame = () => !['lobby', 'ended'].includes(S.phase);
 
-// 螢幕常亮
 let wake = null;
 async function keepAwake() { try { if ('wakeLock' in navigator && !wake) { wake = await navigator.wakeLock.request('screen'); wake.addEventListener('release', () => wake = null); } } catch (e) {} }
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') { keepAwake(); send({ t: 'hello' }); } });
 document.addEventListener('click', keepAwake, { once: true });
 
+function onPrivate(m) {
+  if (m.t === 'peek') {
+    peeks[m.gift.id] = m.gift.name; ls('wy26v2_peek_' + ROOM + PID, JSON.stringify(peeks));
+    const h = S && P(m.gift.holder);
+    modal(`<div style="font-size:60px">🎁</div><h2>偷看結果（只有你看得到）</h2>
+      <div style="font-weight:900;font-size:16px">${h ? esc(h.name) + ' 手上的' : ''}${G.tiers[m.gift.tier].name}</div>
+      <div style="font-weight:900;font-size:30px;margin:8px 0 16px;color:var(--red)">${esc(m.gift.name)}</div>
+      <button class="btn" onclick="closeModal()">記住了！</button>`);
+    vib([100, 50, 100]);
+    render();
+  }
+}
+function modal(html) { $('modal').innerHTML = `<div class="card">${html}</div>`; $('modal').classList.remove('hidden'); }
+function closeModal() { $('modal').classList.add('hidden'); }
+
 /* ================= 畫面 ================= */
-function render(prevPhase) {
+function render() {
   if (!S) return;
   if (MC) return renderMC();
-  const me = S.players[PID];
   if (editingNow) return;
-  if (!me) {
-    // 正在打字時不要重畫，避免鍵盤被收起
-    if (document.activeElement && document.activeElement.id === 'nm') return;
-    return renderJoin();
-  }
-  const isCur = curPid() === PID;
-  // 輪到我 → 震動提示
-  const tk = S.round + ':' + S.turn + ':' + S.phase;
-  if (isCur && S.phase === 'roll' && lastTurnKey !== tk) { vib([200, 100, 200]); }
-  lastTurnKey = tk;
-
-  let h = meCard(me);
-  h += `<div class="card action" id="act">${actionHTML(me, isCur)}</div>`;
-  h += miniBoard(me);
-  app.innerHTML = h;
-  bindAction(me);
+  const me = P(PID);
+  if (!me) { if (document.activeElement && document.activeElement.id === 'nm') return; return renderJoin(); }
+  handleLaunches(me);
+  const pd = S.pending;
+  const k = pd ? pd.id : S.phase + S.turn;
+  if (k !== lastVib && ((pd && (pd.pid === PID || (pd.players || []).includes(PID))) || (S.phase === 'roll' && curPid() === PID))) vib([200, 100, 200]);
+  lastVib = k;
+  if (me.role === 'guest') return renderGuest(me);
+  app.innerHTML = meCard(me) + `<div class="card action" id="act">${actionHTML(me)}</div>` + miniBoard();
+  bind(me);
 }
-const curPid = () => S.order.length ? S.order[S.turn % S.order.length] : null;
-const ranked = () => S.order.map((id) => S.players[id]).filter(Boolean).sort((a, b) => b.coins - a.coins);
+
+function handleLaunches(me) {
+  const pd = S.pending;
+  if (!pd || launched[pd.id]) return;
+  if (pd.kind === 'game' && pd.players.includes(PID)) {
+    launched[pd.id] = true;
+    MiniGames.play(pd.game, { seed: pd.seed, variant: pd.variant, title: pd.title }).then((score) => send({ t: 'gameResult', id: pd.id, score }));
+  }
+  if (pd.kind === 'rush' && pd.players.includes(PID)) {
+    launched[pd.id] = true;
+    MiniGames.rush(pd.label, pd.seed + PID.length).then((ms) => send({ t: 'rushResult', id: pd.id, ms }));
+  }
+}
 
 function meCard(me) {
-  if (me.role === 'cheer') {
-    return `<div class="card me">${av(me)}<div><div class="nm">${esc(me.name)}</div><div class="sub">啦啦隊・幫場上的人狂按加油</div></div><div></div></div>`;
+  const list = ranked();
+  const rk = list.findIndex((p) => p.pid === PID) + 1;
+  let gift = '';
+  if (me.role === 'probation' && S.phase === 'lobby') {
+    gift = '<div class="giftbox"><span class="gi">🧧</span><div>紅包（試用期）<small>最後的名次決定金額</small></div></div>';
+  } else if (me.role === 'probation') {
+    const amt = rk ? G.redPacket.find((r) => rk <= r.upTo).amount : 0;
+    gift = `<div class="giftbox"><span class="gi">🧧</span><div>紅包（試用期）<small>照目前第 ${rk} 名，可以拿 ${amt} 元</small></div></div>`;
+  } else {
+    const g = giftOf(PID);
+    gift = g ? `<div class="giftbox"><span class="gi">🎁</span><div>${tierName(g)}${giftName(g) ? '・' + esc(giftName(g)) : '（內容保密）'}
+      <small>${g.locked ? '🔒 已鎖定，不會再被搶' : `被搶 ${g.steals} 次，${G.lockAfter} 次後鎖定`}</small></div></div>` : (inGame() ? '<div class="giftbox"><span class="gi">🎁</span><div>目前沒有禮物</div></div>' : '');
   }
-  const rk = ranked().findIndex((p) => p.pid === PID) + 1;
-  const tile = G.tiles[me.pos];
+  const items = me.items.map((it) => it === 'peek'
+    ? `<button class="item" id="usePeek">${G.items[it].icon} ${G.items[it].name}（點我用）</button>`
+    : `<span class="item">${G.items[it].icon} ${G.items[it].name}</span>`).join('');
   return `<div class="card">
-    <div class="me">${av(me)}
-      <div><div class="nm">${esc(me.name)}${me.role === 'guest' ? ' <small style="font-size:13px">外賓</small>' : ''}</div>
-      <div class="sub">第 ${rk} 名・在「${tile.icon} ${tile.name}」${me.skip ? `・暫停 ${me.skip} 回合` : ''}</div></div>
-      <div class="coins"><b>${me.coins}</b><span>${G.currency}</span></div>
-    </div>
-    <div class="items">${me.items.length ? me.items.map((it) => `<span class="item">${G.items[it].icon} ${G.items[it].name}</span>`).join('') : '<span class="none">口袋空空，抽機會卡可以拿到道具</span>'}</div>
-  </div>`;
+    <div class="me">${av(me)}<div><div class="nm">${esc(me.name)}</div><div class="sub">${G.roles[me.role].name}${rk && inGame() ? `・第 ${rk} 名` : ''}</div></div>
+      <div class="coins"><b>${me.coins}</b><span>${G.currency}</span></div></div>
+    ${gift}${items ? `<div class="items">${items}</div>` : ''}</div>`;
 }
 
 function cardMini() {
   const c = S.card; if (!c) return '';
-  return `<div class="cardmini"><div class="t">${c.icon} ${esc(c.title)}</div>${c.text ? `<div class="x">${esc(c.text)}</div>` : ''}${c.live ? `<div class="live">🎬 ${esc(c.live)}</div>` : ''}${c.status ? `<div class="live">${esc(c.status)}</div>` : ''}</div>`;
+  return `<div class="cardmini"><div class="t">${c.icon} ${esc(c.title)}</div>${c.text ? `<div class="x">${esc(c.text)}</div>` : ''}${c.live ? `<div class="live">${esc(c.live)}</div>` : ''}${c.status ? `<div class="live">${esc(c.status)}</div>` : ''}</div>`;
+}
+function optsHTML(pd) {
+  if (pd.kind === 'fatePick') return `<div class="fate3">${pd.options.map((o) => `<button data-v="${o.v}">？</button>`).join('')}</div>`;
+  return `<div class="opts">${pd.options.map((o, i) => `<button class="btn ${o.v === 'none' || o.v === 'accept' || o.v === 'keep' ? 'paper' : i === 0 && pd.kind !== 'pick' ? '' : 'mint'}" data-v="${esc(o.v)}"><span>${esc(o.label)}</span>${o.sub ? `<small>${esc(o.sub)}</small>` : ''}</button>`).join('')}</div>`;
 }
 
-function actionHTML(me, isCur) {
-  const cp = S.players[curPid()];
-  if (S.phase === 'lobby') {
-    return `<div class="big">已加入！🎉</div><div class="small">等主持人按下開始<br>目前 ${Object.keys(S.players).length} 人在場</div>
-      <button class="btn paper sm" id="editBtn">修改名字／角色</button>`;
-  }
-  if (S.phase === 'ended') {
-    if (me.role === 'cheer') return `<div class="big">遊戲結束！</div><div class="small">感謝你的加油 📣</div>`;
-    const rk = S.final ? S.final.ranking.indexOf(PID) + 1 : 0;
-    return `<div class="small">最終名次</div><div class="rank">${rk ? '#' + rk : '-'}</div><div class="big">${rk === 1 ? '👑 你是發財王！' : rk <= 3 ? '上台領獎吧！' : '明年再來發財！'}</div><div class="small">${me.coins} ${G.currency}</div>`;
-  }
+function actionHTML(me) {
   const pd = S.pending;
-  if (pd && pd.by === 'player' && pd.pid === PID) {
-    return `${cardMini()}<div class="big">${esc(pd.title)}</div>
-      <div class="opts">${pd.options.map((o) => `<button class="btn ${o.v === 'accept' ? 'paper' : o.v === 'live' ? 'red' : ''}" data-v="${o.v}"><span>${esc(o.label)}</span>${o.sub ? `<small>${esc(o.sub)}</small>` : ''}</button>`).join('')}</div>`;
+  const cp = P(curPid());
+  if (S.phase === 'lobby') return `<div class="big">已加入！🎉</div><div class="small">等主持人按下開始<br>目前 ${Object.keys(S.players).length} 人在場</div><button class="btn paper sm" id="editBtn">修改名字／身分</button>`;
+  if (S.phase === 'ended') {
+    const rk = S.final ? S.final.ranking.indexOf(PID) + 1 : 0;
+    const red = S.final && S.final.red[PID];
+    const g = giftOf(PID);
+    return `<div class="small">最終名次</div><div class="rank">#${rk || '-'}</div>
+      ${red ? `<div class="big">🧧 紅包 ${red} 元</div>` : g ? `<div class="big">🎁 你帶回家的是<br>${tierName(g)}・${esc(g.name)}</div>` : ''}<div class="small">請看大螢幕拆禮物！</div>`;
   }
-  if (pd && pd.by === 'mc' && pd.pid === PID) {
-    return `${cardMini()}<div class="big">🎬 表演時間！</div><div class="small">完成後由主持人判定</div>`;
+  if (pd) {
+    if (pd.kind === 'game' && pd.players.includes(PID)) return `${cardMini()}<div class="big">🎮 ${pd.res && PID in pd.res ? '完成！等對手…' : '遊戲進行中'}</div>`;
+    if (pd.kind === 'rush' && pd.players.includes(PID)) return `<div class="big">⚡ 搶按中！</div>`;
+    if (pd.kind === 'realpk' && pd.players.includes(PID)) {
+      if (answered[pd.id]) return `${cardMini()}<div class="big">已回報，等對方確認…</div>`;
+      return `${cardMini()}<div class="big">比完了嗎？誰贏了？</div><div class="opts">${pd.players.map((x) => `<button class="btn ${x === PID ? '' : 'paper'}" data-win="${x}"><span>${P(x).avatar} ${esc(P(x).name)} 贏</span></button>`).join('')}</div>`;
+    }
+    if (pd.by === 'player' && pd.pid === PID) return `${cardMini()}<div class="big">${esc(pd.title)}</div>${optsHTML(pd)}`;
   }
-  if (isCur && S.phase === 'roll') {
-    const hasDouble = me.items.includes('double');
-    return `<div class="big">輪到你了！</div>
-      <button class="dicebtn" id="rollBtn"><span><span class="ic">🎲</span>擲骰子</span></button>
-      ${hasDouble ? `<label class="toggle"><input type="checkbox" id="dbl" ${useDouble ? 'checked' : ''}> 🎲 使用雙骰卡（擲兩顆）</label>` : ''}
-      <div class="small">也可以搖一搖手機擲骰</div>`;
+  if (S.phase === 'roll' && curPid() === PID) {
+    return `<div class="big">輪到你了！</div><button class="dicebtn" id="rollBtn"><span><span class="ic">🎲</span>擲骰子</span></button><div class="small">也可以搖一搖手機擲骰</div>`;
   }
-  if (isCur) {
-    return `${cardMini() || `<div class="big">${S.dice ? '🎲 ' + S.dice.vals.join(' + ') : ''}</div>`}<div class="small">${esc(S.msg || '請看大螢幕！')}</div>`;
-  }
-  // 別人的回合
-  return `<div class="turnwho">${cp ? av(cp) : ''}<div class="big">${cp ? esc(cp.name) : ''} 的回合</div></div>
-    ${cardMini() || `<div class="small">${esc(S.msg || '')}</div>`}
-    <button class="cheer" id="cheerBtn"><span><span class="ic">📣</span>加油！</span></button>
-    <div class="cheercount">狂按幫 ${cp ? esc(cp.name) : '他'} 加錢！每 10 下 +1 幣<br><span id="cc">${cheerTotal ? `你已經按了 ${cheerTotal} 下` : ''}</span></div>`;
+  if (S.phase === 'privilege') return `${cardMini()}<div class="small">👑 首富特權進行中，請看大螢幕</div>`;
+  return `<div class="turnwho">${cp ? av(cp) : ''}<div class="big">${cp ? esc(cp.name) : ''} 的回合</div></div>${cardMini() || `<div class="small">${esc(S.msg || '請看大螢幕')}</div>`}`;
 }
 
-function bindAction(me) {
-  const roll = $('rollBtn');
-  if (roll) roll.onclick = doRoll;
-  const dbl = $('dbl');
-  if (dbl) dbl.onchange = () => useDouble = dbl.checked;
-  const ch = $('cheerBtn');
-  if (ch) ch.addEventListener('pointerdown', () => { cheerTaps++; cheerTotal++; vib(15); const c = $('cc'); if (c) c.textContent = `你已經按了 ${cheerTotal} 下`; });
-  const ed = $('editBtn');
-  if (ed) ed.onclick = () => { form = { name: me.name, role: me.role, avatar: me.avatar }; renderJoin(true); };
+function bind(me) {
+  const roll = $('rollBtn'); if (roll) roll.onclick = doRoll;
+  const ed = $('editBtn'); if (ed) ed.onclick = () => { form = { name: me.name, role: me.role, avatar: me.avatar }; renderJoin(true); };
+  const up = $('usePeek'); if (up) up.onclick = () => choosePeek();
+  bindChoices();
+  document.querySelectorAll('[data-win]').forEach((b) => b.onclick = () => { send({ t: 'pkWinner', id: S.pending.id, winner: b.dataset.win }); answered[S.pending.id] = true; vib(30); render(); });
+}
+function bindChoices() {
   document.querySelectorAll('#act [data-v]').forEach((b) => b.onclick = () => {
     if (!S.pending) return;
     send({ t: 'choose', id: S.pending.id, v: b.dataset.v });
@@ -243,57 +275,88 @@ function bindAction(me) {
     vib(30);
   });
 }
+function choosePeek() {
+  const gs = S.gifts.filter((g) => !g.public && g.holder);
+  modal(`<h2>👀 用偷看券看哪一份？</h2><div class="opts">${gs.map((g) => { const h = P(g.holder); return `<button class="btn paper" data-peek="${g.id}"><span>${tierName(g)}（${h ? h.avatar + ' ' + esc(h.name) : ''}）</span></button>`; }).join('')}<button class="btn" onclick="closeModal()">取消</button></div>`);
+  document.querySelectorAll('[data-peek]').forEach((b) => b.onclick = () => { send({ t: 'usePeek', gift: b.dataset.peek }); closeModal(); });
+}
 
 let rolled = '';
 function doRoll() {
   const k = S.round + ':' + S.turn + ':' + S.seq;
   if (rolled === k) return;
   rolled = k;
-  send({ t: 'roll', double: useDouble && S.players[PID].items.includes('double') });
-  useDouble = false; vib(60);
+  send({ t: 'roll' }); vib(60);
   const b = $('rollBtn'); if (b) { b.disabled = true; b.classList.add('shake'); }
 }
-// 搖一搖
 let lastShake = 0;
-function onMotion(e) {
-  const a = e.accelerationIncludingGravity; if (!a) return;
+window.addEventListener('devicemotion', (e) => {
+  const a = e.accelerationIncludingGravity; if (!a || !S) return;
   const f = Math.abs(a.x) + Math.abs(a.y) + Math.abs(a.z);
-  if (f > 38 && Date.now() - lastShake > 1500 && S && S.phase === 'roll' && curPid() === PID) { lastShake = Date.now(); doRoll(); }
-}
-window.addEventListener('devicemotion', onMotion);
-document.addEventListener('click', () => {
-  if (window.DeviceMotionEvent && typeof DeviceMotionEvent.requestPermission === 'function') DeviceMotionEvent.requestPermission().catch(() => {});
-}, { once: true });
+  if (f > 38 && Date.now() - lastShake > 1500 && S.phase === 'roll' && curPid() === PID) { lastShake = Date.now(); doRoll(); }
+});
+document.addEventListener('click', () => { if (window.DeviceMotionEvent && typeof DeviceMotionEvent.requestPermission === 'function') DeviceMotionEvent.requestPermission().catch(() => {}); }, { once: true });
 
-function miniBoard(me) {
+function miniBoard() {
   if (S.phase === 'lobby') return '';
   const list = ranked();
-  const myIdx = list.findIndex((p) => p.pid === PID);
-  const show = list.slice(0, 5);
-  if (myIdx >= 5) show.push(list[myIdx]);
-  return `<div class="card"><h2 style="font-size:18px">排行榜・第 ${S.round}/${S.maxRounds} 輪</h2><div class="mini">${show.map((p) => `
-    <div class="r${p.pid === PID ? ' me2' : ''}"><span>${list.indexOf(p) + 1}</span>${av(p)}<span>${esc(p.name)}</span><span>${p.coins}</span></div>`).join('')}</div></div>`;
+  return `<div class="card"><h2 style="font-size:18px">排行榜・第 ${S.round}/${S.maxRounds} 輪</h2><div class="mini">${list.map((p, i) => {
+    const g = giftOf(p.pid);
+    const tag = p.role === 'probation' ? '🧧' : g ? `${tierName(g)}${g.locked ? '🔒' : ''}` : '';
+    return `<div class="r${p.pid === PID ? ' me2' : ''}"><span>${i + 1}</span>${av(p)}<span>${esc(p.name)}</span><span class="g">${tag}</span><span>${p.coins}</span></div>`;
+  }).join('')}</div></div>`;
 }
 
-/* ---------- 加入表單 ---------- */
-let editingNow = false;
+/* ---------- 外賓：董事會 ---------- */
+function renderGuest(me) {
+  const pd = S.pending;
+  const cp = P(curPid());
+  let act = '';
+  if (S.phase === 'lobby') act = `<div class="big">歡迎加入董事會！🏛️</div><div class="small">你不用走棋盤，但握有大權：<br>幫人翻命運牌、打賞表演、投票表決，<br>還能押寶誰最後抱走頭獎。</div><button class="btn paper sm" id="editBtn">修改名字／身分</button>`;
+  else if (S.phase === 'ended') {
+    const ok = S.final && S.final.bettors.includes(PID);
+    act = `<div class="big">${ok ? '🏆 你押中了！<br>最強董事就是你' : '感謝董事會的參與！'}</div><div class="small">請看大螢幕拆禮物</div>`;
+  } else if (pd && pd.kind === 'vote') {
+    act = answered[pd.id] ? `${cardMini()}<div class="big">已投票 ✓</div>` : `${cardMini()}<div class="big">🗳️ 董事會投票</div><div class="small">${esc(pd.title)}</div><div class="opts">${pd.options.map((o) => `<button class="btn" data-vote="${esc(o.v)}"><span>${esc(o.label)}</span></button>`).join('')}</div>`;
+  } else if (pd && pd.kind === 'tip') {
+    const tp = P(pd.pid);
+    act = `${cardMini()}<div class="big">💸 打賞 ${tp ? esc(tp.name) : ''}！</div><button class="bigbtn" id="tipBtn"><span><span class="ic">💰</span>打賞</span></button><div class="small">狂按！每下 +1 幣，每位董事最多 20</div>`;
+  } else if (pd && pd.by === 'player' && pd.pid === PID) {
+    act = `${cardMini()}<div class="big">${esc(pd.title)}</div>${optsHTML(pd)}`;
+  } else {
+    act = `<div class="turnwho">${cp ? av(cp) : ''}<div class="big">${cp ? esc(cp.name) : ''} 的回合</div></div>${cardMini() || `<div class="small">${esc(S.msg || '')}</div>`}`;
+  }
+  const g1 = S.gifts.find((g) => g.tier === 1);
+  const locked = inGame() && S.round >= S.maxRounds;
+  const staff = boardPlayers().filter((p) => p.role === 'staff');
+  const bet = S.phase === 'ended' || !staff.length ? '' : `<div class="card"><h2 style="font-size:18px">🔮 押寶：誰最後會抱走頭獎？</h2>
+    <div class="small" style="font-weight:700;color:var(--muted);margin-bottom:8px">${g1 && g1.holder && P(g1.holder) ? `頭獎目前在 ${P(g1.holder).avatar} ${esc(P(g1.holder).name)} 手上・` : ''}${locked ? '最後一輪，押寶已鎖定' : '最後一輪開始前都可以改'}</div>
+    <div class="bet">${staff.map((p) => `<button data-bet="${p.pid}" class="${me.bet === p.pid ? 'on' : ''}" ${locked ? 'disabled' : ''}>${p.avatar}<br>${esc(p.name)}</button>`).join('')}</div></div>`;
+  app.innerHTML = `<div class="card"><div class="me">${av(me)}<div><div class="nm">${esc(me.name)}</div><div class="sub">🏛️ 董事會成員</div></div><div></div></div></div>
+    <div class="card action" id="act">${act}</div>${bet}${miniBoard()}`;
+  const ed = $('editBtn'); if (ed) ed.onclick = () => { form = { name: me.name, role: me.role, avatar: me.avatar }; renderJoin(true); };
+  bindChoices();
+  document.querySelectorAll('[data-vote]').forEach((b) => b.onclick = () => { send({ t: 'vote', id: S.pending.id, v: b.dataset.vote }); answered[S.pending.id] = true; vib(30); render(); });
+  document.querySelectorAll('[data-bet]').forEach((b) => b.onclick = () => { send({ t: 'bet', target: b.dataset.bet }); vib(30); });
+  const tb = $('tipBtn'); if (tb) tb.addEventListener('pointerdown', (e) => { e.preventDefault(); tipTaps++; vib(15); });
+}
+
+/* ---------- 加入 ---------- */
 function renderJoin(editing) {
   editingNow = !!editing;
   const taken = new Set(Object.values(S.players).filter((p) => p.pid !== PID).map((p) => p.avatar));
   if (!form.avatar || taken.has(form.avatar)) form.avatar = G.avatars.find((a) => !taken.has(a)) || G.avatars[0];
-  const roles = [['staff', '同仁', '下場玩'], ['guest', '外賓', '下場玩'], ['cheer', '啦啦隊', '只加油']];
-  const inProg = S.phase !== 'lobby';
+  const roles = [['staff', '正式員工', '搶禮物'], ['probation', '試用期', '拚紅包'], ['guest', '外賓', '當董事']];
   app.innerHTML = `<div class="card">
     <h2>${editing ? '修改資料' : '加入遊戲'}</h2>
-    ${inProg && !editing ? '<p style="font-weight:700;margin:0 0 8px">遊戲進行中，加入後會從起點出發 🏃</p>' : ''}
+    ${S.phase !== 'lobby' && !editing ? '<p style="font-weight:700;margin:0 0 8px">遊戲進行中，加入後從起點出發 🏃</p>' : ''}
     <label class="f">你的名字（最多 8 字）</label>
     <input class="name" id="nm" maxlength="8" value="${esc(form.name)}" placeholder="例如：小明" autocomplete="off">
-    <label class="f">你是</label>
+    <label class="f">你的身分</label>
     <div class="roles">${roles.map(([v, t, s]) => `<button data-r="${v}" class="${form.role === v ? 'on' : ''}">${t}<small>${s}</small></button>`).join('')}</div>
     <label class="f">選一隻代表你的動物</label>
     <div class="avs">${G.avatars.map((a) => `<button data-a="${a}" class="${form.avatar === a ? 'on' : ''}${taken.has(a) ? ' taken' : ''}" ${taken.has(a) ? 'disabled' : ''}>${a}</button>`).join('')}</div>
-    <button class="btn red wide" id="joinBtn">${editing ? '儲存' : '加入！'}</button>
-  </div>`;
+    <button class="btn red wide" id="joinBtn">${editing ? '儲存' : '加入！'}</button></div>`;
   $('nm').oninput = (e) => form.name = e.target.value;
   document.querySelectorAll('[data-r]').forEach((b) => b.onclick = () => { form.role = b.dataset.r; renderJoin(editing); });
   document.querySelectorAll('[data-a]').forEach((b) => b.onclick = () => { form.avatar = b.dataset.a; renderJoin(editing); });
@@ -301,7 +364,7 @@ function renderJoin(editing) {
     form.name = $('nm').value.trim();
     if (!form.name) { $('nm').focus(); $('nm').classList.add('shake'); return; }
     profile = { name: form.name, role: form.role, avatar: form.avatar };
-    ls('wy26_prof_' + ROOM, JSON.stringify(profile)); ls('wy26_prof_last', JSON.stringify(profile));
+    ls('wy26v2_prof_' + ROOM + PID, JSON.stringify(profile)); ls('wy26v2_prof_last', JSON.stringify(profile));
     send(Object.assign({ t: 'join' }, profile));
     $('joinBtn').disabled = true; $('joinBtn').textContent = '加入中…';
     keepAwake();
@@ -309,36 +372,38 @@ function renderJoin(editing) {
   };
 }
 
-/* ---------- 主持人模式 ---------- */
+/* ---------- 主持人 ---------- */
 function mc(cmd, extra) { send(Object.assign({ t: 'mc', key: MC, cmd }, extra || {})); vib(30); }
 function renderMC() {
-  const cp = S.players[curPid()];
+  const cp = P(curPid());
   const pd = S.pending;
+  const PH = { lobby: '大廳等待中', roll: '等待擲骰', rolling: '擲骰中', moving: '移動中', card: '事件中', result: '結果', ended: '已結束', turn: '換人', privilege: '首富特權' };
   let h = `<div class="card"><h2>🎙️ 主持人控制台</h2>
-    <div style="font-weight:900">階段：${{ lobby: '大廳等待中', roll: '等待擲骰', rolling: '擲骰中', moving: '移動中', card: '事件中', result: '結果', skip: '暫停', ended: '已結束', turn: '換人' }[S.phase] || S.phase}${cp && S.phase !== 'lobby' ? `・輪到 ${cp.avatar} ${esc(cp.name)}` : ''}</div>
+    <div style="font-weight:900">${PH[S.phase] || S.phase}${cp && inGame() ? `・輪到 ${cp.avatar} ${esc(cp.name)}` : ''}</div>
     <div style="font-weight:700;color:var(--muted);font-size:14px">第 ${S.round}/${S.maxRounds} 輪・${S.order.length} 位玩家</div></div>`;
   if (S.card) h += `<div class="card">${cardMini()}</div>`;
   if (pd) {
-    const who = S.players[pd.pid];
-    h += `<div class="card"><h2>${pd.by === 'mc' ? '請判定' : `代 ${who ? esc(who.name) : ''} 選擇`}：${esc(pd.title)}</h2>
-      <div class="opts" style="display:flex;flex-direction:column;gap:10px">${pd.options.map((o, i) => `<button class="btn ${pd.by === 'mc' ? (i ? 'paper' : 'green') : 'paper'}" style="font-size:22px;padding:14px" data-mv="${o.v}">${esc(o.label)}</button>`).join('')}</div></div>`;
+    let opts = pd.options || [];
+    let title = pd.title || '';
+    if (pd.kind === 'game' || pd.kind === 'rush' || pd.kind === 'tip' || pd.kind === 'vote') { opts = [{ v: '__end', label: '提早結束這一段' }]; title = { game: '小遊戲進行中', rush: '全場搶按中', tip: '打賞中', vote: '投票中' }[pd.kind]; }
+    if (pd.kind === 'realpk') opts = pd.players.map((x) => ({ v: x, label: `${P(x).avatar} ${P(x).name} 贏` }));
+    const who = pd.pid && P(pd.pid);
+    h += `<div class="card"><h2>${who && pd.by === 'player' ? `代 ${esc(who.name)} 選：` : ''}${esc(title)}</h2>
+      <div class="opts">${opts.map((o) => `<button class="btn paper" style="font-size:20px;padding:13px" data-mv="${esc(o.v)}"><span>${esc(o.label)}</span></button>`).join('')}</div></div>`;
   }
   h += `<div class="card"><div class="mcgrid">
       ${S.phase === 'lobby' ? '<button class="btn red" data-c="start">開始遊戲</button>' : ''}
       <button class="btn" data-c="roll" ${S.phase !== 'roll' ? 'disabled' : ''}>代擲骰子</button>
-      <button class="btn paper" data-c="next" ${S.phase === 'lobby' || S.phase === 'ended' ? 'disabled' : ''}>跳到下一位</button>
-      <button class="btn red" data-c="end" ${S.phase === 'lobby' || S.phase === 'ended' ? 'disabled' : ''}>結束遊戲</button>
+      <button class="btn paper" data-c="next" ${!inGame() || S.phase === 'privilege' ? 'disabled' : ''}>跳到下一位</button>
+      <button class="btn red" data-c="end" ${!inGame() || S.phase === 'privilege' ? 'disabled' : ''}>結束遊戲</button>
     </div></div>`;
   h += `<div class="card"><h2 style="font-size:18px">手動加扣錢</h2>${ranked().map((p) => `
     <div class="adj"><span>${p.avatar} ${esc(p.name)}・${p.coins}</span>
       <button class="btn sm red" data-adj="${p.pid}" data-n="-50">-50</button><button class="btn sm paper" data-adj="${p.pid}" data-n="-10">-10</button>
       <button class="btn sm paper" data-adj="${p.pid}" data-n="10">+10</button><button class="btn sm" data-adj="${p.pid}" data-n="50">+50</button></div>`).join('')}</div>`;
   app.innerHTML = h;
-  document.querySelectorAll('[data-mv]').forEach((b) => b.onclick = () => { mc('choose', { id: pd.id, v: b.dataset.mv }); b.disabled = true; });
-  document.querySelectorAll('[data-c]').forEach((b) => b.onclick = () => {
-    if (b.dataset.c === 'end' && !confirm('確定結束遊戲進入結算？')) return;
-    mc(b.dataset.c);
-  });
+  document.querySelectorAll('[data-mv]').forEach((b) => b.onclick = () => { mc('choose', { id: pd.id, v: b.dataset.mv === '__end' ? null : b.dataset.mv }); b.disabled = true; });
+  document.querySelectorAll('[data-c]').forEach((b) => b.onclick = () => { if (b.dataset.c === 'end' && !confirm('確定結束遊戲，進入首富特權和結算？')) return; mc(b.dataset.c); });
   document.querySelectorAll('[data-adj]').forEach((b) => b.onclick = () => mc('adj', { pid: b.dataset.adj, n: +b.dataset.n }));
 }
 </script>
