@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#f9c9b5">
 <title>藝途發財夢｜手機控制器</title>
-<link rel="stylesheet" href="assets/style.css?v=20261113d">
+<link rel="stylesheet" href="assets/style.css?v=20261113e">
 <style>
   body { min-height: 100svh; padding: 14px 16px calc(24px + env(safe-area-inset-bottom)); max-width: 520px; margin: 0 auto; user-select: none; -webkit-user-select: none; }
   header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
@@ -78,6 +78,11 @@
   .modal .card { width: 100%; text-align: center; }
   .hidden { display: none !important; }
   .shake { animation: shake .4s ease 2; }
+  .cfx { position: fixed; left: 50%; top: 42%; z-index: 150; pointer-events: none; text-align: center; transform: translate(-50%, -50%); animation: cfx 1.9s ease forwards; }
+  .cfx .a { font-size: 110px; font-weight: 900; line-height: 1; -webkit-text-stroke: 8px var(--ink); paint-order: stroke fill; text-shadow: 0 7px 0 var(--ink); }
+  .cfx.plus .a { color: var(--yellow); } .cfx.minus .a { color: #ff6b5a; }
+  .cfx .u { display: inline-block; margin-top: 8px; font-size: 18px; font-weight: 900; background: var(--ink); color: #fff; border-radius: 99px; padding: 3px 14px; }
+  @keyframes cfx { 0% { transform: translate(-50%, -50%) scale(.2); opacity: 0; } 14% { transform: translate(-50%, -50%) scale(1.15); opacity: 1; } 24% { transform: translate(-50%, -50%) scale(1); } 80% { opacity: 1; transform: translate(-50%, -50%) scale(1); } 100% { opacity: 0; transform: translate(-50%, -80%) scale(.9); } }
 </style>
 </head>
 <body>
@@ -89,9 +94,9 @@
 <div class="modal hidden" id="modal"></div>
 
 <script src="https://unpkg.com/mqtt@5.10.1/dist/mqtt.min.js"></script>
-<script src="assets/game-data.js?v=20261113d"></script>
-<script src="assets/net.js?v=20261113d"></script>
-<script src="assets/games.js?v=20261113d"></script>
+<script src="assets/game-data.js?v=20261113e"></script>
+<script src="assets/net.js?v=20261113e"></script>
+<script src="assets/games.js?v=20261113e"></script>
 <script>
 const G = window.GAME;
 const $ = (id) => document.getElementById(id);
@@ -183,12 +188,35 @@ function modal(html) { $('modal').innerHTML = `<div class="card">${html}</div>`;
 function closeModal() { $('modal').classList.add('hidden'); }
 
 /* ================= 畫面 ================= */
+// 自己的錢變動 → 手機上跳大大的 +N／−N
+let prevCoins = null, coinAcc = 0, coinTimer = null;
+function coinFx(me) {
+  if (me.role === 'guest' || S.phase === 'lobby') { prevCoins = me.coins; return; }
+  if (prevCoins != null && me.coins !== prevCoins) {
+    coinAcc += me.coins - prevCoins;
+    clearTimeout(coinTimer);
+    coinTimer = setTimeout(() => {
+      const n = coinAcc; coinAcc = 0;
+      if (!n) return;
+      document.querySelectorAll('.cfx').forEach((e) => e.remove());
+      const el = document.createElement('div');
+      el.className = 'cfx ' + (n > 0 ? 'plus' : 'minus');
+      el.innerHTML = `<div class="a">${n > 0 ? '+' : '−'}${Math.abs(n)}</div><div class="u">${n > 0 ? '💰' : '💸'} ${G.currency}</div>`;
+      document.body.appendChild(el);
+      vib(n > 0 ? [60, 40, 60] : [200]);
+      setTimeout(() => el.remove(), 1900);
+    }, 200);
+  }
+  prevCoins = me.coins;
+}
+
 function render() {
   if (!S) return;
   if (MC) return renderMC();
   if (editingNow) return;
   const me = P(PID);
   if (!me) { if (document.activeElement && document.activeElement.id === 'nm') return; return renderJoin(); }
+  coinFx(me);
   handleLaunches(me);
   const pd = S.pending;
   const k = pd ? pd.id : S.phase + S.turn;

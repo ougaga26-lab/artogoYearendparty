@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>藝途發財夢｜主畫面</title>
-<link rel="stylesheet" href="assets/style.css?v=20261113d">
+<link rel="stylesheet" href="assets/style.css?v=20261113e">
 <style>
   body { overflow: hidden; height: 100vh; }
 
@@ -123,6 +123,35 @@
   .row { display: grid; grid-template-columns: 26px 40px 1fr auto; align-items: center; gap: 8px; background: #fff; border: 2px solid var(--ink); border-radius: 12px; padding: 5px 10px; }
   .row.cur { background: var(--yellow); }
   .row.bump { animation: pop .5s ease; }
+  .row.up { background: #b7f0c4 !important; } .row.down { background: #ffc2b8 !important; }
+
+  /* 加扣錢大動畫 */
+  .bigfx { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 30; pointer-events: none; display: flex; flex-direction: column; align-items: center; animation: bigin 2s ease forwards; }
+  .bigfx:not(.multi)::before { content: ''; position: absolute; left: 50%; top: 50%; width: 62cqw; height: 62cqw; transform: translate(-50%, -50%); border-radius: 50%; z-index: -1;
+    background: radial-gradient(circle, rgba(255,246,220,.97) 0%, rgba(255,246,220,.94) 45%, rgba(255,246,220,0) 70%); }
+  .bigfx.minus::before { background: radial-gradient(circle, rgba(255,226,220,.97) 0%, rgba(255,226,220,.94) 45%, rgba(255,226,220,0) 70%) !important; }
+  .bigfx .who { display: flex; align-items: center; gap: 1.2cqw; background: #fff; border: 4px solid var(--ink); border-radius: 99px; padding: .6cqw 2.4cqw .6cqw .8cqw; box-shadow: 0 .6cqw 0 var(--ink); font-size: 3.6cqw; font-weight: 900; }
+  .bigfx .who .avatar { width: 6cqw; height: 6cqw; font-size: 3.8cqw; }
+  .bigfx .amt { font-size: 17cqw; font-weight: 900; line-height: 1; margin-top: .4cqw; -webkit-text-stroke: 1.3cqw var(--ink); paint-order: stroke fill; text-shadow: 0 1.1cqw 0 var(--ink); letter-spacing: -.02em; }
+  .bigfx.plus .amt { color: var(--yellow); } .bigfx.minus .amt { color: #ff6b5a; }
+  .bigfx.minus { animation: bigin 2s ease forwards, wob .4s ease .15s 2; }
+  .bigfx .unit { font-size: 2.6cqw; font-weight: 900; background: var(--ink); color: #fff; border-radius: 99px; padding: .2cqw 1.6cqw; margin-top: .6cqw; }
+  .bigfx .burst { position: absolute; left: 50%; top: 55%; }
+  .bigfx .burst i { position: absolute; font-style: normal; font-size: 4cqw; transform: translate(-50%, -50%); animation: burst 1.1s ease-out var(--d) forwards; opacity: 0; }
+  .bigfx.minus .burst i { animation-name: fall; }
+  @keyframes bigin { 0% { transform: translate(-50%, -50%) scale(.2); opacity: 0; } 12% { transform: translate(-50%, -50%) scale(1.15); opacity: 1; } 22% { transform: translate(-50%, -50%) scale(1); } 80% { transform: translate(-50%, -50%) scale(1); opacity: 1; } 100% { transform: translate(-50%, -75%) scale(.9); opacity: 0; } }
+  @keyframes wob { 25% { margin-left: -1.5cqw; } 75% { margin-left: 1.5cqw; } }
+  @keyframes burst { 0% { opacity: 1; transform: translate(-50%, -50%) rotate(var(--a)) translateY(0); } 100% { opacity: 0; transform: translate(-50%, -50%) rotate(var(--a)) translateY(-26cqw); } }
+  @keyframes fall { 0% { opacity: 1; transform: translate(-50%, -50%) rotate(var(--a)) translateY(-6cqw) rotate(calc(-1 * var(--a))); } 100% { opacity: 0; transform: translate(-50%, -50%) rotate(var(--a)) translateY(-6cqw) rotate(calc(-1 * var(--a))) translateY(22cqw); } }
+  .bigfx.multi { background: var(--paper); border: 4px solid var(--ink); border-radius: 22px; box-shadow: 0 .8cqw 0 var(--ink); padding: 2cqw 2.4cqw; gap: 1.4cqw; max-width: 74cqw; animation-duration: 2.8s; }
+  .bigfx .why { font-size: 3cqw; font-weight: 900; }
+  .bigfx .mgrid { display: grid; grid-template-columns: repeat(3, auto); gap: 1cqw 1.6cqw; }
+  .bigfx .mchip { display: flex; align-items: center; gap: .8cqw; font-weight: 900; animation: pop .45s ease both; }
+  .bigfx .mchip .avatar { width: 4.6cqw; height: 4.6cqw; font-size: 2.9cqw; }
+  .bigfx .mchip .mn { font-size: 2.4cqw; white-space: nowrap; }
+  .bigfx .who span { white-space: nowrap; }
+  .bigfx .mchip .ma { font-size: 4.4cqw; -webkit-text-stroke: .5cqw var(--ink); paint-order: stroke fill; }
+  .bigfx .mchip.plus .ma { color: var(--yellow); } .bigfx .mchip.minus .ma { color: #ff6b5a; }
   .row .rk { font-weight: 900; font-size: 18px; text-align: center; }
   .row .avatar { width: 38px; height: 38px; font-size: 22px; }
   .row .nm { font-weight: 900; font-size: 18px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
@@ -300,9 +329,9 @@
 
 <script src="https://unpkg.com/mqtt@5.10.1/dist/mqtt.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-<script src="assets/game-data.js?v=20261113d"></script>
-<script src="assets/net.js?v=20261113d"></script>
-<script src="assets/broadcast.js?v=20261113d"></script>
+<script src="assets/game-data.js?v=20261113e"></script>
+<script src="assets/net.js?v=20261113e"></script>
+<script src="assets/broadcast.js?v=20261113e"></script>
 <script>
 const G = window.GAME;
 const N = G.tiles.length;
@@ -411,7 +440,7 @@ function onMsg(m) {
         const used = pd.res[m.pid] || 0;
         const add = Math.max(0, Math.min(20 - used, m.n | 0));
         for (let i = 0; i < Math.min(m.n | 0, 6); i++) setTimeout(spawnHeart, i * 90);
-        if (add) { pd.res[m.pid] = used + add; pd.total = (pd.total || 0) + add; addCoins(P(pd.pid), add, true); sync(); }
+        if (add) { pd.res[m.pid] = used + add; pd.total = (pd.total || 0) + add; addCoins(P(pd.pid), add, true, false); sync(); }
       }
       break;
     case 'usePeek': {
@@ -703,6 +732,7 @@ async function tipPhase(p) {
   setLive(`💸 董事會打賞時間！外賓狂按手機打賞 ${p.name}`);
   await collect(pd, 10000);
   setStatus(`董事會共打賞 ${pd.total || 0} 幣！`);
+  if (pd.total) queueBigFx(p, pd.total);
   await sleep(1600);
 }
 
@@ -951,14 +981,46 @@ async function rushFlow(cfg) {
   await sleep(3200);
 }
 
-function addCoins(p, n, quiet) {
+function addCoins(p, n, quiet, big = true) {
   if (!p || !n) return;
   const before = p.coins;
   p.coins = Math.max(0, p.coins + n);
   const real = p.coins - before;
   if (!real) return;
-  fxNumber(p, real); bumpRow(p.pid);
+  fxNumber(p, real); bumpRow(p.pid, real);
+  if (big) queueBigFx(p, real);
   if (!quiet) sfx(real > 0 ? 'coin' : 'lose');
+}
+
+/* ---------- 加扣錢大動畫：同一瞬間的變動合併成一次顯示 ---------- */
+let fxBatch = [], fxTimer = null;
+function queueBigFx(p, n) {
+  const hit = fxBatch.find((x) => x.p === p);
+  if (hit) hit.n += n; else fxBatch.push({ p, n });
+  clearTimeout(fxTimer);
+  fxTimer = setTimeout(showBigFx, 140);
+}
+function showBigFx() {
+  const batch = fxBatch.filter((x) => x.n); fxBatch = [];
+  if (!batch.length) return;
+  document.querySelectorAll('.bigfx').forEach((e) => e.remove());
+  const el = document.createElement('div');
+  const why = S.card && S.card.title ? `${S.card.icon || ''} ${esc(S.card.title)}` : '';
+  const amt = (n) => `${n > 0 ? '+' : '−'}${Math.abs(n)}`;
+  if (batch.length === 1) {
+    const { p, n } = batch[0];
+    el.className = `bigfx ${n > 0 ? 'plus' : 'minus'}`;
+    el.innerHTML = `<div class="who">${avatarHTML(p)}<span>${esc(p.name)}</span></div><div class="amt">${amt(n)}</div><div class="unit">${G.currency}</div>
+      <div class="burst">${Array.from({ length: 10 }, (_, i) => `<i style="--a:${i * 36}deg;--d:${0.04 * i}s">${n > 0 ? '💰' : '💸'}</i>`).join('')}</div>`;
+    sfx(n > 0 ? 'big' : 'bigLose');
+  } else {
+    batch.sort((a, b) => b.n - a.n);
+    el.className = 'bigfx multi';
+    el.innerHTML = `${why ? `<div class="why">${why}</div>` : ''}<div class="mgrid">${batch.map(({ p, n }, i) => `<div class="mchip ${n > 0 ? 'plus' : 'minus'}" style="animation-delay:${i * 0.07}s">${avatarHTML(p)}<span class="mn">${esc(p.name)}</span><span class="ma">${amt(n)}</span></div>`).join('')}</div>`;
+    sfx('big');
+  }
+  $('board').appendChild(el);
+  setTimeout(() => el.remove(), batch.length === 1 ? 2000 : 2800);
 }
 
 /* ================= 結算 ================= */
@@ -1140,7 +1202,8 @@ function renderLB() {
     const g = giftOf(p.pid);
     const gift = p.role === 'probation' ? '<span class="gtag rp">🧧 紅包</span>'
       : g ? `<span class="gtag t${g.tier}">🎁 ${esc(giftText(g))}${g.locked ? ' 🔒' : g.steals ? ' ' + '●'.repeat(g.steals) : ''}</span>` : '';
-    return `<div class="row${p.pid === cp && inGame() ? ' cur' : ''}" id="row_${p.pid}">
+    const fl = rowFlash[p.pid] && rowFlash[p.pid].until > Date.now() ? ' ' + rowFlash[p.pid].dir : '';
+    return `<div class="row${p.pid === cp && inGame() ? ' cur' : ''}${fl}" id="row_${p.pid}">
       <span class="rk">${i + 1}</span>${avatarHTML(p)}
       <div style="min-width:0"><div class="nm">${esc(p.name)}</div>
       <div class="meta">${gift}${p.items.map((it) => G.items[it].icon).join('')}${p.on ? '' : ' 📴'}</div></div>
@@ -1149,7 +1212,12 @@ function renderLB() {
   const gs = guests();
   $('guestsLine').innerHTML = gs.length ? `🏛️ 董事會：${gs.map((g) => `${g.avatar}${esc(g.name)}${g.on ? '' : '📴'}`).join('　')}` : '';
 }
-function bumpRow(pid) { requestAnimationFrame(() => { const r = $('row_' + pid); if (r) { r.classList.remove('bump'); void r.offsetWidth; r.classList.add('bump'); } }); }
+const rowFlash = {};
+function bumpRow(pid, n) {
+  rowFlash[pid] = { dir: n > 0 ? 'up' : 'down', until: Date.now() + 1800 };
+  renderLB();
+  setTimeout(renderLB, 1900);
+}
 
 function tileCenter(i) { const t = $('tile' + i); return { x: t.offsetLeft + t.offsetWidth / 2, y: t.offsetTop + t.offsetHeight / 2 + t.offsetHeight * 0.08, w: t.offsetWidth }; }
 function renderTokens() {
@@ -1355,6 +1423,8 @@ function sfx(k) {
     case 'turn': tone(784, 0.12, 'triangle', 0.07); tone(1047, 0.2, 'triangle', 0.07, 0.12); break;
     case 'join': tone(1047, 0.1, 'triangle', 0.06); break;
     case 'fanfare': [523, 659, 784, 1047, 784, 1047].forEach((f, i) => tone(f, 0.22, 'square', 0.05, i * 0.13)); break;
+    case 'big': [784, 988, 1175, 1568].forEach((f, i) => tone(f, 0.16, 'square', 0.06, i * 0.07)); tone(2093, 0.4, 'triangle', 0.05, 0.3); break;
+    case 'bigLose': [392, 349, 311, 262].forEach((f, i) => tone(f, 0.22, 'sawtooth', 0.05, i * 0.11)); break;
   }
 }
 
