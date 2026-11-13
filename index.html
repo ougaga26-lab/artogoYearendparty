@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>藝途發財夢｜主畫面</title>
-<link rel="stylesheet" href="assets/style.css?v=20261113e">
+<link rel="stylesheet" href="assets/style.css?v=20261113f">
 <style>
   body { overflow: hidden; height: 100vh; }
 
@@ -232,6 +232,84 @@
   .toast { background: var(--ink); color: #fff; font-weight: 900; font-size: 20px; padding: 10px 22px; border-radius: 99px; animation: pop .3s ease; }
   .heart { position: fixed; bottom: -40px; z-index: 70; font-size: 34px; pointer-events: none; animation: up 2.4s ease-out forwards; }
   @keyframes up { to { transform: translateY(-75vh) scale(1.3); opacity: 0; } }
+
+  /* ---------- 開場抽獎典禮 ---------- */
+  .overlay.cer { z-index: 55; overflow: hidden; }
+  .cer-wrap { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2.4vh; padding: 3vh 4vw 9vh; }
+  .cer-title { font-size: clamp(40px, 5.2vw, 100px); -webkit-text-stroke-width: 10px; text-shadow: 0 8px 0 var(--ink); text-align: center; line-height: 1.15; }
+  .cer-title .avatar { width: 1.1em; height: 1.1em; font-size: .7em; vertical-align: -.1em; -webkit-text-stroke: 0; }
+  .cer-sub { font-size: clamp(18px, 1.7vw, 30px); font-weight: 900; text-align: center; }
+  .cer-body { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 2.4vh; }
+  .cer-skip { position: fixed; right: 18px; bottom: 16px; z-index: 3; opacity: .75; }
+  .cer-count { font-size: clamp(70px, 10vw, 190px); font-weight: 900; line-height: 1; color: var(--yellow); -webkit-text-stroke: 10px var(--ink); paint-order: stroke fill; text-shadow: 0 10px 0 var(--ink); min-height: 1em; text-align: center; }
+  .cer-count small { display: block; font-size: .3em; -webkit-text-stroke: 5px var(--ink); text-shadow: 0 4px 0 var(--ink); }
+  .cer-count.go { color: #ff6b5a; }
+  .cer-count.pop { animation: pop .25s ease; }
+  .srace { width: min(1150px, 92vw); display: flex; flex-direction: column; gap: 10px; }
+  .srow { display: grid; grid-template-columns: 2.2em 2.4em 7.5em 1fr 3.4em; gap: 14px; align-items: center; font-weight: 900; font-size: clamp(18px, 1.55vw, 28px); }
+  .srow .rk { text-align: center; }
+  .srow .avatar { width: 2.2em; height: 2.2em; font-size: 1.25em; }
+  .srow .nm { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.1; }
+  .srow .nm small { display: block; font-size: .6em; color: var(--muted); }
+  .srow .nm small.ok { color: #2f8a4c; }
+  .srow .bar { height: 1.3em; background: var(--paper); border: 3px solid var(--ink); border-radius: 99px; overflow: hidden; }
+  .srow .bar i { display: block; height: 100%; width: 0; background: var(--c, var(--yellow)); border-right: 3px solid var(--ink); transition: width .25s ease; }
+  .srow .n { text-align: right; font-size: 1.3em; }
+  .srow.first .n { color: var(--red); }
+  .gobtn { font-size: 24px; padding: 12px 36px; }
+  .ostrip { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; max-width: 1400px; }
+  .ostrip .oc { display: flex; align-items: center; gap: 6px; background: var(--paper); border: 3px solid var(--ink); border-radius: 99px; padding: 3px 12px 3px 4px; font-weight: 900; font-size: 17px; }
+  .ostrip .oc .avatar { width: 34px; height: 34px; font-size: 20px; }
+  .ostrip .oc.cur { background: var(--yellow); transform: scale(1.1); box-shadow: 0 4px 0 var(--ink); }
+  .ostrip .oc.done { opacity: .75; }
+  .boxes { display: flex; flex-wrap: wrap; justify-content: center; gap: 2.4vw 2vw; max-width: 1400px; }
+  .gbox { position: relative; width: clamp(100px, 9.5vw, 170px); aspect-ratio: 1; flex: none; }
+  .gbox .bx { position: absolute; left: 7%; right: 7%; top: 30%; bottom: 0; background: var(--red); border: 4px solid var(--ink); border-radius: 10px; box-shadow: 0 7px 0 var(--ink); }
+  .gbox .lid { position: absolute; left: 0; right: 0; top: 14%; height: 20%; background: #ff7a68; border: 4px solid var(--ink); border-radius: 9px; z-index: 1; }
+  .gbox .rib { position: absolute; left: 50%; top: 14%; bottom: 0; width: 15%; transform: translateX(-50%); background: var(--yellow); border-left: 4px solid var(--ink); border-right: 4px solid var(--ink); z-index: 2; }
+  .gbox .bow { position: absolute; left: 50%; top: 0; width: 46%; height: 18%; transform: translateX(-50%); z-index: 3; }
+  .gbox .bow::before, .gbox .bow::after { content: ''; position: absolute; top: 0; width: 50%; height: 100%; background: var(--yellow); border: 4px solid var(--ink); border-radius: 50% 50% 10% 50%; }
+  .gbox .bow::before { left: 0; transform: rotate(-12deg); } .gbox .bow::after { right: 0; transform: scaleX(-1) rotate(-12deg); }
+  .gbox .num { position: absolute; left: 50%; top: 64%; transform: translate(-50%, -50%); z-index: 4; background: var(--paper); border: 3px solid var(--ink); border-radius: 99px; font-weight: 900; font-size: clamp(18px, 1.7vw, 30px); padding: 0 .45em; line-height: 1.3; }
+  .gbox .stk { position: absolute; right: -12px; top: 4px; z-index: 5; }
+  .gbox .stk .avatar { width: clamp(36px, 3vw, 54px); height: clamp(36px, 3vw, 54px); font-size: clamp(20px, 1.8vw, 32px); }
+  .gbox .bet { position: absolute; left: -10px; top: 4px; z-index: 5; background: var(--lilac); border: 3px solid var(--ink); border-radius: 99px; font-weight: 900; font-size: 15px; padding: 0 8px; }
+  .gbox.taken .bx, .gbox.taken .lid { filter: saturate(.55); }
+  .gbox.opened { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; background: var(--paper); border: 4px solid var(--ink); border-radius: 14px; box-shadow: 0 6px 0 var(--ink); font-weight: 900; text-align: center; }
+  .gbox.opened .t { font-size: clamp(20px, 1.9vw, 34px); padding: 0 .4em; border: 3px solid var(--ink); border-radius: 10px; }
+  .gbox.opened .t.t1 { background: var(--yellow); } .gbox.opened .t.t2 { background: #dfe6ee; } .gbox.opened .t.t3 { background: #f0c39a; } .gbox.opened .t.t4 { background: #fff; }
+  .gbox.opened .avatar { width: clamp(34px, 3vw, 52px); height: clamp(34px, 3vw, 52px); font-size: clamp(20px, 1.8vw, 30px); }
+  .gbox.opened .w { font-size: clamp(13px, 1vw, 18px); white-space: nowrap; max-width: 95%; overflow: hidden; text-overflow: ellipsis; }
+  .gbox.big { width: clamp(220px, 24vw, 420px); animation: wob var(--sp, 1s) ease-in-out infinite; }
+  .gbox.big .num { font-size: clamp(30px, 3vw, 56px); }
+  .gbox.redenv { display: grid; place-items: center; font-size: clamp(150px, 17vw, 300px); line-height: 1; }
+  @keyframes wob { 0%, 100% { transform: rotate(calc(var(--amp, 0deg) * -1)) scale(var(--sc, 1)); } 50% { transform: rotate(var(--amp, 0deg)) scale(var(--sc, 1)); } }
+  .pbar { width: min(560px, 80vw); height: 34px; background: var(--paper); border: 4px solid var(--ink); border-radius: 99px; overflow: hidden; box-shadow: 0 5px 0 var(--ink); }
+  .pbar i { display: block; height: 100%; width: 0; background: var(--yellow); border-right: 3px solid var(--ink); transition: width .15s ease; }
+  .cbets { font-weight: 900; font-size: 18px; background: var(--paper); border: 3px solid var(--ink); border-radius: 12px; padding: 6px 14px; }
+  .dgrid { display: flex; flex-wrap: wrap; gap: 14px; justify-content: center; max-width: 1400px; }
+  .dcard { width: 170px; padding: 14px 10px; text-align: center; font-weight: 900; animation: pop .4s ease both; }
+  .dcard .avatar { width: 58px; height: 58px; font-size: 34px; }
+  .dcard .nm { font-size: 20px; margin: 4px 0 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .dcard .gtag { font-size: 18px; padding: 1px 10px; }
+  .dcard .gn { font-size: 13px; color: var(--muted); margin-top: 4px; min-height: 1.2em; }
+  .cer-reveal { position: fixed; inset: 0; z-index: 6; display: grid; place-items: center; background: rgba(31,42,58,.6); overflow: hidden; }
+  .rv { position: relative; text-align: center; animation: rvpop .75s cubic-bezier(.2, 1.5, .4, 1) both; }
+  .rv .rays { position: absolute; left: 50%; top: 50%; width: 150vmax; height: 150vmax; margin: -75vmax 0 0 -75vmax; background: repeating-conic-gradient(rgba(255,255,255,.16) 0 9deg, transparent 9deg 18deg); animation: spin 16s linear infinite; z-index: -1; border-radius: 50%; }
+  .rv.t1 .rays { background: repeating-conic-gradient(rgba(247,201,72,.45) 0 9deg, transparent 9deg 18deg); animation-duration: 8s; }
+  .rv .c0 { background: var(--paper); border: 5px solid var(--ink); border-radius: 28px; box-shadow: 0 14px 0 var(--ink); padding: 30px 64px 34px; min-width: min(640px, 86vw); }
+  .rv .who { display: flex; align-items: center; justify-content: center; gap: 14px; font-size: clamp(26px, 2.6vw, 46px); font-weight: 900; }
+  .rv .who .avatar { width: 1.6em; height: 1.6em; font-size: 1em; }
+  .rv .lbl { font-size: clamp(18px, 1.6vw, 28px); font-weight: 900; color: var(--muted); margin-top: 6px; }
+  .rv .tier { font-size: clamp(90px, 10.5vw, 200px); font-weight: 900; line-height: 1.1; -webkit-text-stroke: 10px var(--ink); paint-order: stroke fill; text-shadow: 0 10px 0 var(--ink); color: #fff; }
+  .rv.t1 .tier { color: var(--yellow); animation: pulse 1s ease-in-out infinite; } .rv.t2 .tier { color: #dfe6ee; } .rv.t3 .tier { color: #f0c39a; } .rv.red .tier { color: #ff6b5a; }
+  .rv .gname { font-size: clamp(26px, 2.6vw, 48px); font-weight: 900; color: var(--red); }
+  .rv .note { font-size: clamp(16px, 1.4vw, 24px); font-weight: 700; color: var(--muted); margin-top: 4px; }
+  @keyframes rvpop { 0% { transform: scale(.15) rotate(-10deg); opacity: 0; } 100% { transform: none; opacity: 1; } }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes pulse { 50% { transform: scale(1.06); } }
+  .cf { position: fixed; top: -30px; z-index: 8; width: 14px; height: 22px; border: 2px solid var(--ink); pointer-events: none; animation: fall linear forwards; }
+  @keyframes fall { to { transform: translateY(112vh) rotate(var(--r, 540deg)); } }
   .hidden { display: none !important; }
 </style>
 </head>
@@ -246,7 +324,7 @@
       <div class="card rules">
         <ol>
           <li>手機<b>掃右邊 QR Code</b>，選身分：正式員工／試用期／外賓</li>
-          <li>正式員工開場會<b>隨機分到一份禮物</b>；試用期同事拿<b>紅包</b>，名次決定金額</li>
+          <li>開場<b>抽獎典禮</b>：搖手機搶順序，正式員工輪流挑禮物盒、當場拆開；試用期拆<b>紅包</b>，名次決定金額</li>
           <li>踩到事件格才知道是好事還是壞事；壞事可以<b>挑戰小遊戲</b>化解</li>
           <li>賺來的藝途幣拿去<b>搶禮物</b>、在 <b>PK 格</b>用對決換禮物</li>
           <li>外賓是<b>董事會</b>：幫人翻命運牌、打賞、投票、押寶誰拿頭獎</li>
@@ -323,15 +401,26 @@
   </aside>
 </div>
 
+<!-- 開場抽獎典禮 -->
+<div class="overlay cer hidden" id="ceremony">
+  <div class="cer-wrap">
+    <h1 class="title-3d cer-title" id="cerTitle"></h1>
+    <div class="cer-sub" id="cerSub"></div>
+    <div class="cer-body" id="cerBody"></div>
+  </div>
+  <button class="btn sm paper cer-skip" id="cerSkip">跳過典禮，直接隨機分</button>
+  <div class="cer-reveal hidden" id="cerReveal"></div>
+</div>
+
 <div class="overlay hidden" id="final"></div>
 <div class="toasts" id="toasts"></div>
 <div class="modal hidden" id="modal"></div>
 
 <script src="https://unpkg.com/mqtt@5.10.1/dist/mqtt.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-<script src="assets/game-data.js?v=20261113e"></script>
-<script src="assets/net.js?v=20261113e"></script>
-<script src="assets/broadcast.js?v=20261113e"></script>
+<script src="assets/game-data.js?v=20261113f"></script>
+<script src="assets/net.js?v=20261113f"></script>
+<script src="assets/broadcast.js?v=20261113f"></script>
 <script>
 const G = window.GAME;
 const N = G.tiles.length;
@@ -379,6 +468,7 @@ function sync() {
   const pub = Object.assign({}, S, { ver: window.APP_VER });
   delete pub.mcKey; delete pub.decks;
   pub.gifts = S.gifts.map((g) => Object.assign({}, g, { name: (g.public || S.phase === 'ended') ? g.name : null }));
+  if (S.cer) pub.cer = Object.assign({}, S.cer, { boxes: S.cer.boxes.map((b) => b.open ? b : Object.assign({}, b, { gift: null })) });
   if (net) net.send({ t: 'state', s: pub }, { retain: true });
   render();
 }
@@ -443,6 +533,33 @@ function onMsg(m) {
         if (add) { pd.res[m.pid] = used + add; pd.total = (pd.total || 0) + add; addCoins(P(pd.pid), add, true, false); sync(); }
       }
       break;
+    case 'ready':
+      if (match && pd.kind === 'shake' && pd.players.includes(m.pid) && !pd.ready[m.pid]) {
+        pd.ready[m.pid] = true; sync(); sfx('join');
+        if (!pd.go && pd.players.every((x) => pd.ready[x] || !(S.players[x] && S.players[x].on))) setTimeout(goShake, 1500);
+      }
+      break;
+    case 'shakeN':
+      if (match && pd.kind === 'shake' && pd.players.includes(m.pid)) { shakeLive[m.pid] = Math.min(400, m.n | 0); paintShake(); }
+      break;
+    case 'shakeDone':
+      if (match && pd.kind === 'shake' && pd.players.includes(m.pid) && !(m.pid in pd.res)) {
+        pd.res[m.pid] = shakeLive[m.pid] = Math.min(400, m.n | 0);
+        if (pd.players.every((x) => x in pd.res || !(S.players[x] && S.players[x].on))) resolvePending(); else sync();
+      }
+      break;
+    case 'power':
+      if (match && pd.kind === 'open' && pd.pid === m.pid) { openPower = Math.max(openPower, Math.min(100, +m.v || 0)); paintPower(); }
+      break;
+    case 'opened':
+      if (match && pd.kind === 'open' && pd.pid === m.pid) resolvePending('opened');
+      break;
+    case 'gbet': {
+      const C = S.cer;
+      const b = C && C.boxes.find((x) => x.n === (m.n | 0));
+      if (S.phase === 'ceremony' && p && p.role === 'guest' && b && !b.open && !C.topOpened) { C.gbets[m.pid] = b.n; sync(); }
+      break;
+    }
     case 'usePeek': {
       const g = S.gifts.find((x) => x.id === m.gift);
       if (p && g && p.items.includes('peek')) { p.items.splice(p.items.indexOf('peek'), 1); privatePeek(p, g); toast(`${p.name} 用了偷看券 👀`); sync(); }
@@ -468,7 +585,7 @@ function handleJoin(m) {
     p = S.players[m.pid] = { pid: m.pid, name, role, avatar, color: G.colors[idx % G.colors.length], pos: 0, coins: G.startCoins, items: [], stats: { wins: 0, bad: 0, steals: 0, laps: 0 }, on: true, bet: null };
     if (role !== 'guest') {
       S.order.push(p.pid);
-      if (inGame() && role === 'staff') { const spare = S.gifts.find((g) => !g.holder); if (spare) spare.holder = p.pid; }
+      if (inGame() && role === 'staff' && S.phase !== 'ceremony') { const spare = S.gifts.find((g) => !g.holder); if (spare) spare.holder = p.pid; }
     }
     toast(`${avatar} ${name} 加入了（${G.roles[role].name}）！`);
     sfx('join');
@@ -488,6 +605,8 @@ function handleMc(m) {
     case 'next': if (inGame()) forceNext(); break;
     case 'end': if (inGame()) endGame(); break;
     case 'choose': if (S.pending && S.pending.id === m.id) resolvePending(m.v); break;
+    case 'cerGo': goShake(); break;
+    case 'cerSkip': skipCeremony(); break;
     case 'adj': { const p = P(m.pid); if (p) { addCoins(p, m.n | 0); sync(); } break; }
   }
 }
@@ -535,15 +654,96 @@ function startGame() {
   cancelChain();
   for (let i = S.order.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [S.order[i], S.order[j]] = [S.order[j], S.order[i]]; }
   for (const p of Object.values(S.players)) Object.assign(p, { pos: 0, coins: G.startCoins, items: [], stats: { wins: 0, bad: 0, steals: 0, laps: 0 } });
-  // 分配禮物
+  // 禮物先裝進盒子，開場典禮再一盒一盒拆
   S.gifts = loadGifts().map((g) => Object.assign({}, g, { holder: null, steals: 0, locked: false }));
-  const staff = boardPlayers().filter((p) => p.role === 'staff').sort(() => Math.random() - 0.5);
-  const gs = S.gifts.slice().sort(() => Math.random() - 0.5);
-  staff.forEach((p, i) => { if (gs[i]) gs[i].holder = p.pid; });
-  Object.assign(S, { phase: 'turn', round: 1, turn: 0, card: null, pending: null, dice: null, final: null, decks: {} });
+  const gs = shuffle(S.gifts.slice());
+  const cer = { step: 'intro', cur: null, openBox: null, boxes: gs.map((g, i) => ({ n: i + 1, gift: g.id, by: null, open: false })), shake: null, gbets: {}, prophets: [], topOpened: false, reveal: null };
+  Object.assign(S, { phase: 'ceremony', round: 1, turn: 0, card: null, pending: null, dice: null, final: null, decks: {}, cer, prophets: [] });
   sfx('fanfare');
-  toast('遊戲開始！禮物已隨機分配');
-  run(startTurn);
+  run(ceremonyFlow);
+}
+
+/* ================= 開場抽獎典禮 ================= */
+// 1. 全員搖手機搶順序 → 2. 正式員工照順序挑禮物盒、搖手機開盒 → 3. 試用期拆紅包 → 4. 開局戰況
+let shakeLive = {}, openPower = 0, goTimer = null;
+function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+
+async function ceremonyFlow() {
+  const C = S.cer;
+  C.step = 'intro'; sync();
+  await sleep(4500);
+  // 搖手機搶順序
+  const ps = boardPlayers();
+  C.step = 'shake'; shakeLive = {};
+  const pd = { kind: 'shake', players: ps.map((p) => p.pid), ready: {}, go: false, goAt: 0 };
+  clearTimeout(goTimer); goTimer = setTimeout(goShake, 30000);
+  const res = await collect(pd, 0);
+  clearTimeout(goTimer);
+  const score = (p) => res[p.pid] ?? shakeLive[p.pid] ?? 0;
+  const ranked = ps.slice().sort((a, b) => score(b) - score(a));
+  C.shake = ranked.map((p) => ({ pid: p.pid, n: score(p) }));
+  S.order = ranked.map((p) => p.pid).concat(S.order.filter((x) => !ranked.some((p) => p.pid === x)));
+  C.step = 'shakeResult'; sync(); sfx('fanfare');
+  await sleep(6000);
+  // 正式員工挑盒子、開盒
+  for (const p of ranked.filter((x) => x.role === 'staff')) {
+    if (!P(p.pid)) continue;
+    const free = C.boxes.filter((b) => !b.by);
+    if (!free.length) { toast(`禮物不夠分，${p.name} 這次沒有禮物`); continue; }
+    C.step = 'pick'; C.cur = p.pid; C.openBox = null;
+    const v = await ask({ kind: 'box', by: 'player', pid: p.pid, title: '挑一個禮物盒！', options: free.map((b) => ({ v: String(b.n), label: '#' + b.n })) }, 25000, String(pickOne(free).n));
+    const box = C.boxes.find((b) => String(b.n) === String(v) && !b.by) || pickOne(C.boxes.filter((b) => !b.by));
+    box.by = p.pid; sync(); sfx('card');
+    await sleep(1200);
+    await openStep(p, box);
+  }
+  // 試用期拆紅包
+  for (const p of ranked.filter((x) => x.role === 'probation')) {
+    if (P(p.pid)) await openStep(p, null);
+  }
+  C.step = 'done'; C.cur = null; C.openBox = null; sync(); sfx('fanfare');
+  await sleep(8000);
+  return finishCeremony();
+}
+async function openStep(p, box) {
+  const C = S.cer;
+  C.step = 'open'; C.cur = p.pid; C.openBox = box ? box.n : null; openPower = 0; sync();
+  await ask({ kind: 'open', pid: p.pid, red: !box }, 25000, null);
+  openPower = 100;
+  let tier = 0;
+  if (box) {
+    const g = S.gifts.find((x) => x.id === box.gift);
+    box.open = true; g.holder = p.pid; tier = g.tier;
+    C.reveal = { k: 'b' + box.n, pid: p.pid, tier, name: g.public ? g.name : null };
+    if (tier === 1) { C.topOpened = true; C.prophets = guests().filter((x) => C.gbets[x.pid] === box.n).map((x) => x.pid); }
+  } else C.reveal = { k: 'r' + p.pid, pid: p.pid, red: true };
+  sync();
+  await sleep(tier === 1 ? 6500 : 4200);
+  C.reveal = null;
+}
+function goShake() {
+  const pd = S.pending;
+  if (!pd || pd.kind !== 'shake' || pd.go) return;
+  pd.go = true; pd.goAt = Date.now(); sync();
+  const id = pd.id;
+  setTimeout(() => { if (S.pending && S.pending.id === id) resolvePending(); }, 3000 + 10000 + 4000);
+}
+function finishCeremony() {
+  // 被跳過或中途有人加入：還沒有禮物的正式員工，隨機分剩下的
+  const C = S.cer || {};
+  const left = shuffle(S.gifts.filter((g) => !g.holder));
+  boardPlayers().filter((p) => p.role === 'staff' && !giftOf(p.pid)).forEach((p) => { const g = left.shift(); if (g) g.holder = p.pid; });
+  S.prophets = C.prophets || [];
+  S.cer = null; S.pending = null; S.phase = 'turn'; S.turn = 0;
+  toast('禮物分好了，開始擲骰子！');
+  return startTurn();
+}
+function skipCeremony() {
+  if (S.phase !== 'ceremony') return;
+  cancelChain();
+  if (S.cer && !S.cer.shake) shuffle(S.order);
+  $('cerReveal').classList.add('hidden');
+  run(finishCeremony);
 }
 
 async function startTurn() {
@@ -570,7 +770,7 @@ function nextTurn() {
   }
   return startTurn();
 }
-function forceNext() { cancelChain(); S.card = null; run(nextTurn); }
+function forceNext() { if (S.phase === 'ceremony') return; cancelChain(); S.card = null; run(nextTurn); }
 
 const d6 = () => 1 + Math.floor(Math.random() * 6);
 async function doRoll() {
@@ -1025,6 +1225,7 @@ function showBigFx() {
 
 /* ================= 結算 ================= */
 function endGame() {
+  if (S.phase === 'ceremony') return;
   cancelChain();
   S.phase = 'privilege'; S.card = null; S.dice = null; S.msg = '首富特權時間！';
   sync();
@@ -1058,6 +1259,7 @@ function finalize() {
     red,
     topHolder: g1 ? g1.holder : null,
     bettors: guests().filter((g) => g1 && g.bet && g.bet === g1.holder).map((g) => g.pid),
+    prophets: (S.prophets || []).filter((x) => P(x)),
     awards: [
       { t: '小遊戲之王', pid: maxBy((p) => p.stats.wins), d: '小遊戲和 PK 贏最多次' },
       { t: '禮物大盜', pid: maxBy((p) => p.stats.steals), d: '搶走最多禮物' },
@@ -1107,7 +1309,7 @@ function render() {
     : '<div class="who">等待開始</div>';
   if (!$('dice').dataset.anim) renderDice(S.dice ? S.dice.vals : []);
   $('msg').textContent = S.msg || '';
-  renderCard(); renderLB(); renderTokens();
+  renderCard(); renderLB(); renderTokens(); renderCeremony();
   $('cRoll').disabled = S.phase !== 'roll';
   document.querySelectorAll('.tile.here').forEach((e) => e.classList.remove('here'));
   if (cp && inGame()) $('tile' + cp.pos).classList.add('here');
@@ -1366,6 +1568,168 @@ function shrink(file) {
   });
 }
 
+/* ---------- 開場抽獎典禮畫面 ---------- */
+let cerKey = '', revealKey = '', lastPowSfx = 0;
+function renderCeremony() {
+  const on = S.phase === 'ceremony' && !!S.cer;
+  $('ceremony').classList.toggle('hidden', !on);
+  if (!on) { cerKey = ''; revealKey = ''; $('cerReveal').classList.add('hidden'); return; }
+  const C = S.cer, pd = S.pending;
+  const k = [C.step, C.cur, pd ? pd.id : 0, pd && pd.go ? 1 : 0, C.boxes.map((b) => (b.by || '') + (b.open ? 1 : 0)).join(','), boardPlayers().length].join('|');
+  if (k !== cerKey) { cerKey = k; buildCeremony(); }
+  paintCeremony();
+  const rk = C.reveal ? C.reveal.k : '';
+  if (rk !== revealKey) {
+    revealKey = rk;
+    const el = $('cerReveal');
+    if (!C.reveal) el.classList.add('hidden');
+    else { el.innerHTML = revealHTML(C.reveal); el.classList.remove('hidden'); celebrate(C.reveal); }
+  }
+}
+const bigBox = (n, cls = '') => `<div class="gbox ${cls}"><div class="bx"></div><div class="lid"></div><div class="rib"></div><div class="bow"></div>${n ? `<div class="num">#${n}</div>` : ''}</div>`;
+function boxesHTML() {
+  return `<div class="boxes">${S.cer.boxes.map((b) => {
+    if (b.open) { const g = S.gifts.find((x) => x.id === b.gift); const h = P(b.by); return `<div class="gbox opened"><div class="t t${g.tier}">${tierName(g)}</div>${h ? avatarHTML(h) : ''}<div class="w">${h ? esc(h.name) : ''}</div></div>`; }
+    const h = b.by && P(b.by);
+    return `<div class="gbox${h ? ' taken' : ''}" id="gb${b.n}"><div class="bx"></div><div class="lid"></div><div class="rib"></div><div class="bow"></div><div class="num">#${b.n}</div>${h ? `<div class="stk">${avatarHTML(h)}</div>` : ''}<div class="bet hidden"></div></div>`;
+  }).join('')}</div>`;
+}
+function orderStrip() {
+  const C = S.cer;
+  if (!C.shake) return '';
+  return `<div class="ostrip">${C.shake.map((x, i) => {
+    const p = P(x.pid); if (!p) return '';
+    const g = giftOf(p.pid);
+    const tag = p.role === 'probation' ? '🧧' : g ? `<span class="gtag t${g.tier}">${tierName(g)}</span>` : '';
+    return `<div class="oc${x.pid === C.cur ? ' cur' : ''}${g ? ' done' : ''}"><span>${i + 1}</span>${avatarHTML(p)}<span>${esc(p.name)}</span>${tag}</div>`;
+  }).join('')}</div>`;
+}
+function buildCeremony() {
+  const C = S.cer, pd = S.pending;
+  const cp = C.cur && P(C.cur);
+  const staffN = boardPlayers().filter((p) => p.role === 'staff').length;
+  const probN = boardPlayers().filter((p) => p.role === 'probation').length;
+  let t = '', s = '', b = '';
+  if (C.step === 'intro') {
+    t = '🎁 開場抽獎典禮';
+    s = '先搖手機搶順序，再輪流上台挑禮物盒、當場拆開！';
+    b = boxesHTML() + `<div class="cer-sub">共 ${C.boxes.length} 份禮物・${staffN} 位正式員工挑盒子${probN ? `・${probN} 位試用期拆紅包` : ''}</div>`;
+  } else if (C.step === 'shake') {
+    t = '📱 搖手機搶順序！';
+    s = pd && pd.go ? '用力搖！搖最多下的人先挑禮物' : '手機上按「我準備好了」，倒數完用力搖 10 秒';
+    b = `<div class="cer-count" id="cerCount">${pd && pd.go ? '' : '準備'}</div><div class="srace">${(pd ? pd.players : []).map((pid) => { const p = P(pid); return p ? `<div class="srow" id="sr_${pid}" style="--c:${p.color}"><span class="rk"></span>${avatarHTML(p)}<span class="nm">${esc(p.name)}<small></small></span><span class="bar"><i></i></span><span class="n">0</span></div>` : ''; }).join('')}</div>`
+      + (pd && !pd.go ? '<button class="btn red gobtn" id="cerGo">人到齊了，開始搖！（空白鍵）</button>' : '');
+  } else if (C.step === 'shakeResult') {
+    t = '🏆 抽獎順序出爐！';
+    s = '搖最多下的人先挑禮物盒（之後擲骰子也照這個順序）';
+    const max = Math.max(20, ...C.shake.map((x) => x.n));
+    b = `<div class="srace">${C.shake.map((x, i) => { const p = P(x.pid); return p ? `<div class="srow${i === 0 ? ' first' : ''}" style="--c:${p.color};animation:pop .4s ease ${i * 0.12}s both"><span class="rk">${['🥇', '🥈', '🥉'][i] || i + 1}</span>${avatarHTML(p)}<span class="nm">${esc(p.name)}<small>${p.role === 'probation' ? '試用期・拆紅包' : p.role === 'staff' ? '挑禮物盒' : ''}</small></span><span class="bar"><i style="width:${x.n / max * 100}%"></i></span><span class="n">${x.n}</span></div>` : ''; }).join('')}</div>`;
+  } else if (C.step === 'pick') {
+    t = cp ? `輪到 ${avatarHTML(cp)} ${esc(cp.name)} 挑盒子！` : '';
+    s = '在手機上選一個號碼・盒子裡是什麼等級，打開才知道';
+    b = orderStrip() + boxesHTML() + (guests().length && !C.topOpened ? '<div class="cbets" id="cerBets"></div>' : '');
+  } else if (C.step === 'open') {
+    const red = !C.openBox;
+    t = cp ? `${avatarHTML(cp)} ${esc(cp.name)} ${red ? '拆紅包！' : `打開 #${C.openBox}！`}` : '';
+    s = '用力搖手機！搖越大力，盒子晃越大';
+    b = (red ? '<div class="gbox big redenv" id="cerBig">🧧</div>' : bigBox(C.openBox, 'big').replace('class="gbox big"', 'class="gbox big" id="cerBig"'))
+      + '<div class="pbar"><i id="cerPow"></i></div>' + orderStrip();
+  } else if (C.step === 'done') {
+    t = '📋 開局戰況';
+    s = '拿到普獎的人別灰心，等等踩到 🎁 格就去搶頭獎！';
+    const list = (C.shake || []).map((x) => P(x.pid)).filter((p) => p && p.role !== 'guest');
+    b = `<div class="dgrid">${list.map((p, i) => { const g = giftOf(p.pid); return `<div class="card dcard" style="animation-delay:${i * 0.1}s">${avatarHTML(p)}<div class="nm">${esc(p.name)}</div>${p.role === 'probation' ? '<span class="gtag rp">🧧 紅包</span><div class="gn">名次決定金額</div>' : g ? `<span class="gtag t${g.tier}">${tierName(g)}</span><div class="gn">${g.public ? esc(g.name) : '內容保密'}</div>` : '<div class="gn">沒有禮物</div>'}</div>`; }).join('')}</div>`;
+  }
+  $('cerTitle').innerHTML = t; $('cerSub').textContent = s; $('cerBody').innerHTML = b;
+  const go = $('cerGo'); if (go) go.onclick = goShake;
+  if (C.step === 'shake') paintShake();
+  if (C.step === 'open') paintPower();
+}
+function paintCeremony() {
+  const C = S.cer;
+  if (C.step === 'shake') paintShake();
+  // 董事會猜頭獎盒
+  const cnt = {};
+  Object.values(C.gbets || {}).forEach((n) => cnt[n] = (cnt[n] || 0) + 1);
+  C.boxes.forEach((b) => { const el = document.querySelector(`#gb${b.n} .bet`); if (el) { el.classList.toggle('hidden', !cnt[b.n] || C.topOpened); el.textContent = `🔮×${cnt[b.n] || 0}`; } });
+  const cb = $('cerBets');
+  if (cb) { const n = Object.keys(C.gbets || {}).length; cb.textContent = `🏛️ 董事會猜頭獎在哪一盒：${n ? `已經 ${n} 位下注` : '還沒有人猜，快拿出手機！'}`; }
+}
+function paintShake() {
+  const pd = S.pending;
+  if (!pd || pd.kind !== 'shake') return;
+  const val = (pid) => (pd.res && pid in pd.res ? pd.res[pid] : shakeLive[pid]) || 0;
+  const max = Math.max(20, ...pd.players.map(val));
+  const order = pd.players.slice().sort((a, b) => val(b) - val(a));
+  pd.players.forEach((pid) => {
+    const row = $('sr_' + pid); if (!row) return;
+    const p = P(pid), n = val(pid);
+    row.querySelector('.bar i').style.width = (n / max * 100) + '%';
+    row.querySelector('.n').textContent = n;
+    row.querySelector('.rk').textContent = pd.go && n ? order.indexOf(pid) + 1 : '';
+    const sm = row.querySelector('small');
+    const done = pd.res && pid in pd.res;
+    sm.textContent = done ? '✔ 完成' : pd.go ? '' : pd.ready[pid] ? '✔ 準備好了' : p && p.on ? '⏳ 還沒按準備' : '離線';
+    sm.className = done || pd.ready[pid] ? 'ok' : '';
+  });
+}
+function paintPower() {
+  const el = $('cerBig'), bar = $('cerPow');
+  if (!el || !bar) return;
+  const p = openPower;
+  bar.style.width = p + '%';
+  el.style.setProperty('--amp', (p < 3 ? 0 : 2 + p * 0.14) + 'deg');
+  el.style.setProperty('--sp', (0.9 - p * 0.0075).toFixed(2) + 's');
+  el.style.setProperty('--sc', (1 + p * 0.0018).toFixed(3));
+  if (p - lastPowSfx >= 8) { lastPowSfx = p; tone(160 + p * 7, 0.08, 'square', 0.05); }
+  if (p < lastPowSfx) lastPowSfx = p;
+}
+let cerCountTxt = '';
+function tickCeremony() {
+  if (!S || S.phase !== 'ceremony' || !S.cer) return;
+  const pd = S.pending, el = $('cerCount');
+  if (!el || !pd || pd.kind !== 'shake' || !pd.go) return;
+  const t = Date.now() - pd.goAt;
+  let txt, go = false;
+  if (t < 3000) txt = String(3 - Math.floor(t / 1000));
+  else if (t < 13000) { txt = `${Math.ceil((13000 - t) / 1000)}<small>用力搖！</small>`; go = true; }
+  else txt = '時間到！';
+  if (txt === cerCountTxt) return;
+  cerCountTxt = txt;
+  el.innerHTML = txt;
+  el.className = 'cer-count pop' + (go ? ' go' : '');
+  if (t < 3000) tone(660, 0.15, 'square', 0.06);
+  else if (t < 3400) tone(1320, 0.3, 'square', 0.07);
+  else if (t >= 13000) sfx('coin');
+}
+function revealHTML(r) {
+  const p = P(r.pid); if (!p) return '';
+  if (r.red) {
+    const amts = G.redPacket.map((x) => x.amount);
+    return `<div class="rv red"><div class="rays"></div><div class="c0"><div class="who">${avatarHTML(p)}${esc(p.name)}</div><div class="lbl">拆開了紅包！</div><div class="tier">🧧 紅包</div><div class="gname">保底 ${Math.min(...amts)} 元</div><div class="note">最後名次越前面越多，最高 ${Math.max(...amts).toLocaleString()} 元</div></div></div>`;
+  }
+  return `<div class="rv t${r.tier}"><div class="rays"></div><div class="c0"><div class="who">${avatarHTML(p)}${esc(p.name)}</div><div class="lbl">抽到了…</div><div class="tier">${G.tiers[r.tier].name}</div>
+    <div class="gname">${r.name ? esc(r.name) : '？？？'}</div><div class="note">${r.name ? '' : '內容保密，最後拆禮物才揭曉'}${r.tier === 1 ? (r.name ? '' : '・') + '全場都想搶這一份！' : ''}</div></div></div>`;
+}
+function celebrate(r) {
+  const n = r.red ? 50 : r.tier === 1 ? 150 : r.tier === 2 ? 70 : 40;
+  const colors = r.tier === 1 ? ['var(--yellow)', '#fff3b0', 'var(--red)', 'var(--yellow)'] : ['var(--yellow)', 'var(--red)', 'var(--mint)', 'var(--sky)', 'var(--lilac)'];
+  for (let i = 0; i < n; i++) {
+    const c = document.createElement('i');
+    c.className = 'cf';
+    c.style.left = Math.random() * 100 + 'vw';
+    c.style.background = colors[i % colors.length];
+    c.style.animationDuration = (2.2 + Math.random() * 2.2) + 's';
+    c.style.animationDelay = (Math.random() * (r.tier === 1 ? 1.6 : 0.6)) + 's';
+    c.style.setProperty('--r', (Math.random() * 1080 - 540) + 'deg');
+    document.body.appendChild(c);
+    setTimeout(() => c.remove(), 5200);
+  }
+  if (r.red) { sfx('coin'); sfx('big'); }
+  else if (r.tier === 1) { sfx('fanfare'); setTimeout(() => sfx('big'), 700); }
+  else sfx('big');
+}
+
 /* ---------- 結算畫面 ---------- */
 function renderFinal() {
   const f = S.final; if (!f) return;
@@ -1388,6 +1752,7 @@ function renderFinal() {
     ${red.length ? `<h3>🧧 紅包</h3><div class="finrow">${red.map(([pid, amt]) => { const p = P(pid); return `<div class="card finbox"><div class="t">第 ${f.ranking.indexOf(pid) + 1} 名</div><div class="w">${p.avatar} ${esc(p.name)}</div><div class="w" style="color:var(--red)">${amt} 元</div></div>`; }).join('')}</div>` : ''}
     <div class="finrow">
       ${guests().length ? `<div class="card finbox"><div class="t">🏛️ 最強董事</div><div class="w">${bettors.length ? bettors.map((b) => b.avatar + ' ' + esc(b.name)).join('、') : '沒有人押中'}</div><div class="d">押中頭獎得主：${f.topHolder && P(f.topHolder) ? esc(P(f.topHolder).name) : '-'}</div></div>` : ''}
+      ${f.prophets && f.prophets.length ? `<div class="card finbox"><div class="t">🔮 開場神預言</div><div class="w">${f.prophets.map((x) => P(x).avatar + ' ' + esc(P(x).name)).join('、')}</div><div class="d">開場就猜中頭獎在哪一盒</div></div>` : ''}
       ${f.awards.map((a) => { const p = P(a.pid); return `<div class="card finbox"><div class="t">${a.t}</div><div class="w">${p.avatar} ${esc(p.name)}</div><div class="d">${a.d}</div></div>`; }).join('')}
     </div>
     <div class="rest">${rk.slice(3).map((p, i) => `<span>${i + 4}. ${p.avatar} ${esc(p.name)} ${p.coins}</span>`).join('')}</div>
@@ -1457,6 +1822,7 @@ function init() {
       S = saved; S.pending = null; qrKey = '';
       connect();
       if (saved.phase === 'privilege') run(privilegeFlow);
+      else if (saved.phase === 'ceremony') { run(finishCeremony); toast('典禮中斷了，剩下的禮物隨機分配'); }
       else if (inProg) { run(startTurn); toast('已恢復上一局，從目前這位玩家重新擲骰'); }
       sync();
     };
@@ -1474,13 +1840,16 @@ function init() {
   $('cRoll').onclick = () => { if (S.phase === 'roll') run(() => doRoll()); };
   $('cNext').onclick = () => { if (inGame() && S.phase !== 'privilege') forceNext(); };
   $('cSound').onclick = () => { soundOn = !soundOn; $('cSound').textContent = '音效：' + (soundOn ? '開' : '關'); };
+  $('cerSkip').onclick = () => { if (confirm('跳過典禮？還沒拆的禮物會直接隨機分配。')) skipCeremony(); };
   $('cEnd').onclick = () => { if (inGame() && S.phase !== 'privilege' && confirm('確定要結束遊戲，進入首富特權和結算嗎？')) endGame(); };
   document.addEventListener('keydown', (e) => {
     if (e.target.tagName === 'INPUT') return;
     if (e.code === 'Space' && S.phase === 'roll') { e.preventDefault(); run(() => doRoll()); }
+    if (e.code === 'Space' && S.phase === 'ceremony') { e.preventDefault(); goShake(); }
     if ((e.key === 'n' || e.key === 'N') && inGame() && S.phase !== 'privilege') forceNext();
   });
   window.addEventListener('resize', renderTokens);
+  setInterval(tickCeremony, 120);
   setInterval(() => {
     const now = Date.now();
     const changed = Object.values(S.players).some((p) => p.on !== (now - (lastSeen[p.pid] || 0) < 25000));
