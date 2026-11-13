@@ -39,7 +39,7 @@
   .kp .ok { background: var(--green); color: #fff; }
   .ans { font-size: 36px; font-weight: 900; min-height: 48px; border-bottom: 3px solid var(--ink); min-width: 140px; text-align: center; }
   .grid-find { display: grid; gap: 2px; width: 100%; max-width: 420px; }
-  .grid-find button { aspect-ratio: 1; border: 0; background: #fff; font-size: 22px; font-weight: 700; font-family: 'Noto Sans TC', monospace; border-radius: 4px; padding: 0; }
+  .grid-find button { aspect-ratio: 1; border: 0; background: #fff; font-size: inherit; font-weight: 700; font-family: 'Noto Sans TC', monospace; border-radius: 4px; padding: 0; }
   .grid-find button.bad { background: #f6a596; }
   .tapbtn { width: 230px; height: 230px; border-radius: 50%; border: 4px solid var(--ink); background: var(--red); color: #fff; font-size: 40px; font-weight: 900; box-shadow: 0 8px 0 var(--ink); }
   .tapbtn:active { transform: translateY(6px); box-shadow: 0 2px 0 var(--ink); }
@@ -159,24 +159,33 @@
         const a = 2 + Math.floor(R() * 8), b = 2 + Math.floor(R() * 8); return [`${a} × ${b}`, a * b];
       };
       const o = overlay();
-      let cur = q(), input = '', score = 0;
-      o.innerHTML = head('🧮 速算', '20 秒內答對越多越好') + `<div class="mg-bar"><i></i></div><div class="mg-body">
-        <div style="font-weight:900">答對 <span id="sc">0</span> 題</div><div class="mg-big" id="q"></div><div class="ans" id="ans"></div>${KP}</div>`;
-      const draw = () => { o.querySelector('#q').textContent = cur[0] + ' = ?'; o.querySelector('#ans').textContent = input; o.querySelector('#sc').textContent = score; report({ stage: 'play', q: cur[0], input, score }); };
+      let cur = q(), input = '', score = 0, wrong = 0, lock = false;
+      o.innerHTML = head('🧮 速算', '20 秒內答對越多越好，答錯直接跳下一題') + `<div class="mg-bar"><i></i></div><div class="mg-body">
+        <div style="font-weight:900">答對 <span id="sc">0</span> 題・答錯 <span id="wr">0</span> 題</div><div class="mg-big" id="q"></div><div class="ans" id="ans"></div>${KP}</div>`;
+      const draw = () => { o.querySelector('#q').textContent = cur[0] + ' = ?'; const an = o.querySelector('#ans'); an.textContent = input; an.style.color = ''; o.querySelector('#sc').textContent = score; o.querySelector('#wr').textContent = wrong; report({ stage: 'play', q: cur[0], input, score, wrong }); };
       draw();
       return new Promise((res) => {
         let done = false;
         const stop = timer(o, 20000, () => { done = true; res(score); });
+        // 答錯：紅字閃一下正確答案，0.5 秒後換下一題
+        const miss = () => {
+          wrong++; lock = true;
+          const an = o.querySelector('#ans');
+          an.textContent = `✗ ${cur[1]}`; an.style.color = 'var(--red)';
+          an.animate([{ transform: 'translateX(-8px)' }, { transform: 'translateX(8px)' }, { transform: 'none' }], 200);
+          try { navigator.vibrate && navigator.vibrate(120); } catch (e) {}
+          setTimeout(() => { lock = false; if (done) return; cur = q(); input = ''; draw(); }, 500);
+        };
         keypad(o, (k) => {
-          if (done) return;
+          if (done || lock) return;
           if (k === 'del') input = input.slice(0, -1);
           else if (k === 'ok') {
-            if (+input === cur[1] && input !== '') { score++; cur = q(); }
-            else { o.querySelector('#ans').animate([{ transform: 'translateX(-8px)' }, { transform: 'translateX(8px)' }, { transform: 'none' }], 200); }
-            input = '';
+            if (input === '') return;
+            if (+input === cur[1]) { score++; cur = q(); input = ''; } else return miss();
           } else if (input.length < 4) {
             input += k;
             if (+input === cur[1] && String(cur[1]).length === input.length) { score++; cur = q(); input = ''; }
+            else if (input.length >= String(cur[1]).length) return miss(); // 位數打滿還不對 → 算錯
           }
           draw();
         });
@@ -190,9 +199,9 @@
       let total = 0;
       for (let round = 0; round < 3; round++) {
         const [norm, odd] = pairs[Math.floor(R() * pairs.length)];
-        const cols = 8, rows = 11, n = cols * rows, oi = Math.floor(R() * n);
+        const cols = [5, 8, 10][round], rows = cols, n = cols * rows, oi = Math.floor(R() * n); // 一關比一關大
         o.innerHTML = head(variant === 'typo' ? '🔍 找錯字' : '🐞 找 Bug', `第 ${round + 1}/3 關：找出唯一的「${odd}」`) + `<div class="mg-body">
-          <div class="grid-find" style="grid-template-columns:repeat(${cols},1fr)">${Array.from({ length: n }, (_, i) => `<button data-i="${i}">${i === oi ? odd : norm}</button>`).join('')}</div></div>`;
+          <div class="grid-find" style="grid-template-columns:repeat(${cols},1fr);font-size:${[30, 20, 16][round]}px">${Array.from({ length: n }, (_, i) => `<button data-i="${i}">${i === oi ? odd : norm}</button>`).join('')}</div></div>`;
         const t0 = now();
         let pen = 0;
         report({ stage: 'play', round: round + 1, wrong: 0, total: r1(total) });
@@ -214,7 +223,7 @@
       const phrase = G.typingPhrases[Math.floor(R() * G.typingPhrases.length)];
       const o = overlay();
       o.innerHTML = head('⌨️ 打字', '一字不差打出下面這句，打對自動完成') + `<div class="mg-bar"><i></i></div><div class="mg-body" style="justify-content:flex-start">
-        <div class="mg-big" style="font-size:28px">${phrase}</div><textarea id="tx" rows="2" autocomplete="off" autocorrect="off" spellcheck="false"></textarea></div>`;
+        <div class="mg-big" style="font-size:24px;line-height:1.4">${phrase}</div><textarea id="tx" rows="2" autocomplete="off" autocorrect="off" spellcheck="false"></textarea></div>`;
       const tx = o.querySelector('#tx');
       setTimeout(() => tx.focus(), 50);
       const t0 = now();
@@ -223,7 +232,7 @@
       return new Promise((res) => {
         let done = false;
         const check = () => { if (!done && tx.value.replace(/\s/g, '') === phrase.replace(/\s/g, '')) { done = true; stop(); tx.blur(); res(r1((now() - t0) / 1000)); } };
-        const stop = timer(o, 40000, () => { if (!done) { done = true; tx.blur(); res(99); } });
+        const stop = timer(o, 45000, () => { if (!done) { done = true; tx.blur(); res(99); } });
         tx.addEventListener('input', check); tx.addEventListener('compositionend', check);
       });
     },
@@ -300,7 +309,7 @@
     // 對齊：分數 = 誤差 %
     async M8(R) {
       const o = overlay();
-      o.innerHTML = head('📐 對齊', '把藍色方塊拖到紅框正中間，按「完成」') + `<div class="mg-bar"><i></i></div><div class="mg-body">
+      o.innerHTML = head('📐 對齊', '5 秒內把藍色方塊拖到紅框正中間！') + `<div class="mg-bar"><i></i></div><div class="mg-body">
         <div class="align-area" id="ar"><div class="align-target" id="tg"></div><div class="align-box" id="bx">印</div></div>
         <button class="btn green" id="done" style="width:100%;font-size:24px">完成！</button></div>`;
       const ar = o.querySelector('#ar'), tg = o.querySelector('#tg'), bx = o.querySelector('#bx');
@@ -318,37 +327,59 @@
       return new Promise((res) => {
         let done = false;
         const finish = () => { if (done) return; done = true; stop(); res(r1(Math.hypot(bxp - tx, byp - ty) / W * 100)); };
-        const stop = timer(o, 20000, finish);
+        const stop = timer(o, 5000, finish); // 時間到就用當下的位置計分
         o.querySelector('#done').onclick = finish;
       });
     },
 
-    // 記憶：分數 = 答對件數（+ 速度小數加分）
+    // 記憶：一關比一關多件作品，點出剛剛有作品的格子，點錯就結束
+    // 分數 = 過了幾關 + 失敗那關答對的比例（例如 2.5 = 過 2 關，第 3 關對一半）
     async M9(R) {
-      const icons = ['🖼️', '🗿', '🏺', '🎨'];
-      const cells = [...Array(9).keys()].sort(() => R() - 0.5).slice(0, 4);
+      const LV = [[3, 3, 3], [4, 3, 3], [5, 4, 4], [6, 4, 4], [7, 5, 4], [8, 5, 5], [9, 5, 5]]; // [件數, 欄, 列]
+      const ART = ['🖼️', '🗿', '🏺', '🎨', '🪞', '🎭', '📜', '🕯️', '🪆'];
       const o = overlay();
-      const grid = (show) => `<div class="mem">${Array.from({ length: 9 }, (_, i) => `<button data-i="${i}">${show && cells.includes(i) ? icons[cells.indexOf(i)] : ''}</button>`).join('')}</div>`;
-      o.innerHTML = head('🧠 記憶', '記住每件作品的位置！') + `<div class="mg-body">${grid(true)}<div class="mg-big" id="cd">3</div></div>`;
-      report({ stage: 'play', mem: 'show', placed: 0 });
-      for (let i = 3; i > 0; i--) { o.querySelector('#cd').textContent = i; await wait(1000); }
-      let correct = 0;
-      const t0 = now();
-      for (let k = 0; k < 4; k++) {
-        o.innerHTML = head('🧠 記憶', '剛剛它在哪一格？') + `<div class="mg-body"><div class="mg-big">${icons[k]}</div>${grid(false)}</div>`;
-        const i = await new Promise((r) => {
-          const to = setTimeout(() => r(-1), 10000);
-          o.querySelectorAll('.mem button').forEach((b) => b.addEventListener('pointerdown', () => { clearTimeout(to); r(+b.dataset.i); }, { once: true }));
+      const t0 = now(), LIMIT = 60000;
+      let score = 0;
+      for (let lv = 0; lv < LV.length; lv++) {
+        if (now() - t0 > LIMIT) break;
+        const [n, cols, rows] = LV[lv];
+        const cnt = cols * rows;
+        const cells = [...Array(cnt).keys()].sort(() => R() - 0.5).slice(0, n);
+        const fs = cols >= 5 ? 28 : cols === 4 ? 34 : 44;
+        const grid = (show) => `<div class="mem" style="grid-template-columns:repeat(${cols},1fr)">${Array.from({ length: cnt }, (_, i) => `<button data-i="${i}" style="font-size:${fs}px">${show && cells.includes(i) ? ART[cells.indexOf(i)] : ''}</button>`).join('')}</div>`;
+        const showMs = 1500 + n * 450;
+        o.innerHTML = head('🧠 記憶', `第 ${lv + 1} 關：記住 ${n} 件作品的位置！`) + `<div class="mg-body">${grid(true)}<div class="mg-big" id="cd"></div></div>`;
+        report({ stage: 'play', mem: 'show', level: lv + 1, n, found: 0 });
+        const tShow = now();
+        while (now() - tShow < showMs) { o.querySelector('#cd').textContent = Math.ceil((showMs - (now() - tShow)) / 1000); await wait(100); }
+        o.innerHTML = head('🧠 記憶', `第 ${lv + 1} 關：點出剛剛有作品的 ${n} 格`) + `<div class="mg-body">${grid(false)}<div class="mg-big" id="cd">0 / ${n}</div></div>`;
+        report({ mem: 'place', level: lv + 1, n, found: 0 });
+        const found = await new Promise((r) => {
+          let k = 0, over = false;
+          const to = setTimeout(() => { over = true; r(k); }, Math.max(1000, LIMIT - (now() - t0)) + 8000);
+          o.querySelectorAll('.mem button').forEach((b) => b.addEventListener('pointerdown', (e) => {
+            e.preventDefault();
+            if (over || b.classList.contains('ok')) return;
+            const i = +b.dataset.i;
+            if (cells.includes(i)) {
+              b.classList.add('ok'); b.textContent = ART[cells.indexOf(i)]; k++;
+              o.querySelector('#cd').textContent = `${k} / ${n}`;
+              report({ found: k });
+              if (k === n) { over = true; clearTimeout(to); r(k); }
+            } else {
+              b.classList.add('no'); over = true; clearTimeout(to);
+              try { navigator.vibrate && navigator.vibrate(150); } catch (e) {}
+              o.querySelectorAll('.mem button').forEach((x) => { const j = +x.dataset.i; if (cells.includes(j) && !x.classList.contains('ok')) x.textContent = ART[cells.indexOf(j)]; });
+              setTimeout(() => r(k), 900);
+            }
+          }));
         });
-        const ok = i === cells[k];
-        if (ok) correct++;
-        report({ mem: 'place', placed: k + 1 });
-        const btn = o.querySelector(`.mem button[data-i="${i}"]`);
-        if (btn) { btn.classList.add(ok ? 'ok' : 'no'); btn.textContent = icons[k]; }
-        await wait(400);
+        if (found < n) { score = lv + found / n; break; }
+        score = lv + 1;
+        o.querySelector('#cd').textContent = '過關！';
+        await wait(600);
       }
-      const t = Math.min(30, (now() - t0) / 1000);
-      return r2(correct + (1 - t / 30) * 0.99);
+      return r2(score);
     },
 
     // 人流估算：分數 = 誤差 %

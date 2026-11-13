@@ -66,8 +66,8 @@
           <div class="b" style="left:${pc(d.box[0])};top:${pc(d.box[1])};width:${pc(d.size)};height:${pc(d.size)}"></div></div>`;
       }
       case 'M9':
-        if (d.mem === 'show') return `<div class="bc-big bc-pulse">👀 記憶中…</div><div class="bc-sub">3 秒記住 4 件作品的位置</div>`;
-        return `<div class="bc-big">擺回 ${d.placed} / 4 件</div><div class="bc-dots">${[1, 2, 3, 4].map((i) => `<i class="${i <= d.placed ? 'on' : ''}"></i>`).join('')}</div>`;
+        if (d.mem === 'show') return `<div class="bc-big bc-pulse">👀 第 ${d.level || 1} 關</div><div class="bc-sub">記住 ${d.n || ''} 件作品的位置</div>`;
+        return `<div class="bc-big">第 ${d.level || 1} 關</div><div class="bc-mid">找到 ${d.found || 0} / ${d.n || ''}</div><div class="bc-dots">${Array.from({ length: d.n || 0 }, (_, i) => `<i class="${i < (d.found || 0) ? 'on' : ''}"></i>`).join('')}</div>`;
       case 'M10':
         if (d.crowd === 'show') return `<div class="bc-big bc-pulse">👥 觀察人潮中…</div>`;
         return `<div class="bc-sub">猜有幾個人？${d.opts ? '（' + d.opts.join('／') + '）' : ''}</div><div class="bc-huge">${esc(d.guess) || '?'}</div>`;

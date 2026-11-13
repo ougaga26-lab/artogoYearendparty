@@ -1,4 +1,4 @@
-window.APP_VER = '20261113m'; // 每次更新程式都改這個版本號，手機會自動要求重新整理
+window.APP_VER = '20261113n'; // 每次更新程式都改這個版本號，手機會自動要求重新整理
 
 /* =========================================================
    藝途發財夢 v2 — 遊戲內容設定檔
@@ -218,14 +218,14 @@ window.GAME = {
   // better: high = 數字越大越好；low = 越小越好。pass = 單人救援過關門檻
   games: {
     M1: { name: '色卡對色', icon: '🎨', desc: '用三條滑桿調出跟目標一樣的顏色', better: 'high', pass: 85, unit: '% 相似' },
-    M2: { name: '速算', icon: '🧮', desc: '20 秒內答對越多題越好', better: 'high', pass: 5, unit: ' 題' },
-    M3: { name: '找 Bug', icon: '🐞', desc: '在一整片字裡找出唯一不一樣的那個，共 3 關', better: 'low', pass: 15, unit: ' 秒' },
+    M2: { name: '速算', icon: '🧮', desc: '20 秒內答對越多題越好，答錯直接跳下一題', better: 'high', pass: 5, unit: ' 題' },
+    M3: { name: '找 Bug', icon: '🐞', desc: '找出唯一不一樣的那個字，3 關越來越大（5×5、8×8、10×10）', better: 'low', pass: 20, unit: ' 秒' },
     M4: { name: '打字', icon: '⌨️', desc: '照著畫面一字不差打出來', better: 'low', pass: 25, unit: ' 秒' },
-    M5: { name: '狂點', icon: '👆', desc: '10 秒內瘋狂點按鈕', better: 'high', pass: 60, unit: ' 下' },
+    M5: { name: '狂點', icon: '👆', desc: '10 秒內瘋狂點按鈕', better: 'high', pass: 70, unit: ' 下' },
     M6: { name: '反應力', icon: '⚡', desc: 'DAINY 出現的瞬間按下去，老闆出現不能按，共 3 次', better: 'low', pass: 0.42, unit: ' 秒' },
-    M7: { name: '精準計時', icon: '⏱️', desc: '憑感覺在剛好 5.00 秒時按停', better: 'low', pass: 0.3, unit: ' 秒誤差' },
-    M8: { name: '對齊', icon: '📐', desc: '把方塊拖到框框的正中間', better: 'low', pass: 3, unit: '% 誤差' },
-    M9: { name: '記憶', icon: '🧠', desc: '記住 4 件作品的位置，再擺回去', better: 'high', pass: 4, unit: ' 件' },
+    M7: { name: '精準計時', icon: '⏱️', desc: '憑感覺在剛好 5.00 秒時按停', better: 'low', pass: 1, unit: ' 秒誤差' },
+    M8: { name: '對齊', icon: '📐', desc: '5 秒內把方塊拖到框框的正中間', better: 'low', pass: 3, unit: '% 誤差' },
+    M9: { name: '記憶', icon: '🧠', desc: '記住作品的位置再點出來，一關比一關多，點錯就結束', better: 'high', pass: 3, unit: ' 關' },
     M10: { name: '人流估算', icon: '👥', desc: '畫面出現一群人 4 秒，從 4 個數字選出正確人數', better: 'low', pass: 15, unit: '% 誤差' },
     S1: { name: '金雞獨立', icon: '🦩', desc: '手機握在胸前單腳站，手機晃太大就出局，最多 60 秒', better: 'high', pass: 30, unit: ' 秒', body: true },
     S2: { name: '搖手機耐力賽', icon: '📱', desc: '60 秒用力搖手機，搖越多下越好', better: 'high', pass: 350, unit: ' 下', body: true },
@@ -236,7 +236,8 @@ window.GAME = {
   pkGames: { M1: 1, M2: 1, M3: 1, M6: 1, M7: 1, M9: 1, R1: 3, R2: 3, S1: 3, S2: 3 },
   pkStakes: [50, 100],   // PK 可以選的賭金
   pkSwapCost: 20,        // 被挑戰的人換項目要付的錢（付給發起的人）
-  typingPhrases: ['台北市藝途路二百號', '尾牙快樂大家發大財', 'DAINY請整理會議記錄', '請在週五前回覆確認', '展覽開幕記得帶名牌'],
+  // 打字句子：大約 16～18 個字，夾一點英文和數字，切換輸入法會更手忙腳亂
+  typingPhrases: ['DAINY請幫我整理上週三的會議紀錄', '客戶說第一版最好但要加第七版的顏色', '老闆說這個禮拜五之前一定要上線喔', '請在週五下班前把12張發票交給會計', '開幕前一晚記得再校一次主視覺的顏色', '官網的404頁面為什麼有一隻跳舞的貓'],
   typoPairs: [['己', '已'], ['未', '末'], ['天', '夭'], ['王', '玉'], ['日', '曰'], ['人', '入'], ['大', '太'], ['土', '士']],
   bugPairs: [['0', 'O'], ['1', 'l'], ['5', 'S'], ['8', 'B']],
 
