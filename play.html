@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#f9c9b5">
 <title>藝途發財夢｜手機控制器</title>
-<link rel="stylesheet" href="assets/style.css?v=20261113f">
+<link rel="stylesheet" href="assets/style.css?v=20261113g">
 <style>
   body { min-height: 100svh; padding: 14px 16px calc(24px + env(safe-area-inset-bottom)); max-width: 520px; margin: 0 auto; user-select: none; -webkit-user-select: none; }
   header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
@@ -112,9 +112,10 @@
 <div class="cerov hidden" id="cerov"></div>
 
 <script src="https://unpkg.com/mqtt@5.10.1/dist/mqtt.min.js"></script>
-<script src="assets/game-data.js?v=20261113f"></script>
-<script src="assets/net.js?v=20261113f"></script>
-<script src="assets/games.js?v=20261113f"></script>
+<script src="assets/game-data.js?v=20261113g"></script>
+<script src="assets/net.js?v=20261113g"></script>
+<script src="assets/games.js?v=20261113g"></script>
+<script src="assets/shake.js?v=20261113g"></script>
 <script>
 const G = window.GAME;
 const $ = (id) => document.getElementById(id);
@@ -365,24 +366,11 @@ function beep(f, d = 0.07, type = 'square', vol = 0.08) {
   if (!pctx) return;
   try { const o = pctx.createOscillator(), gn = pctx.createGain(), t = pctx.currentTime; o.type = type; o.frequency.setValueAtTime(f, t); gn.gain.setValueAtTime(vol, t); gn.gain.exponentialRampToValueAtTime(0.0001, t + d); o.connect(gn).connect(pctx.destination); o.start(t); o.stop(t + d); } catch (e) {}
 }
-function askMotion() { unlockAudio(); try { if (window.DeviceMotionEvent && typeof DeviceMotionEvent.requestPermission === 'function') DeviceMotionEvent.requestPermission().catch(() => {}); } catch (e) {} }
-// 搖一下＝加速度衝過門檻再落回來（像計步器），同一下來回只算一次
-let motionSeen = false, motionHi = false, motionLast = 0, onShake = null;
-window.addEventListener('devicemotion', (e) => {
-  const a = e.acceleration, g = e.accelerationIncludingGravity;
-  let m = null;
-  if (a && a.x != null) m = Math.hypot(a.x, a.y, a.z);
-  else if (g && g.x != null) m = Math.abs(Math.hypot(g.x, g.y, g.z) - 9.8);
-  if (m == null) return;
-  motionSeen = true;
-  if (!onShake) return;
-  const now = Date.now();
-  if (!motionHi && m > 12 && now - motionLast > 90) { motionHi = true; motionLast = now; onShake(); }
-  else if (motionHi && m < 4) motionHi = false;
-});
+function askMotion() { unlockAudio(); Shake.ask(); }
+// 搖晃偵測在 assets/shake.js
 const cer = { id: null };
 function cerShow(html) { const el = $('cerov'); el.innerHTML = html; el.classList.remove('hidden'); }
-function cerClose() { const el = $('cerov'); el.classList.add('hidden'); el.innerHTML = ''; el.onpointerdown = null; cer.id = null; onShake = null; }
+function cerClose() { const el = $('cerov'); el.classList.add('hidden'); el.innerHTML = ''; el.onpointerdown = null; cer.id = null; Shake.off(); }
 function handleCeremony() {
   const pd = S.pending;
   const mine = pd && ((pd.kind === 'shake' && pd.players.includes(PID)) || (pd.kind === 'open' && pd.pid === PID));
@@ -416,15 +404,15 @@ async function runShake(id) {
   const enableTap = () => { tapOn = true; $('shHint').textContent = '狂點螢幕！'; el.onpointerdown = (e) => { e.preventDefault(); unlockAudio(); bump(); }; };
   $('shCnt').textContent = '0'; beep(1320, .3); vib(200);
   $('shHint').textContent = '用力搖！';
-  onShake = bump;
-  if (!motionSeen) enableTap();
+  Shake.on(bump);
+  if (!Shake.seen) enableTap();
   while (Date.now() < end) {
-    if (cer.id !== id) { onShake = null; el.onpointerdown = null; return; }
+    if (cer.id !== id) { Shake.off(); el.onpointerdown = null; return; }
     if (!tapOn && n === 0 && Date.now() > end - 8000) enableTap(); // 搖了 2 秒都沒偵測到 → 改點螢幕
     $('shSub').textContent = `還剩 ${Math.ceil((end - Date.now()) / 1000)} 秒`;
     await wait(150);
   }
-  onShake = null; el.onpointerdown = null;
+  Shake.off(); el.onpointerdown = null;
   send({ t: 'shakeDone', id, n });
   vib([100, 50, 100]); [523, 659, 784].forEach((f, i) => setTimeout(() => beep(f, .16, 'triangle'), i * 100));
   el.innerHTML = `<div class="hint">時間到！</div><div class="cnt">${n}</div><div class="hint">你${tapOn ? '點' : '搖'}了 ${n} 下</div><div class="sm">看大螢幕的排名！</div>`;
@@ -444,13 +432,13 @@ function openGift(pd) {
     beep(200 + pw * 8, .05); vib(10 + Math.round(pw / 4));
     if (Date.now() - lastSent > 150 || pw >= 100) { lastSent = Date.now(); send({ t: 'power', id: pd.id, v: pw }, { qos: 0 }); }
     if (pw >= 100) {
-      done = true; onShake = null; el.onpointerdown = null;
+      done = true; Shake.off(); el.onpointerdown = null;
       send({ t: 'opened', id: pd.id });
       vib([200, 80, 300]); [523, 659, 784, 1047].forEach((f, i) => setTimeout(() => beep(f, .2, 'triangle'), i * 90));
       el.innerHTML = `<div class="gift">✨</div><h1 class="title-3d">打開了！</h1><div class="hint">快看大螢幕！</div>`;
     }
   };
-  onShake = () => add(7);
+  Shake.on(() => add(6));
   el.onpointerdown = (e) => { e.preventDefault(); unlockAudio(); add(5); };
 }
 function cerAction(me) {
