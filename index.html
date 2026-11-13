@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>藝觸即發｜主畫面</title>
-<link rel="stylesheet" href="assets/style.css?v=20261113o">
+<link rel="stylesheet" href="assets/style.css?v=20261113p">
 <style>
   body { overflow: hidden; height: 100vh; }
 
@@ -320,6 +320,56 @@
   @keyframes pulse { 50% { transform: scale(1.06); } }
   .cf { position: fixed; top: -30px; z-index: 8; width: 14px; height: 22px; border: 2px solid var(--ink); pointer-events: none; animation: fall linear forwards; }
   @keyframes fall { to { transform: translateY(112vh) rotate(var(--r, 540deg)); } }
+
+  /* ---------- 大廳下方：遊戲說明 ---------- */
+  .lobby { min-height: calc(100vh - 56px); }
+  .tohelp { display: block; margin: 0 auto 18px; animation: bob 1.4s ease-in-out infinite; }
+  .guide { max-width: 1320px; margin: 0 auto; padding: 10px 40px 60px; display: flex; flex-direction: column; gap: 34px; }
+  .guide h2.gh { margin: 0; text-align: center; font-size: clamp(36px, 3.6vw, 64px); -webkit-text-stroke-width: 8px; text-shadow: 0 6px 0 var(--ink); }
+  .guide .gsub { text-align: center; font-weight: 900; font-size: 20px; margin-top: 6px; }
+  .guide h3 { margin: 0 0 14px; font-size: 28px; font-weight: 900; display: flex; align-items: center; gap: 10px; }
+  .guide h3 .no { display: inline-grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; background: var(--ink); color: #fff; font-size: 20px; }
+  .gflow { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; }
+  .gstep { position: relative; padding: 18px 16px; text-align: center; }
+  .gstep .ic { font-size: 54px; line-height: 1.1; }
+  .gstep .t { font-size: 22px; font-weight: 900; margin: 6px 0 4px; }
+  .gstep .d { font-size: 15px; font-weight: 700; color: var(--muted); line-height: 1.5; }
+  .gstep:not(:last-child)::after { content: '➜'; position: absolute; right: -19px; top: 50%; transform: translateY(-50%); font-size: 22px; font-weight: 900; z-index: 2; }
+  .groles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  .grole { padding: 0; overflow: hidden; display: flex; flex-direction: column; }
+  .grole .top { padding: 16px 18px; border-bottom: 3px solid var(--ink); display: flex; align-items: center; gap: 14px; }
+  .grole .top .ic { width: 72px; height: 72px; border-radius: 50%; border: 3px solid var(--ink); background: #fff; display: grid; place-items: center; font-size: 42px; flex: none; }
+  .grole .top .n { font-size: 28px; font-weight: 900; line-height: 1.1; }
+  .grole .top .g { font-size: 15px; font-weight: 900; margin-top: 4px; }
+  .grole ul { margin: 0; padding: 14px 18px 18px; list-style: none; display: flex; flex-direction: column; gap: 10px; }
+  .grole li { display: grid; grid-template-columns: 34px 1fr; gap: 8px; font-weight: 700; font-size: 16px; line-height: 1.5; }
+  .grole li .i { font-size: 24px; line-height: 1.2; }
+  .grole li b { color: var(--red); }
+  .gtbl { width: 100%; border-collapse: collapse; margin-top: 4px; font-size: 15px; }
+  .gtbl td { border: 2px solid var(--ink); padding: 3px 8px; font-weight: 900; text-align: center; background: #fff; }
+  .gtbl td:first-child { background: var(--cream); }
+  .gtiles { display: grid; grid-template-columns: repeat(7, 1fr); gap: 14px; }
+  .gtile { text-align: center; }
+  .gtile .tl { aspect-ratio: 1; border: 3px solid var(--ink); border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: var(--shadow-sm); }
+  .gtile .tl .ic { font-size: 44px; line-height: 1; }
+  .gtile .tl .nm { font-size: 13px; font-weight: 900; margin-top: 6px; background: rgba(255,253,246,.9); border: 2px solid var(--ink); border-radius: 6px; padding: 0 6px; white-space: nowrap; }
+  .gtile .d { font-size: 14px; font-weight: 700; margin-top: 8px; line-height: 1.45; }
+  .g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .gbox2 { padding: 18px 20px; }
+  .gopts { display: flex; gap: 12px; }
+  .gopt { flex: 1; border: 3px solid var(--ink); border-radius: 12px; background: #fff; padding: 12px 8px; text-align: center; }
+  .gopt .ic { font-size: 38px; } .gopt .t { font-weight: 900; font-size: 17px; } .gopt .d { font-size: 13px; font-weight: 700; color: var(--muted); margin-top: 2px; }
+  .gsteps { display: flex; flex-direction: column; gap: 8px; }
+  .gsteps div { display: grid; grid-template-columns: 30px 1fr; gap: 10px; align-items: start; font-weight: 700; font-size: 16px; line-height: 1.45; }
+  .gsteps div span:first-child { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: var(--yellow); border: 2px solid var(--ink); font-weight: 900; font-size: 14px; }
+  .gitems { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .gitem { border: 3px solid var(--ink); border-radius: 12px; background: #fff; padding: 12px; text-align: center; }
+  .gitem .ic { font-size: 40px; } .gitem .t { font-weight: 900; font-size: 18px; } .gitem .d { font-size: 13px; font-weight: 700; color: var(--muted); line-height: 1.45; margin-top: 2px; }
+  .ggames { display: grid; grid-template-columns: repeat(7, 1fr); gap: 12px; }
+  .ggame { border: 3px solid var(--ink); border-radius: 12px; background: #fff; padding: 10px 6px; text-align: center; }
+  .ggame .ic { font-size: 34px; } .ggame .t { font-weight: 900; font-size: 16px; } .ggame .k { font-size: 12px; font-weight: 900; margin-top: 4px; display: inline-block; padding: 0 6px; border-radius: 6px; border: 2px solid var(--ink); }
+  .ggame .k.body { background: var(--peach); } .ggame .k.ph { background: var(--sky); }
+  .gend { text-align: center; }
   .hidden { display: none !important; }
 </style>
 </head>
@@ -349,7 +399,6 @@
         <button class="btn sm" id="giftBtn">🎁 禮物設定</button>
         <label>伺服器 <select id="brokerSel"></select></label>
         <button class="btn sm paper" id="newRoom">換新房號</button>
-        <button class="btn sm paper" id="mcBtn1">主持人手機 QR</button>
         <a class="btn sm paper" href="test.html" target="_blank" style="text-decoration:none">🧪 小遊戲測試場</a>
       </div>
       <div class="warn hidden" id="giftWarn" style="margin-top:12px"></div>
@@ -371,6 +420,8 @@
       <button class="btn red" id="startBtn" style="font-size:26px;padding:14px 48px" disabled>開始遊戲！</button>
     </div>
   </div>
+  <button class="btn paper tohelp" id="toHelp">📖 遊戲說明往下看 ↓</button>
+  <section class="guide" id="guide"></section>
 </div>
 
 <!-- 遊戲主畫面 -->
@@ -404,7 +455,6 @@
         <button class="btn sm paper" id="cRoll">代擲骰子 ␣</button>
         <button class="btn sm paper" id="cNext">跳到下一位 N</button>
         <button class="btn sm paper" id="cSound">音效：開</button>
-        <button class="btn sm paper" id="mcBtn2">主持人手機</button>
         <span class="spacer"></span>
         <button class="btn sm red" id="cEnd">結束遊戲</button>
       </div>
@@ -429,9 +479,9 @@
 
 <script src="https://unpkg.com/mqtt@5.10.1/dist/mqtt.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-<script src="assets/game-data.js?v=20261113o"></script>
-<script src="assets/net.js?v=20261113o"></script>
-<script src="assets/broadcast.js?v=20261113o"></script>
+<script src="assets/game-data.js?v=20261113p"></script>
+<script src="assets/net.js?v=20261113p"></script>
+<script src="assets/broadcast.js?v=20261113p"></script>
 <script>
 const G = window.GAME;
 const N = G.tiles.length;
@@ -1588,6 +1638,7 @@ function renderLobby() {
   const url = joinUrl(false);
   if (qrKey !== url) { qrKey = url; makeQR($('qrBig'), url, 320); makeQR($('qrSmall'), url, 200); $('urlBig').textContent = url; $('codeBig').textContent = $('codeSmall').textContent = S.room; }
   $('fileWarn').classList.toggle('hidden', location.protocol !== 'file:');
+  if ($('guideRounds')) $('guideRounds').textContent = S.maxRounds;
   $('rVal').textContent = $('ruleRounds').textContent = S.maxRounds;
   if (S.phase !== 'lobby') return;
   const ps = Object.values(S.players);
@@ -1841,6 +1892,89 @@ function celebrate(r) {
   else sfx('big');
 }
 
+/* ---------- 大廳下方的遊戲說明（數字都從 game-data.js 讀，改設定會跟著變） ---------- */
+function buildGuide() {
+  const t = G.tiers, rp = G.redPacket;
+  const rpRows = rp.map((r, i) => `<tr><td>第 ${i ? rp[i - 1].upTo + 1 : 1}${r.upTo >= 99 ? ' 名以後' : `～${r.upTo} 名`}</td><td>${r.amount.toLocaleString()} 元</td></tr>`).join('');
+  const sp = G.special;
+  const tile = (bg, ic, nm, d) => `<div class="gtile"><div class="tl bg-${bg}"><span class="ic">${ic}</span><span class="nm">${nm}</span></div><div class="d">${d}</div></div>`;
+  const li = (i, h) => `<li><span class="i">${i}</span><span>${h}</span></li>`;
+  const games = Object.values(G.games);
+  $('guide').innerHTML = `
+    <div><h2 class="title-3d gh">📖 遊戲怎麼玩</h2><div class="gsub">開始前花 1 分鐘看完，等等才知道怎麼陰同事 😈</div></div>
+
+    <div><h3><span class="no">1</span>整場流程</h3>
+      <div class="gflow">
+        <div class="card gstep"><div class="ic">🎁</div><div class="t">開場抽獎典禮</div><div class="d">全場搖手機搶順序<br>正式員工輪流挑禮物盒、當場搖開<br>試用期拆紅包</div></div>
+        <div class="card gstep"><div class="ic">🎲</div><div class="t">擲骰走棋盤</div><div class="d">一共 <b id="guideRounds">${S ? S.maxRounds : G.defaultRounds}</b> 輪，輪到你就在手機擲骰<br>踩到格子才知道發生什麼事</div></div>
+        <div class="card gstep"><div class="ic">👑</div><div class="t">首富特權</div><div class="d">藝途幣前 ${G.privilegeTop} 名的正式員工<br>各可以免費換一份禮物</div></div>
+        <div class="card gstep"><div class="ic">🎉</div><div class="t">全場拆禮物</div><div class="d">揭曉每個人最後抱回家的禮物<br>試用期領紅包、頒發各種獎</div></div>
+      </div></div>
+
+    <div><h3><span class="no">2</span>你是哪一種身分？</h3>
+      <div class="groles">
+        <div class="card grole"><div class="top bg-red"><span class="ic">🎁</span><div><div class="n">正式員工</div><div class="g">目標：最後抱走最好的禮物</div></div></div>
+          <ul>${li('📦', `開場挑一個禮物盒，可能開出<b>頭獎、二獎、三獎或普獎</b>`)}
+            ${li('💸', `踩到 🎁 搶禮物格：付錢跟任何人換禮物<br>頭獎 ${t[1].price}・二獎 ${t[2].price}・三獎 ${t[3].price}・普獎 ${t[4].price} 幣，錢付給被搶的人`)}
+            ${li('🔒', `每份禮物被搶 <b>${G.lockAfter} 次</b>就鎖定，誰都搶不走`)}
+            ${li('⚔️', 'PK 時可以<b>賭禮物</b>，贏了直接換')}
+            ${li('👑', `最後藝途幣前 ${G.privilegeTop} 名有<b>首富特權</b>，再免費換一次`)}</ul></div>
+        <div class="card grole"><div class="top bg-sun"><span class="ic">🧧</span><div><div class="n">試用期</div><div class="g">目標：名次越前面，紅包越大</div></div></div>
+          <ul>${li('🏆', `沒有禮物，拿<b>現金紅包</b>，金額看最後名次：<table class="gtbl">${rpRows}</table>`)}
+            ${li('🤝', `踩到 🎁 格當<b>禮物仲介</b>：免費讓兩個人互換禮物，自己抽 ${G.brokerFee} 幣`)}
+            ${li('⚔️', `PK 一律<b>賭錢</b>（${G.pkStakes.join(' 或 ')} 幣），贏了直接衝名次`)}
+            ${li('😇', '一樣會踩到壞事、被點名 PK，請小心')}</ul></div>
+        <div class="card grole"><div class="top bg-lilac"><span class="ic">🏛️</span><div><div class="n">外賓・董事會</div><div class="g">不走棋盤，但握有生殺大權</div></div></div>
+          <ul>${li('🔮', '開場猜<b>頭獎在哪一盒</b>，猜中拿「開場神預言」')}
+            ${li('🃏', '有人踩到命運格，由你從 3 張牌<b>幫他挑一張</b>')}
+            ${li('💰', '有人上台表演時狂按<b>打賞</b>（每位最多 20 幣）')}
+            ${li('🗳️', '<b>投票表決</b>：現場 Demo 好不好、真人 PK 誰贏')}
+            ${li('🎯', '<b>押寶</b>誰最後抱走頭獎，押中就是「最強董事」')}
+            ${li('🦸', '可能被請上台<b>代打 PK</b>！')}</ul></div>
+      </div></div>
+
+    <div><h3><span class="no">3</span>棋盤上的格子</h3>
+      <div class="gtiles">
+        ${tile(sp.start.color, sp.start.icon, '起點', `經過領薪水 ${G.salary}<br>剛好停在上面再加 ${G.salary}`)}
+        ${tile('sky', '💻', '事件格', '只寫類別（語音導覽、DAINY…）<br>踩到才知道好事壞事')}
+        ${tile(sp.gift.color, sp.gift.icon, sp.gift.name, '付錢跟別人換禮物<br>試用期改當仲介')}
+        ${tile(sp.pk.color, sp.pk.icon, sp.pk.name, '指定一個人對決<br>賭禮物或賭錢')}
+        ${tile(sp.peek.color, sp.peek.icon, sp.peek.name, '偷看一份禮物<br>只有你的手機看得到')}
+        ${tile(sp.chance.color, sp.chance.icon, sp.chance.name, '抽一張機會卡<br>大多是好東西')}
+        ${tile(sp.fate.color, sp.fate.icon, sp.fate.name, '外賓幫你挑一張<br>是好是壞看命')}
+      </div></div>
+
+    <div class="g2">
+      <div class="card gbox2"><h3><span class="no">4</span>遇到壞事怎麼辦？</h3>
+        <div class="gopts">
+          <div class="gopt"><div class="ic">😩</div><div class="t">認了</div><div class="d">乖乖扣錢</div></div>
+          <div class="gopt"><div class="ic">🛡️</div><div class="t">免死金牌</div><div class="d">有的話直接抵銷</div></div>
+          <div class="gopt"><div class="ic">🎮</div><div class="t">挑戰小遊戲</div><div class="d">過關就免罰<br>沒過還是要扣</div></div>
+        </div></div>
+      <div class="card gbox2"><h3><span class="no">5</span>PK 怎麼打？</h3>
+        <div class="gsteps">
+          <div><span>1</span><span>踩到 ⚔️ 格，<b>指定</b>要挑戰誰</span></div>
+          <div><span>2</span><span>選<b>賭注</b>：🎁 禮物（兩人都是正式員工）或 💰 ${G.pkStakes.join('／')} 幣</span></div>
+          <div><span>3</span><span>大螢幕翻 <b>3 張遊戲卡</b>，你挑一個項目</span></div>
+          <div><span>4</span><span>對手可以花 <b>${G.pkSwapCost} 幣</b>換成另外兩張其中一張</span></div>
+          <div><span>5</span><span>有<b>代打卡</b>的人可以找人上場，開打！</span></div>
+        </div></div>
+    </div>
+
+    <div><h3><span class="no">6</span>道具（每人最多 ${G.maxItems} 個）</h3>
+      <div class="gitems">
+        <div class="gitem"><div class="ic">🛡️</div><div class="t">免死金牌</div><div class="d">遇到壞事時抵銷一次</div></div>
+        <div class="gitem"><div class="ic">🔒</div><div class="t">防盜鎖</div><div class="d">有人來搶你的禮物，自動擋下</div></div>
+        <div class="gitem"><div class="ic">👀</div><div class="t">偷看券</div><div class="d">隨時在手機偷看一份禮物</div></div>
+        <div class="gitem"><div class="ic">🦸</div><div class="t">代打卡</div><div class="d">PK 時請任何人替你上場<br>比腕力打不過？找個壯的</div></div>
+      </div></div>
+
+    <div><h3><span class="no">7</span>會玩到的小遊戲</h3>
+      <div class="ggames">${games.map((d) => `<div class="ggame"><div class="ic">${d.icon}</div><div class="t">${d.name}</div><span class="k ${d.body ? 'body' : 'ph'}">${d.real ? '真人對決' : d.body ? '動身體' : '手機'}</span></div>`).join('')}</div></div>
+
+    <div class="gend"><button class="btn red" id="toTop" style="font-size:24px;padding:12px 40px">↑ 回到上面掃 QR Code 加入</button></div>`;
+}
+
 /* ---------- 結算畫面 ---------- */
 function renderFinal() {
   const f = S.final; if (!f) return;
@@ -1947,7 +2081,9 @@ function init() {
   $('newRoom').onclick = newRoom;
   $('giftBtn').onclick = showGiftSetup;
   $('startBtn').onclick = () => { sfx('join'); startGame(); };
-  $('mcBtn1').onclick = $('mcBtn2').onclick = showMcQR;
+  buildGuide();
+  $('toHelp').onclick = () => $('guide').scrollIntoView({ behavior: 'smooth' });
+  $('toTop').onclick = () => $('lobby').scrollTo({ top: 0, behavior: 'smooth' });
   $('cRoll').onclick = () => { if (S.phase === 'roll') run(() => doRoll()); };
   $('cNext').onclick = () => { if (inGame() && S.phase !== 'privilege') forceNext(); };
   $('cSound').onclick = () => { soundOn = !soundOn; $('cSound').textContent = '音效：' + (soundOn ? '開' : '關'); };
