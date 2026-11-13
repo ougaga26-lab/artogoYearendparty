@@ -1,0 +1,1010 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>藝途發財夢｜主畫面</title>
+<link rel="stylesheet" href="assets/style.css">
+<style>
+  body { overflow: hidden; height: 100vh; }
+
+  /* ---------- 遊戲主舞台 ---------- */
+  .stage { height: 100vh; display: grid; grid-template-columns: auto 1fr; gap: 22px; padding: 20px 24px; }
+  .board {
+    position: relative; width: min(calc(100vh - 40px), 64vw); aspect-ratio: 1;
+    container-type: inline-size;
+    display: grid; grid-template-columns: repeat(7, 1fr); grid-template-rows: repeat(7, 1fr); gap: 6px;
+    padding: 12px; background: var(--ink); border-radius: 24px; box-shadow: 0 8px 0 rgba(31,42,58,.35);
+  }
+  .tile {
+    position: relative; border: 3px solid var(--ink); border-radius: 10px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden;
+    transition: box-shadow .2s, transform .2s;
+  }
+  .tile .num {
+    position: absolute; top: 4px; left: 4px; width: 2.5cqw; height: 2.5cqw; border-radius: 50%;
+    background: #fff; border: 2px solid var(--ink); font-size: 1.2cqw; font-weight: 900; display: grid; place-items: center;
+  }
+  .tile .ic { font-size: 5.2cqw; line-height: 1; margin-top: .6cqw; }
+  .tile.corner .ic { font-size: 6.4cqw; }
+  .tile .nm {
+    font-size: 1.7cqw; font-weight: 900; margin-top: .5cqw; padding: .1cqw .8cqw;
+    background: rgba(255,253,246,.85); border: 2px solid var(--ink); border-radius: 6px; white-space: nowrap;
+  }
+  .tile.here { box-shadow: inset 0 0 0 4px #fff, 0 0 0 4px var(--yellow); z-index: 2; }
+  .tile.flash { animation: flash .9s ease 2; }
+  @keyframes flash { 50% { transform: scale(1.06); box-shadow: 0 0 0 6px var(--yellow); } }
+
+  .tokens { position: absolute; inset: 0; pointer-events: none; }
+  .token {
+    position: absolute; width: 3.3cqw; height: 3.3cqw; font-size: 2.1cqw; transform: translate(-50%, -50%);
+    transition: left .2s ease, top .2s ease, width .2s, height .2s; z-index: 5;
+  }
+  .token.cur { width: 4.8cqw; height: 4.8cqw; font-size: 3cqw; z-index: 7; }
+  .token.cur span { animation: bob .9s ease-in-out infinite; display: block; }
+  .token.off { opacity: .55; }
+  .fxnum {
+    position: absolute; z-index: 9; font-weight: 900; font-size: 3cqw; transform: translate(-50%, -50%);
+    -webkit-text-stroke: 4px var(--ink); paint-order: stroke fill; animation: rise 1.6s ease-out forwards; pointer-events: none;
+  }
+  .fxnum.plus { color: var(--yellow); } .fxnum.minus { color: #ff8f80; }
+  @keyframes rise { 0% { opacity: 0; margin-top: 0 } 15% { opacity: 1 } 100% { opacity: 0; margin-top: -7cqw } }
+
+  /* ---------- 棋盤中央 ---------- */
+  .center {
+    grid-row: 2 / 7; grid-column: 2 / 7; position: relative; overflow: hidden;
+    background: var(--cream); border: 3px solid var(--ink); border-radius: 16px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1.6cqw; padding: 2cqw;
+  }
+  .center .ctitle { font-size: 6.4cqw; -webkit-text-stroke-width: .9cqw; text-shadow: 0 .8cqw 0 var(--ink); }
+  .center .round { font-size: 1.8cqw; font-weight: 900; }
+  .turnbox { display: flex; align-items: center; gap: 1.4cqw; background: var(--paper); border: 3px solid var(--ink); border-radius: 14px; padding: 1cqw 2cqw; box-shadow: var(--shadow-sm); }
+  .turnbox .avatar { width: 6.4cqw; height: 6.4cqw; font-size: 4cqw; }
+  .turnbox .who { font-size: 3.4cqw; font-weight: 900; line-height: 1.1; }
+  .turnbox .sub { font-size: 1.7cqw; font-weight: 700; color: var(--muted); }
+  .dice { display: flex; gap: 2cqw; min-height: 9cqw; }
+  .die {
+    width: 9cqw; height: 9cqw; background: #fff; border: 3px solid var(--ink); border-radius: 1.8cqw; box-shadow: 0 .6cqw 0 var(--ink);
+    display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); padding: 1.1cqw;
+  }
+  .die i { width: 1.9cqw; height: 1.9cqw; border-radius: 50%; background: var(--ink); place-self: center; }
+  .die.one i { background: var(--red); width: 2.6cqw; height: 2.6cqw; }
+  .die.rolling { animation: shake .18s linear infinite; }
+  .msg { font-size: 2.4cqw; font-weight: 900; text-align: center; min-height: 3cqw; }
+  .timer { font-size: 1.5cqw; font-weight: 700; color: var(--muted); }
+
+  .cardview {
+    position: absolute; inset: 2cqw; border: 3px solid var(--ink); border-radius: 18px; box-shadow: var(--shadow);
+    display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 1.2cqw;
+    padding: 2.4cqw 3cqw; animation: pop .45s ease; background: var(--paper);
+  }
+  .cardview .deck { font-size: 2cqw; font-weight: 900; background: var(--ink); color: #fff; padding: .3cqw 1.8cqw; border-radius: 99px; }
+  .cardview .cic { font-size: 8.5cqw; line-height: 1; }
+  .cardview h2 { font-size: 4.6cqw; margin: 0; font-weight: 900; line-height: 1.15; }
+  .cardview p { font-size: 2.5cqw; margin: 0; font-weight: 700; line-height: 1.45; }
+  .cardview .owner { font-size: 1.8cqw; font-weight: 700; color: var(--muted); }
+  .cardview .live {
+    font-size: 2.9cqw; font-weight: 900; background: #fff; border: 3px dashed var(--ink); border-radius: 14px; padding: 1.2cqw 2cqw; line-height: 1.35;
+  }
+  .cardview .status { font-size: 2cqw; font-weight: 900; }
+  .cardview .opts { display: flex; flex-wrap: wrap; gap: 1cqw; justify-content: center; }
+  .cardview .opts .btn { font-size: 2cqw; padding: .8cqw 2cqw; }
+  .cardview .opts .btn.big { font-size: 3cqw; padding: 1.2cqw 4cqw; }
+  .cardview.d-chance { background: #fde9a6; }
+  .cardview.d-fate { background: var(--lilac); }
+  .cardview.d-challenge, .cardview.d-ktv { background: #fbd0c4; }
+  .cardview.d-bad { background: #fbd0c4; }
+  .cardview.d-good { background: #d5eedc; }
+  .cardview.d-boss { background: #c7daea; }
+  .cardview.d-duo { background: var(--sky); }
+
+  /* ---------- 右側面板 ---------- */
+  .side { display: flex; flex-direction: column; gap: 16px; min-width: 0; min-height: 0; }
+  .joinbox { display: flex; gap: 16px; align-items: center; padding: 14px 18px; }
+  .joinbox .qr { width: 132px; height: 132px; flex: none; background: var(--paper); }
+  .joinbox .qr img, .joinbox .qr canvas { width: 100% !important; height: 100% !important; }
+  .joinbox h3 { margin: 0; font-size: clamp(18px, 1.7vw, 30px); font-weight: 900; }
+  .joinbox .code { font-size: clamp(26px, 2.6vw, 46px); font-weight: 900; letter-spacing: .12em; color: var(--red); line-height: 1.1; }
+  .joinbox small { font-size: 14px; font-weight: 700; color: var(--muted); }
+  .board-side-title { display: flex; justify-content: space-between; align-items: baseline; }
+  .board-side-title h3 { margin: 0; font-size: 22px; font-weight: 900; }
+  .lb { flex: 1; min-height: 0; padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+  .lb-list { flex: 1; min-height: 0; display: grid; gap: 8px; align-content: start; overflow: hidden; }
+  .lb-list.two { grid-template-columns: 1fr 1fr; }
+  .row {
+    display: grid; grid-template-columns: 30px 40px 1fr auto; align-items: center; gap: 8px;
+    background: #fff; border: 2px solid var(--ink); border-radius: 12px; padding: 5px 10px; transition: background .3s;
+  }
+  .row.cur { background: var(--yellow); }
+  .row.bump { animation: pop .5s ease; }
+  .row .rk { font-weight: 900; font-size: 18px; text-align: center; }
+  .row .avatar { width: 38px; height: 38px; font-size: 22px; }
+  .row .nm { font-weight: 900; font-size: 18px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  .row .meta { font-size: 13px; font-weight: 700; color: var(--muted); }
+  .row .co { font-weight: 900; font-size: 22px; }
+  .tag { display: inline-block; font-size: 11px; font-weight: 900; padding: 0 6px; border-radius: 6px; border: 2px solid var(--ink); background: var(--sky); vertical-align: 2px; margin-left: 4px; }
+  .tag.skip { background: var(--peach); }
+  .controls { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .controls .spacer { flex: 1; }
+  .netst { font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 6px; }
+
+  /* ---------- 大廳 ---------- */
+  .overlay { position: fixed; inset: 0; z-index: 50; overflow: auto; background: inherit; background: radial-gradient(120% 90% at 50% 0%, #fde7c8 0%, #f9c9b5 55%, #f3b49f 100%); }
+  .lobby { min-height: 100vh; display: grid; grid-template-columns: 1.1fr 1fr; gap: 40px; padding: 48px 64px; align-items: center; }
+  .lobby .big { font-size: clamp(56px, 8vw, 150px); -webkit-text-stroke-width: 12px; text-shadow: 0 10px 0 var(--ink); }
+  .lobby .ribbon { font-size: clamp(18px, 1.8vw, 30px); margin: 18px 0 28px; }
+  .rules { padding: 20px 26px; font-size: clamp(16px, 1.25vw, 22px); font-weight: 700; line-height: 1.7; }
+  .rules ol { margin: 0; padding-left: 1.3em; }
+  .rules b { color: var(--red); }
+  .settings { margin-top: 20px; display: flex; flex-wrap: wrap; gap: 14px 22px; align-items: center; font-weight: 900; }
+  .stepper { display: inline-flex; align-items: center; gap: 8px; }
+  .stepper b { min-width: 2ch; text-align: center; font-size: 24px; }
+  select, input[type=text] {
+    font: inherit; font-weight: 700; border: 2px solid var(--ink); border-radius: 10px; padding: 6px 10px; background: var(--paper);
+  }
+  .qrcard { padding: 28px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+  .qrcard .qrbig { width: min(34vh, 360px); height: min(34vh, 360px); padding: 12px; background: var(--paper); border: 3px solid var(--ink); border-radius: 14px; }
+  .qrcard .qrbig img, .qrcard .qrbig canvas { width: 100% !important; height: 100% !important; }
+  .qrcard .code { font-size: clamp(40px, 4vw, 72px); font-weight: 900; letter-spacing: .14em; color: var(--red); line-height: 1; }
+  .qrcard .url { font-size: 13px; font-weight: 700; color: var(--muted); word-break: break-all; }
+  .joined { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; min-height: 64px; }
+  .chip { display: flex; flex-direction: column; align-items: center; gap: 2px; font-weight: 900; font-size: 14px; animation: pop .4s ease; }
+  .chip .avatar { width: 52px; height: 52px; font-size: 30px; }
+  .warn { background: #fff1b8; border: 2px solid var(--ink); border-radius: 10px; padding: 8px 12px; font-weight: 700; font-size: 14px; }
+  .resume { margin-top: 18px; padding: 14px 18px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; font-weight: 900; }
+
+  /* ---------- 結算 ---------- */
+  .final { min-height: 100vh; padding: 36px 56px; display: flex; flex-direction: column; align-items: center; gap: 26px; }
+  .final .big { font-size: clamp(48px, 6vw, 110px); -webkit-text-stroke-width: 10px; }
+  .podium { display: flex; align-items: flex-end; gap: 24px; }
+  .pod { width: 220px; text-align: center; }
+  .pod .avatar { width: 96px; height: 96px; font-size: 60px; margin-bottom: 8px; }
+  .pod .nm { font-size: 28px; font-weight: 900; }
+  .pod .co { font-size: 22px; font-weight: 900; }
+  .pod .block { margin-top: 10px; border: 3px solid var(--ink); border-radius: 14px 14px 0 0; box-shadow: var(--shadow); display: grid; place-items: center; font-size: 56px; font-weight: 900; }
+  .pod.p1 .block { height: 200px; background: var(--yellow); }
+  .pod.p2 .block { height: 140px; background: #dfe6ee; }
+  .pod.p3 .block { height: 100px; background: #f0c39a; }
+  .pod.p1 .avatar { animation: bob 1s ease-in-out infinite; }
+  .awards { display: flex; gap: 18px; flex-wrap: wrap; justify-content: center; }
+  .award { padding: 14px 22px; text-align: center; min-width: 200px; }
+  .award .t { font-weight: 900; color: var(--red); font-size: 18px; }
+  .award .w { font-weight: 900; font-size: 24px; }
+  .award .d { font-weight: 700; font-size: 14px; color: var(--muted); }
+  .rest { display: flex; flex-wrap: wrap; gap: 8px 18px; justify-content: center; font-weight: 900; font-size: 18px; max-width: 1200px; }
+
+  /* ---------- 其他 ---------- */
+  .toasts { position: fixed; top: 16px; left: 50%; transform: translateX(-50%); z-index: 80; display: flex; flex-direction: column; gap: 8px; align-items: center; pointer-events: none; }
+  .toast { background: var(--ink); color: #fff; font-weight: 900; font-size: 20px; padding: 10px 22px; border-radius: 99px; animation: pop .3s ease; }
+  .heart { position: fixed; bottom: -40px; z-index: 70; font-size: 34px; pointer-events: none; animation: up 2.4s ease-out forwards; }
+  @keyframes up { to { transform: translateY(-75vh) scale(1.3); opacity: 0; } }
+  .modal { position: fixed; inset: 0; z-index: 90; background: rgba(31,42,58,.55); display: grid; place-items: center; }
+  .modal .card { padding: 28px; text-align: center; max-width: 520px; }
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+
+<!-- 大廳 -->
+<div class="overlay" id="lobby">
+  <div class="lobby">
+    <div>
+      <h1 class="title-3d big">藝途發財夢</h1>
+      <div class="ribbon">ARTOGO 2026 尾牙・全員大富翁</div>
+      <div class="card rules">
+        <ol>
+          <li>拿出手機<b>掃右邊 QR Code</b>，輸入名字、挑一隻動物</li>
+          <li>輪到你時，在手機上<b>按「擲骰子」</b>往前走</li>
+          <li>踩到格子會發生公司日常：投資人、改稿、官網 Bug…</li>
+          <li>遇到壞事可以用<b>道具卡</b>或<b>現場救援</b>（滾地、唱歌）化解</li>
+          <li>不想下場也能選<b>啦啦隊</b>，狂按加油幫場上的人加錢</li>
+          <li><b id="ruleRounds">5</b> 輪結束時，<b>藝途幣最多的人</b>就是發財王！</li>
+        </ol>
+      </div>
+      <div class="settings">
+        <span class="stepper">遊戲輪數
+          <button class="btn sm paper" id="rMinus">−</button><b id="rVal">5</b><button class="btn sm paper" id="rPlus">＋</button>
+        </span>
+        <label>連線伺服器 <select id="brokerSel"></select></label>
+        <button class="btn sm paper" id="newRoom">換新房號</button>
+        <button class="btn sm paper" id="mcBtn1">主持人手機 QR</button>
+      </div>
+      <div class="warn hidden" id="fileWarn" style="margin-top:14px">
+        你現在是直接開本機檔案。手機掃 QR 需要網址，請先把整個資料夾放上網（例如 GitHub Pages），或在這裡填上網址：
+        <input type="text" id="baseUrl" placeholder="https://你的網址/2026尾牙遊戲/" style="width:100%;margin-top:6px">
+      </div>
+      <div class="card resume hidden" id="resumeBox"></div>
+    </div>
+    <div class="card qrcard">
+      <div style="font-weight:900;font-size:22px">掃我加入遊戲</div>
+      <div class="qrbig" id="qrBig"></div>
+      <div class="code" id="codeBig">-----</div>
+      <div class="url" id="urlBig"></div>
+      <div class="netst"><span class="dot" id="netDot1"></span><span id="netTxt1">連線中…</span></div>
+      <div style="font-weight:900">已加入 <span id="joinedN">0</span> 人</div>
+      <div class="joined" id="joined"></div>
+      <button class="btn red" id="startBtn" style="font-size:26px;padding:14px 48px" disabled>開始遊戲！</button>
+    </div>
+  </div>
+</div>
+
+<!-- 遊戲主畫面 -->
+<div class="stage" id="stage">
+  <div class="board" id="board">
+    <div class="center" id="center">
+      <div class="title-3d ctitle">藝途發財夢</div>
+      <div class="round" id="roundTxt">第 1 / 5 輪</div>
+      <div class="turnbox" id="turnBox"></div>
+      <div class="dice" id="dice"></div>
+      <div class="msg" id="msg"></div>
+      <div class="timer" id="timer"></div>
+      <div class="cardview hidden" id="cardview"></div>
+    </div>
+    <div class="tokens" id="tokens"></div>
+  </div>
+  <aside class="side">
+    <div class="card joinbox">
+      <div class="qr" id="qrSmall"></div>
+      <div>
+        <h3>掃碼加入／當啦啦隊</h3>
+        <div class="code" id="codeSmall">-----</div>
+        <small>遊戲中也能隨時加入，從起點出發</small>
+      </div>
+    </div>
+    <div class="card lb">
+      <div class="board-side-title"><h3>藝途幣排行榜</h3><span class="netst"><span class="dot" id="netDot2"></span><span id="netTxt2"></span></span></div>
+      <div class="lb-list" id="lb"></div>
+      <div class="controls">
+        <button class="btn sm paper" id="cRoll" title="空白鍵">代擲骰子 ␣</button>
+        <button class="btn sm paper" id="cNext" title="N 鍵">跳到下一位 N</button>
+        <button class="btn sm paper" id="cSound">音效：開</button>
+        <button class="btn sm paper" id="mcBtn2">主持人手機</button>
+        <span class="spacer"></span>
+        <button class="btn sm red" id="cEnd">結束遊戲</button>
+      </div>
+    </div>
+  </aside>
+</div>
+
+<!-- 結算 -->
+<div class="overlay hidden" id="final"></div>
+<div class="toasts" id="toasts"></div>
+<div class="modal hidden" id="modal"></div>
+
+<script src="https://unpkg.com/mqtt@5.10.1/dist/mqtt.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="assets/game-data.js"></script>
+<script src="assets/net.js"></script>
+<script>
+const G = window.GAME;
+const N = G.tiles.length;
+const LS = 'wy26_host';
+const $ = (id) => document.getElementById(id);
+const STOP = Symbol('stop');
+
+let S = null, net = null, netStatus = 'offline';
+let waiter = null, runId = 0, autoTimer = null, pendingSeq = 0;
+let soundOn = true;
+const lastSeen = {};
+
+/* ================= 狀態 ================= */
+function newState(room, broker, maxRounds) {
+  return {
+    room, broker, mcKey: String(Math.floor(1000 + Math.random() * 9000)),
+    phase: 'lobby', round: 1, maxRounds: maxRounds || G.defaultRounds, turn: 0,
+    order: [], players: {}, card: null, pending: null, dice: null, msg: '',
+    decks: {}, cheerGain: 0, rollDeadline: 0, final: null, seq: 0,
+  };
+}
+const P = (pid) => S.players[pid];
+const curPid = () => S.order.length ? S.order[S.turn % S.order.length] : null;
+const gamers = () => S.order.map(P).filter(Boolean);
+const inGame = () => !['lobby', 'ended'].includes(S.phase);
+
+function save() { try { localStorage.setItem(LS, JSON.stringify(S)); } catch (e) {} }
+function sync() {
+  S.seq++;
+  const now = Date.now();
+  for (const p of Object.values(S.players)) p.on = now - (lastSeen[p.pid] || 0) < 25000;
+  save();
+  const pub = Object.assign({}, S); delete pub.mcKey; delete pub.decks;
+  if (net) net.send({ t: 'state', s: pub }, { retain: true });
+  render();
+}
+
+/* ================= 連線 ================= */
+function connect() {
+  if (net) try { net.client.end(true); } catch (e) {}
+  net = netConnect({
+    room: S.room, broker: S.broker, role: 'host',
+    onStatus: (s) => { netStatus = s; renderNet(); if (s === 'online') sync(); },
+    onMsg,
+  });
+}
+function onMsg(m) {
+  if (!m || !m.t || m.t === 'state') return;
+  const wasOn = m.pid && S.players[m.pid] && S.players[m.pid].on;
+  if (m.pid) lastSeen[m.pid] = Date.now();
+  switch (m.t) {
+    case 'hello': sync(); break;
+    case 'ping': if (m.pid && S.players[m.pid] && !wasOn) sync(); break;
+    case 'join': handleJoin(m); break;
+    case 'roll': if (S.phase === 'roll' && curPid() === m.pid) run(() => doRoll(!!m.double)); break;
+    case 'choose':
+      if (S.pending && S.pending.id === m.id && S.pending.by === 'player' && S.pending.pid === m.pid) resolvePending(m.v);
+      break;
+    case 'cheer': handleCheer(m); break;
+    case 'mc': if (String(m.key) === S.mcKey) handleMc(m); break;
+  }
+}
+
+function handleJoin(m) {
+  const name = String(m.name || '').trim().slice(0, 8) || '神秘人';
+  const role = ['staff', 'guest', 'cheer'].includes(m.role) ? m.role : 'staff';
+  const avatar = G.avatars.includes(m.avatar) ? m.avatar : G.avatars[0];
+  let p = S.players[m.pid];
+  if (p) {
+    p.name = name; p.avatar = avatar;
+    if (S.phase === 'lobby' && p.role !== role) {
+      p.role = role;
+      S.order = S.order.filter((x) => x !== p.pid);
+      if (role !== 'cheer') S.order.push(p.pid);
+    }
+  } else {
+    const idx = Object.keys(S.players).length;
+    p = S.players[m.pid] = {
+      pid: m.pid, name, role, avatar, color: G.colors[idx % G.colors.length],
+      pos: 0, coins: G.startCoins, skip: 0, items: [], stats: { won: 0, bad: 0, laps: 0 }, on: true,
+    };
+    if (role !== 'cheer') {
+      // 遊戲中加入：排在目前這位之後的順序最後面
+      S.order.push(p.pid);
+    }
+    toast(`${avatar} ${name} 加入了${role === 'cheer' ? '啦啦隊' : role === 'guest' ? '（外賓）' : ''}！`);
+    sfx('join');
+  }
+  sync();
+}
+
+let cheerBuf = 0;
+function handleCheer(m) {
+  if (!inGame()) return;
+  const cp = curPid(); if (!cp || m.pid === cp) return;
+  const n = Math.max(0, Math.min(20, m.n | 0));
+  for (let i = 0; i < Math.min(n, 6); i++) setTimeout(spawnHeart, i * 90);
+  cheerBuf += n;
+  if (cheerBuf >= 10 && S.cheerGain < 10) {
+    const gain = Math.min(Math.floor(cheerBuf / 10), 10 - S.cheerGain);
+    cheerBuf -= gain * 10; S.cheerGain += gain;
+    addCoins(P(cp), gain, true);
+    sync();
+  }
+}
+
+function handleMc(m) {
+  switch (m.cmd) {
+    case 'start': if (S.phase === 'lobby') startGame(); break;
+    case 'roll': if (S.phase === 'roll') run(() => doRoll(false)); break;
+    case 'next': if (inGame()) forceNext(); break;
+    case 'end': if (inGame()) endGame(); break;
+    case 'choose': if (S.pending && S.pending.id === m.id) resolvePending(m.v); break;
+    case 'adj': { const p = P(m.pid); if (p) { addCoins(p, m.n | 0); sync(); } break; }
+  }
+}
+
+/* ================= 流程控制 ================= */
+const sleep = (ms) => { const id = runId; return new Promise((res, rej) => setTimeout(() => (id === runId ? res() : rej(STOP)), ms)); };
+function run(fn) { Promise.resolve().then(fn).catch((e) => { if (e !== STOP) console.error(e); }); }
+function cancelChain() {
+  runId++;
+  if (waiter) { clearTimeout(waiter.timer); waiter.rej(STOP); waiter = null; }
+  clearTimeout(autoTimer);
+  S.pending = null;
+}
+
+function ask(pending, timeout, def) {
+  const id = runId;
+  pending.id = ++pendingSeq;
+  S.pending = pending; sync();
+  return new Promise((res, rej) => {
+    waiter = { res, rej, timer: timeout ? setTimeout(() => resolvePending(def), timeout) : null };
+    if (id !== runId) rej(STOP);
+  });
+}
+function resolvePending(v) {
+  if (!waiter) return;
+  clearTimeout(waiter.timer);
+  const w = waiter; waiter = null;
+  S.pending = null; sync();
+  w.res(v);
+}
+
+function startGame() {
+  if (!S.order.length) { toast('還沒有玩家加入喔'); return; }
+  cancelChain();
+  // 洗牌決定順序
+  for (let i = S.order.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [S.order[i], S.order[j]] = [S.order[j], S.order[i]]; }
+  for (const p of Object.values(S.players)) Object.assign(p, { pos: 0, coins: G.startCoins, skip: 0, items: [], stats: { won: 0, bad: 0, laps: 0 } });
+  Object.assign(S, { phase: 'turn', round: 1, turn: 0, card: null, pending: null, dice: null, final: null, decks: {} });
+  sfx('fanfare');
+  toast('遊戲開始！順序已隨機決定');
+  run(startTurn);
+}
+
+async function startTurn() {
+  clearTimeout(autoTimer);
+  S.card = null; S.pending = null; S.dice = null; S.cheerGain = 0; cheerBuf = 0;
+  const p = P(curPid());
+  if (!p) return nextTurn();
+  if (p.skip > 0) {
+    p.skip--;
+    S.phase = 'skip'; S.msg = `${p.name} 還在忙，這回合暫停 💤`; sync(); sfx('bad');
+    await sleep(2600);
+    return nextTurn();
+  }
+  S.phase = 'roll'; S.msg = `輪到 ${p.name} 擲骰子！`;
+  S.rollDeadline = Date.now() + 45000;
+  sync(); sfx('turn');
+  armAutoRoll();
+}
+function armAutoRoll() {
+  clearTimeout(autoTimer);
+  autoTimer = setTimeout(() => { if (S.phase === 'roll') run(() => doRoll(false)); }, Math.max(0, S.rollDeadline - Date.now()));
+}
+function nextTurn() {
+  S.turn++;
+  if (S.turn >= S.order.length) {
+    S.turn = 0; S.round++;
+    if (S.round > S.maxRounds) { S.round = S.maxRounds; return endGame(); }
+    toast(`第 ${S.round} 輪開始！`);
+    if (S.round === S.maxRounds) setTimeout(() => toast('🔥 最後一輪！'), 900);
+  }
+  return startTurn();
+}
+function forceNext() { cancelChain(); S.card = null; run(nextTurn); }
+
+const d6 = () => 1 + Math.floor(Math.random() * 6);
+async function doRoll(useDouble) {
+  if (S.phase !== 'roll') return;
+  clearTimeout(autoTimer);
+  const p = P(curPid());
+  if (useDouble) { const i = p.items.indexOf('double'); if (i < 0) useDouble = false; else p.items.splice(i, 1); }
+  const vals = useDouble ? [d6(), d6()] : [d6()];
+  S.phase = 'rolling'; S.dice = { vals, rolling: true }; S.msg = `${p.name} 擲骰中…`; sync();
+  await rollAnim(vals.length);
+  S.dice = { vals }; const total = vals.reduce((a, b) => a + b, 0);
+  S.msg = `${p.name} 擲出 ${total} 點！`; S.phase = 'moving'; sync(); sfx('dice');
+  await sleep(700);
+  await moveBy(p, total);
+  const ctx = { extra: false };
+  await land(p, 0, ctx);
+  S.pending = null; S.phase = 'result'; sync();
+  await sleep(2800);
+  S.card = null;
+  if (ctx.extra) {
+    S.phase = 'roll'; S.dice = null; S.msg = `${p.name} 再擲一次！`; S.rollDeadline = Date.now() + 45000; sync(); armAutoRoll();
+    return;
+  }
+  return nextTurn();
+}
+
+async function moveBy(p, n, fast) {
+  const dir = Math.sign(n);
+  for (let i = 0; i < Math.abs(n); i++) {
+    p.pos = (p.pos + dir + N) % N;
+    if (dir > 0 && p.pos === 0) {
+      p.stats.laps++;
+      addCoins(p, G.salary);
+      toast(`${p.name} 經過起點，領薪水 ${G.salary}！`);
+    }
+    renderTokens(); sfx('step');
+    await sleep(fast ? 120 : 260);
+  }
+  sync();
+}
+
+function draw(deck) {
+  const list = G[deck];
+  if (!S.decks[deck] || !S.decks[deck].length) {
+    S.decks[deck] = list.map((_, i) => i).sort(() => Math.random() - 0.5);
+  }
+  return list[S.decks[deck].pop()];
+}
+const pickOne = (arr) => arr[Math.floor(Math.random() * arr.length)];
+
+async function land(p, depth, ctx) {
+  const t = G.tiles[p.pos];
+  let card;
+  if (t.type === 'chance') card = Object.assign({ deck: 'chance', icon: '❓' }, draw('chance'));
+  else if (t.type === 'fate') card = Object.assign({ deck: 'fate', icon: '🔮' }, draw('fate'));
+  else if (t.type === 'challenge') card = { deck: 'challenge', icon: '🔥', title: '真人挑戰', text: `成功 +${G.challengeReward}，失敗 -${G.challengePenalty}`, effect: { challenge: { reward: G.challengeReward, penalty: G.challengePenalty, text: pickOne(G.challenges) } } };
+  else card = { deck: t.type === 'event' ? (t.bad ? 'bad' : 'good') : t.type, icon: t.icon, title: t.name, text: t.desc, effect: t.effect, bad: t.bad };
+  S.card = { deck: card.deck, icon: card.icon, title: card.title, text: card.text, bad: !!card.bad, pid: p.pid, tile: t.name, live: null, status: null };
+  S.msg = ''; S.phase = 'card';
+  flashTile(p.pos);
+  sync(); sfx(card.bad ? 'bad' : 'card');
+  await sleep(1600);
+  if (!card.effect) return;
+  let eff = card.effect;
+  if (card.bad) {
+    const r = await rescue(p);
+    if (r === 'cancel') return;
+    p.stats.bad++;
+    if (r === 'double') { eff = doubleEff(eff); S.card.status = '救援失敗，懲罰加倍！'; sync(); await sleep(1400); }
+  }
+  await applyEff(eff, p, depth, ctx);
+}
+
+function doubleEff(e) {
+  if (Array.isArray(e)) return e.map(doubleEff);
+  const o = Object.assign({}, e);
+  for (const k of ['coins', 'move', 'skip', 'taxPct']) if (typeof o[k] === 'number') o[k] *= 2;
+  return o;
+}
+
+async function rescue(p) {
+  const opts = [{ v: 'accept', label: '認了 😮‍💨' }];
+  if (p.items.includes('shield')) opts.push({ v: 'shield', label: '🛡️ 用免死金牌' });
+  if (p.items.includes('sing')) opts.push({ v: 'sing', label: '🎤 用點唱券（唱一首）' });
+  opts.push({ v: 'live', label: '🔥 現場救援（失敗加倍）' });
+  S.card.status = null;
+  const v = await ask({ kind: 'rescue', by: 'player', pid: p.pid, title: '遇到麻煩了！要怎麼辦？', options: opts }, 40000, 'accept');
+  if (v === 'shield') {
+    p.items.splice(p.items.indexOf('shield'), 1);
+    S.card.status = '🛡️ 免死金牌生效！平安過關'; sync(); sfx('coin'); await sleep(1800); return 'cancel';
+  }
+  if (v === 'sing') {
+    p.items.splice(p.items.indexOf('sing'), 1);
+    const ok = await judge(p, '高歌一曲，呼隆過去！請到點唱機前唱一段');
+    if (ok) { S.card.status = '🎤 唱得好！麻煩全部消失'; sync(); sfx('coin'); await sleep(1800); return 'cancel'; }
+    return 'apply';
+  }
+  if (v === 'live') {
+    const ok = await judge(p, pickOne(G.rescues));
+    if (ok) { p.stats.won++; S.card.status = '🎉 救援成功！麻煩全部消失'; sync(); sfx('coin'); await sleep(1800); return 'cancel'; }
+    return 'double';
+  }
+  return 'apply';
+}
+
+async function judge(p, text, extra) {
+  S.card.live = text; S.card.status = null;
+  const v = await ask({ kind: 'judge', by: 'mc', pid: p.pid, title: '主持人判定', options: [{ v: 'ok', label: '成功 ✓' }, { v: 'fail', label: '失敗 ✗' }], extra }, 0);
+  S.card.live = null;
+  return v === 'ok';
+}
+
+async function pickPlayer(p, title, cands) {
+  if (!cands.length) return null;
+  const v = await ask({
+    kind: 'pick', by: 'player', pid: p.pid, title,
+    options: cands.map((c) => ({ v: c.pid, label: `${c.avatar} ${c.name}${c.role === 'guest' ? '（外賓）' : ''}`, sub: `${c.coins} 幣` })),
+  }, 40000, cands[0].pid);
+  return P(v);
+}
+
+function transfer(from, to, n) {
+  const amt = Math.min(n, from.coins);
+  addCoins(from, -amt); addCoins(to, amt);
+  return amt;
+}
+
+async function applyEff(eff, p, depth, ctx) {
+  if (Array.isArray(eff)) { for (const e of eff) await applyEff(e, p, depth, ctx); return; }
+  const others = gamers().filter((o) => o.pid !== p.pid);
+  if (typeof eff.coins === 'number') { addCoins(p, eff.coins); sync(); await sleep(900); }
+  if (typeof eff.skip === 'number') { p.skip += eff.skip; S.card.status = `暫停 ${p.skip} 回合`; sync(); await sleep(900); }
+  if (typeof eff.everyone === 'number') { gamers().forEach((o) => addCoins(o, eff.everyone)); sync(); await sleep(1200); }
+  if (typeof eff.payAll === 'number') { others.forEach((o) => transfer(p, o, eff.payAll)); sync(); await sleep(1200); }
+  if (typeof eff.collectAll === 'number') { others.forEach((o) => transfer(o, p, eff.collectAll)); sync(); await sleep(1200); }
+  if (typeof eff.taxPct === 'number') { addCoins(p, -Math.floor(p.coins * eff.taxPct / 100)); sync(); await sleep(900); }
+  if (eff.item) {
+    const it = G.items[eff.item];
+    if (p.items.length >= G.maxItems) S.card.status = '口袋滿了，這張卡只好丟掉';
+    else { p.items.push(eff.item); S.card.status = `${it.icon} 獲得「${it.name}」！`; }
+    sync(); sfx('coin'); await sleep(1200);
+  }
+  if (eff.extraRoll) { ctx.extra = true; S.card.status = '等一下可以再擲一次！'; sync(); await sleep(900); }
+  if (typeof eff.steal === 'number') {
+    const t = await pickPlayer(p, `要偷誰的 ${eff.steal} 幣？`, others);
+    if (t) { const a = transfer(t, p, eff.steal); S.card.status = `從 ${t.name} 手上偷走 ${a} 幣 😈`; sync(); await sleep(1500); }
+  }
+  if (typeof eff.gift === 'number') {
+    const t = await pickPlayer(p, '要感謝哪一位？', others);
+    if (t) { addCoins(p, eff.gift); addCoins(t, eff.gift); S.card.status = `${p.name} 和 ${t.name} 各 +${eff.gift}`; sync(); await sleep(1500); }
+  }
+  if (typeof eff.robin === 'number') {
+    const all = gamers().slice().sort((a, b) => b.coins - a.coins);
+    const rich = all[0], poor = all[all.length - 1];
+    if (rich && poor && rich !== poor) { const a = transfer(rich, poor, eff.robin); S.card.status = `${rich.name} → ${poor.name}：${a} 幣`; }
+    addCoins(p, 10); sync(); await sleep(1800);
+  }
+  if (eff.challenge) {
+    const c = eff.challenge;
+    const ok = await judge(p, c.text || S.card.text);
+    if (ok) { p.stats.won++; addCoins(p, c.reward); S.card.status = `🎉 挑戰成功 +${c.reward}`; sfx('fanfare'); }
+    else { if (c.penalty) addCoins(p, -c.penalty); S.card.status = c.penalty ? `挑戰失敗 -${c.penalty}` : '沒關係，掌聲鼓勵！'; sfx('bad'); }
+    sync(); await sleep(1600);
+  }
+  if (typeof eff.duo === 'number') {
+    const cands = others.slice().sort((a, b) => (b.role === 'guest') - (a.role === 'guest'));
+    const t = await pickPlayer(p, '選一位夥伴（最好是外賓！）', cands);
+    if (t) {
+      const ok = await judge(p, `${p.name} ✕ ${t.name}：${pickOne(G.duoChallenges)}`);
+      if (ok) { p.stats.won++; t.stats.won++; addCoins(p, eff.duo); addCoins(t, eff.duo); S.card.status = `🥂 合作無間！兩人各 +${eff.duo}`; sfx('fanfare'); }
+      else { S.card.status = '差一點點！下次再合作'; sfx('bad'); }
+      sync(); await sleep(1600);
+    }
+  }
+  if (eff.boss) {
+    S.card.status = '老闆正在思考…'; S.dice = { vals: [1], rolling: true }; sync();
+    const d = d6();
+    await rollAnim(1); S.dice = { vals: [d] };
+    if (d >= 4) { addCoins(p, d * 15); S.card.status = `🎲 ${d} 點！老闆開心，加薪 +${d * 15}`; sfx('fanfare'); }
+    else { p.skip += 1; p.stats.bad++; S.card.status = `🎲 ${d} 點…被念到下回合暫停`; sfx('bad'); }
+    sync(); await sleep(2000);
+  }
+  if (typeof eff.goto === 'number') {
+    await sleep(500);
+    S.phase = 'moving'; sync();
+    await moveBy(p, (eff.goto - p.pos + N) % N, true);
+    if (depth < 2) { await sleep(400); await land(p, depth + 1, ctx); }
+  }
+  if (typeof eff.move === 'number' && eff.move) {
+    await sleep(500);
+    S.phase = 'moving'; sync();
+    await moveBy(p, eff.move);
+    if (depth < 2) { await sleep(400); await land(p, depth + 1, ctx); }
+  }
+}
+
+function addCoins(p, n, quiet) {
+  if (!p || !n) return;
+  const before = p.coins;
+  p.coins = Math.max(0, p.coins + n);
+  const real = p.coins - before;
+  if (!real) return;
+  fxNumber(p, real);
+  bumpRow(p.pid);
+  if (!quiet) sfx(real > 0 ? 'coin' : 'lose');
+}
+
+function endGame() {
+  cancelChain();
+  const ranked = gamers().slice().sort((a, b) => b.coins - a.coins);
+  const maxBy = (f) => { const top = ranked.slice().sort((a, b) => f(b) - f(a))[0]; return top && f(top) > 0 ? top.pid : null; };
+  S.final = {
+    ranking: ranked.map((p) => p.pid),
+    awards: [
+      { t: '表演之星', pid: maxBy((p) => p.stats.won), d: '真人挑戰成功最多次' },
+      { t: '最衰同事', pid: maxBy((p) => p.stats.bad), d: '踩到最多麻煩事' },
+      { t: '環島達人', pid: maxBy((p) => p.stats.laps), d: '繞棋盤最多圈' },
+    ].filter((a) => a.pid),
+  };
+  S.phase = 'ended'; S.card = null; S.dice = null;
+  sync(); sfx('fanfare');
+}
+
+/* ================= 畫面 ================= */
+const TILE_POS = [];
+(function () {
+  TILE_POS[0] = [7, 7];
+  for (let i = 1; i <= 5; i++) TILE_POS[i] = [7, 7 - i];
+  TILE_POS[6] = [7, 1];
+  for (let i = 7; i <= 11; i++) TILE_POS[i] = [7 - (i - 6), 1];
+  TILE_POS[12] = [1, 1];
+  for (let i = 13; i <= 17; i++) TILE_POS[i] = [1, 1 + (i - 12)];
+  TILE_POS[18] = [1, 7];
+  for (let i = 19; i <= 23; i++) TILE_POS[i] = [1 + (i - 18), 7];
+})();
+
+function buildBoard() {
+  const b = $('board');
+  G.tiles.forEach((t, i) => {
+    const el = document.createElement('div');
+    el.className = `tile bg-${t.color}${t.corner || i === 0 ? ' corner' : ''}`;
+    el.id = 'tile' + i;
+    el.style.gridRow = TILE_POS[i][0]; el.style.gridColumn = TILE_POS[i][1];
+    el.innerHTML = `<span class="num">${i}</span><span class="ic">${t.icon}</span><span class="nm">${t.name}</span>`;
+    b.insertBefore(el, $('center'));
+  });
+}
+
+function avatarHTML(p, cls = '') {
+  return `<span class="avatar ${cls}" style="--c:${p.color}">${p.avatar}</span>`;
+}
+
+function render() {
+  if (!S) return;
+  $('lobby').classList.toggle('hidden', S.phase !== 'lobby');
+  $('final').classList.toggle('hidden', S.phase !== 'ended');
+  renderLobby(); renderNet();
+  if (S.phase === 'ended') renderFinal();
+  $('roundTxt').textContent = `第 ${S.round} / ${S.maxRounds} 輪${S.round === S.maxRounds && inGame() ? '・最後一輪！' : ''}`;
+  const cp = P(curPid());
+  $('turnBox').innerHTML = cp && inGame()
+    ? `${avatarHTML(cp)}<div><div class="who">${esc(cp.name)}</div><div class="sub">的回合${cp.role === 'guest' ? '・外賓' : ''}</div></div>`
+    : '<div class="who">等待開始</div>';
+  if (!$('dice').dataset.anim) renderDice(S.dice ? S.dice.vals : []);
+  $('msg').textContent = S.msg || '';
+  renderCard(); renderLB(); renderTokens();
+  $('cRoll').disabled = S.phase !== 'roll';
+  document.querySelectorAll('.tile.here').forEach((e) => e.classList.remove('here'));
+  if (cp && inGame()) $('tile' + cp.pos).classList.add('here');
+}
+
+function esc(s) { return String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
+
+const PIPS = { 1: [4], 2: [0, 8], 3: [0, 4, 8], 4: [0, 2, 6, 8], 5: [0, 2, 4, 6, 8], 6: [0, 2, 3, 5, 6, 8] };
+function dieHTML(v, rolling) {
+  let h = '';
+  for (let i = 0; i < 9; i++) h += PIPS[v].includes(i) ? '<i></i>' : '<span></span>';
+  return `<div class="die${v === 1 ? ' one' : ''}${rolling ? ' rolling' : ''}">${h}</div>`;
+}
+function renderDice(vals, rolling) { $('dice').innerHTML = vals.map((v) => dieHTML(v, rolling)).join(''); }
+function rollAnim(count) {
+  return new Promise((res) => {
+    $('dice').dataset.anim = '1';
+    let k = 0;
+    const iv = setInterval(() => {
+      renderDice(Array.from({ length: count }, d6), true); sfx('tick');
+      if (++k > 12) { clearInterval(iv); delete $('dice').dataset.anim; res(); }
+    }, 95);
+  }).then(() => sleep(0));
+}
+
+const DECK_LABEL = { chance: '機會', fate: '命運', challenge: '挑戰', ktv: '點唱機', boss: '老闆辦公室', duo: '貴賓交流', bad: '突發狀況', good: '好事發生', start: '發薪日' };
+function renderCard() {
+  const cv = $('cardview');
+  const c = S.card;
+  if (!c || !inGame()) { cv.classList.add('hidden'); cv.dataset.key = ''; return; }
+  const owner = P(c.pid);
+  const key = c.title + c.pid + c.tile;
+  if (cv.dataset.key !== key) { cv.classList.add('hidden'); void cv.offsetWidth; cv.dataset.key = key; }
+  cv.className = `cardview d-${c.deck}`;
+  let h = `<span class="deck">${DECK_LABEL[c.deck] || ''}</span>
+    <div class="cic">${c.icon}</div><h2>${esc(c.title)}</h2>${c.text ? `<p>${esc(c.text)}</p>` : ''}`;
+  if (c.live) h += `<div class="live">${esc(c.live)}</div>`;
+  if (c.status) h += `<div class="status">${esc(c.status)}</div>`;
+  const pd = S.pending;
+  if (pd) {
+    if (pd.by === 'mc') {
+      h += `<div class="status">主持人判定（鍵盤 1 = 成功、2 = 失敗）</div><div class="opts">${pd.options.map((o, i) => `<button class="btn big ${i ? 'paper' : 'green'}" data-v="${o.v}">${o.label}</button>`).join('')}</div>`;
+    } else {
+      const who = P(pd.pid);
+      h += `<div class="status">⏳ 等 ${who ? esc(who.name) : ''} 在手機上選擇：${esc(pd.title)}</div>
+        <div class="opts">${pd.options.map((o) => `<button class="btn sm paper" data-v="${o.v}">${esc(o.label)}</button>`).join('')}</div>`;
+    }
+  }
+  if (owner) h += `<div class="owner">${owner.avatar} ${esc(owner.name)} 停在「${esc(c.tile)}」</div>`;
+  cv.innerHTML = h;
+  cv.querySelectorAll('[data-v]').forEach((b) => b.onclick = () => resolvePending(b.dataset.v));
+}
+
+let prevRank = {};
+function renderLB() {
+  const list = gamers().slice().sort((a, b) => b.coins - a.coins);
+  const cheerN = Object.values(S.players).filter((p) => p.role === 'cheer').length;
+  const el = $('lb');
+  el.classList.toggle('two', list.length > 8);
+  const cp = curPid();
+  el.innerHTML = list.map((p, i) => `
+    <div class="row${p.pid === cp && inGame() ? ' cur' : ''}" id="row_${p.pid}">
+      <span class="rk">${i + 1}</span>${avatarHTML(p)}
+      <div style="min-width:0"><div class="nm">${esc(p.name)}${p.role === 'guest' ? '<span class="tag">外賓</span>' : ''}${p.skip ? `<span class="tag skip">暫停${p.skip}</span>` : ''}</div>
+      <div class="meta">${p.items.map((it) => G.items[it].icon).join(' ')}${p.on ? '' : ' 📴離線'}</div></div>
+      <span class="co">${p.coins}</span>
+    </div>`).join('') + (cheerN ? `<div class="meta" style="font-weight:900;padding:4px">📣 啦啦隊 ${cheerN} 人加油中</div>` : '');
+}
+function bumpRow(pid) {
+  requestAnimationFrame(() => { const r = $('row_' + pid); if (r) { r.classList.remove('bump'); void r.offsetWidth; r.classList.add('bump'); } });
+}
+
+function tileCenter(i) {
+  const t = $('tile' + i);
+  return { x: t.offsetLeft + t.offsetWidth / 2, y: t.offsetTop + t.offsetHeight / 2 + t.offsetHeight * 0.08, w: t.offsetWidth };
+}
+function renderTokens() {
+  const box = $('tokens');
+  const cp = curPid();
+  const byTile = {};
+  gamers().forEach((p) => { (byTile[p.pos] = byTile[p.pos] || []).push(p); });
+  const seen = new Set();
+  for (const [pos, ps] of Object.entries(byTile)) {
+    const c = tileCenter(+pos);
+    const others = ps.filter((p) => !(p.pid === cp && inGame()));
+    const cols = others.length <= 1 ? 1 : others.length <= 4 ? 2 : others.length <= 9 ? 3 : 4;
+    const rows = Math.ceil(others.length / cols);
+    const cell = c.w * 0.86 / Math.max(cols, rows, 1);
+    ps.forEach((p) => {
+      seen.add(p.pid);
+      let el = $('tok_' + p.pid);
+      if (!el) { el = document.createElement('div'); el.id = 'tok_' + p.pid; box.appendChild(el); }
+      const isCur = p.pid === cp && inGame();
+      el.className = `token${isCur ? ' cur' : ''}${p.on ? '' : ' off'}`;
+      el.innerHTML = `<span class="avatar" style="--c:${p.color};width:100%;height:100%">${p.avatar}</span>`;
+      let x = c.x, y = c.y;
+      if (!isCur && others.length > 1) {
+        const k = others.indexOf(p);
+        x += ((k % cols) - (cols - 1) / 2) * cell;
+        y += (Math.floor(k / cols) - (rows - 1) / 2) * cell;
+      }
+      el.style.left = x + 'px'; el.style.top = y + 'px';
+    });
+  }
+  [...box.children].forEach((el) => { if (!seen.has(el.id.slice(4))) el.remove(); });
+}
+
+function fxNumber(p, n) {
+  const c = tileCenter(p.pos);
+  const el = document.createElement('div');
+  el.className = 'fxnum ' + (n > 0 ? 'plus' : 'minus');
+  el.textContent = (n > 0 ? '+' : '') + n;
+  el.style.left = c.x + 'px'; el.style.top = c.y - c.w * 0.3 + 'px';
+  $('board').appendChild(el);
+  setTimeout(() => el.remove(), 1700);
+}
+function flashTile(i) { const t = $('tile' + i); t.classList.remove('flash'); void t.offsetWidth; t.classList.add('flash'); }
+function spawnHeart() {
+  const h = document.createElement('div');
+  h.className = 'heart'; h.textContent = pickOne(['❤️', '💛', '🧡', '👏', '🎉', '💰']);
+  h.style.left = (55 + Math.random() * 40) + 'vw';
+  document.body.appendChild(h); setTimeout(() => h.remove(), 2500);
+}
+function toast(t) {
+  const el = document.createElement('div'); el.className = 'toast'; el.textContent = t;
+  $('toasts').appendChild(el); setTimeout(() => el.remove(), 3200);
+  while ($('toasts').children.length > 3) $('toasts').firstChild.remove();
+}
+
+function renderNet() {
+  const map = { online: ['on', '連線正常'], reconnecting: ['warn', '重新連線中…'], offline: ['off', '離線'], error: ['off', '連線錯誤'] };
+  const [cls, txt] = map[netStatus] || ['', '連線中…'];
+  for (const k of [1, 2]) { $('netDot' + k).className = 'dot ' + cls; $('netTxt' + k).textContent = txt; }
+}
+
+/* ---------- 大廳 / QR ---------- */
+function baseUrl() {
+  const custom = $('baseUrl').value.trim();
+  if (custom) return custom.endsWith('/') ? custom : custom + '/';
+  return location.href.replace(/[?#].*$/, '').replace(/[^/]*$/, '');
+}
+function joinUrl(mc) { return `${baseUrl()}play.html?r=${S.room}&b=${S.broker}${mc ? '&mc=' + S.mcKey : ''}`; }
+let qrKey = '';
+function makeQR(el, text, size) {
+  el.innerHTML = '';
+  new QRCode(el, { text, width: size, height: size, colorDark: '#1f2a3a', colorLight: '#fffdf6', correctLevel: QRCode.CorrectLevel.M });
+}
+function renderLobby() {
+  const url = joinUrl(false);
+  if (qrKey !== url) {
+    qrKey = url;
+    makeQR($('qrBig'), url, 360); makeQR($('qrSmall'), url, 200);
+    $('urlBig').textContent = url;
+    $('codeBig').textContent = $('codeSmall').textContent = S.room;
+  }
+  $('fileWarn').classList.toggle('hidden', location.protocol !== 'file:');
+  $('rVal').textContent = $('ruleRounds').textContent = S.maxRounds;
+  const ps = Object.values(S.players);
+  $('joinedN').textContent = ps.length;
+  $('joined').innerHTML = ps.map((p) => `<div class="chip">${avatarHTML(p)}<span>${esc(p.name)}${p.role === 'guest' ? '・外賓' : p.role === 'cheer' ? '・啦啦隊' : ''}</span></div>`).join('');
+  $('startBtn').disabled = !S.order.length;
+}
+function showMcQR() {
+  const m = $('modal');
+  m.innerHTML = `<div class="card"><h2 style="margin:0 0 6px">主持人手機</h2><p style="font-weight:700;margin:0 0 14px">用主持人的手機掃這個，可以遠端判定挑戰、代擲骰、加扣錢。<br>（不要給玩家看到喔）</p><div id="mcQr" style="width:260px;height:260px;margin:0 auto 12px"></div><div style="font-weight:900">主持人密碼 ${S.mcKey}</div><button class="btn" style="margin-top:14px" onclick="this.closest('.modal').classList.add('hidden')">關閉</button></div>`;
+  m.classList.remove('hidden');
+  makeQR($('mcQr'), joinUrl(true), 260);
+}
+
+function renderFinal() {
+  const f = S.final; if (!f) return;
+  const rk = f.ranking.map(P).filter(Boolean);
+  const pod = (p, n) => p ? `<div class="pod p${n}">${avatarHTML(p)}<div class="nm">${esc(p.name)}</div><div class="co">${p.coins} 幣</div><div class="block">${n}</div></div>` : '<div class="pod"></div>';
+  $('final').innerHTML = `<div class="final">
+    <h1 class="title-3d big">發財夢結算！</h1>
+    <div class="ribbon" style="font-size:24px">👑 今年的發財王是 ${rk[0] ? esc(rk[0].name) : ''}</div>
+    <div class="podium">${pod(rk[1], 2)}${pod(rk[0], 1)}${pod(rk[2], 3)}</div>
+    <div class="awards">${f.awards.map((a) => { const p = P(a.pid); return `<div class="card award"><div class="t">${a.t}</div><div class="w">${p.avatar} ${esc(p.name)}</div><div class="d">${a.d}</div></div>`; }).join('')}</div>
+    <div class="rest">${rk.slice(3).map((p, i) => `<span>${i + 4}. ${p.avatar} ${esc(p.name)} ${p.coins}</span>`).join('')}</div>
+    <div style="display:flex;gap:12px"><button class="btn" id="againBtn">同一批人再玩一局</button><button class="btn paper" id="newBtn">開新房間</button></div>
+  </div>`;
+  $('againBtn').onclick = () => { S.phase = 'lobby'; S.final = null; sync(); };
+  $('newBtn').onclick = () => newRoom();
+}
+
+/* ---------- 音效 ---------- */
+let actx = null;
+function tone(f, d, type = 'square', vol = 0.06, delay = 0) {
+  if (!soundOn) return;
+  try {
+    actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+    const o = actx.createOscillator(), g = actx.createGain(), t = actx.currentTime + delay;
+    o.type = type; o.frequency.setValueAtTime(f, t);
+    g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + d);
+    o.connect(g).connect(actx.destination); o.start(t); o.stop(t + d);
+  } catch (e) {}
+}
+function sfx(k) {
+  switch (k) {
+    case 'tick': tone(500 + Math.random() * 300, 0.05, 'square', 0.03); break;
+    case 'step': tone(660, 0.08, 'triangle', 0.08); break;
+    case 'dice': tone(880, 0.12, 'triangle', 0.08); tone(1320, 0.15, 'triangle', 0.06, 0.08); break;
+    case 'coin': [988, 1319].forEach((f, i) => tone(f, 0.18, 'square', 0.05, i * 0.08)); break;
+    case 'lose': [400, 300].forEach((f, i) => tone(f, 0.2, 'sawtooth', 0.04, i * 0.12)); break;
+    case 'bad': [520, 440, 330].forEach((f, i) => tone(f, 0.22, 'sawtooth', 0.04, i * 0.14)); break;
+    case 'card': [660, 880].forEach((f, i) => tone(f, 0.16, 'triangle', 0.07, i * 0.1)); break;
+    case 'turn': tone(784, 0.12, 'triangle', 0.07); tone(1047, 0.2, 'triangle', 0.07, 0.12); break;
+    case 'join': tone(1047, 0.1, 'triangle', 0.06); break;
+    case 'fanfare': [523, 659, 784, 1047, 784, 1047].forEach((f, i) => tone(f, 0.22, 'square', 0.05, i * 0.13)); break;
+  }
+}
+
+/* ---------- 綁定 ---------- */
+function newRoom() {
+  cancelChain();
+  if (net) try { net.clear(); } catch (e) {}
+  const keep = S ? S.broker : 0, rounds = S ? S.maxRounds : G.defaultRounds;
+  S = newState(makeCode(5), keep, rounds);
+  qrKey = '';
+  connect(); sync();
+}
+
+function init() {
+  buildBoard();
+  BROKERS.forEach((b, i) => $('brokerSel').add(new Option(b.name, i)));
+  try { $('baseUrl').value = localStorage.getItem('wy26_base') || ''; } catch (e) {}
+  $('baseUrl').oninput = () => { try { localStorage.setItem('wy26_base', $('baseUrl').value); } catch (e) {} qrKey = ''; render(); };
+
+  let saved = null;
+  try { saved = JSON.parse(localStorage.getItem(LS)); } catch (e) {}
+  S = newState(makeCode(5), 0);
+  if (saved && saved.room && saved.phase !== 'ended' && Object.keys(saved.players || {}).length) {
+    const inProg = saved.phase !== 'lobby';
+    const box = $('resumeBox');
+    box.classList.remove('hidden');
+    box.innerHTML = `<span>偵測到上一局（房號 ${saved.room}，${Object.keys(saved.players).length} 人${inProg ? `，第 ${saved.round} 輪` : ''}）</span>
+      <button class="btn sm red" id="resumeBtn">繼續上一局</button>`;
+    $('resumeBtn').onclick = () => {
+      box.classList.add('hidden');
+      S = saved; qrKey = '';
+      connect();
+      if (inProg) { run(startTurn); toast('已恢復上一局，從目前這位玩家重新擲骰'); }
+      sync();
+    };
+  }
+  $('brokerSel').value = S.broker;
+  connect(); sync();
+
+  $('rMinus').onclick = () => { S.maxRounds = Math.max(1, S.maxRounds - 1); sync(); };
+  $('rPlus').onclick = () => { S.maxRounds = Math.min(20, S.maxRounds + 1); sync(); };
+  $('brokerSel').onchange = () => { S.broker = +$('brokerSel').value; qrKey = ''; connect(); sync(); };
+  $('newRoom').onclick = newRoom;
+  $('startBtn').onclick = () => { sfx('join'); startGame(); };
+  $('mcBtn1').onclick = $('mcBtn2').onclick = showMcQR;
+  $('cRoll').onclick = () => { if (S.phase === 'roll') run(() => doRoll(false)); };
+  $('cNext').onclick = () => { if (inGame()) forceNext(); };
+  $('cSound').onclick = () => { soundOn = !soundOn; $('cSound').textContent = '音效：' + (soundOn ? '開' : '關'); };
+  $('cEnd').onclick = () => { if (inGame() && confirm('確定要結束遊戲、進入結算嗎？')) endGame(); };
+  document.addEventListener('keydown', (e) => {
+    if (e.target.tagName === 'INPUT') return;
+    if (e.code === 'Space' && S.phase === 'roll') { e.preventDefault(); run(() => doRoll(false)); }
+    if (e.key === 'n' || e.key === 'N') { if (inGame()) forceNext(); }
+    if (S.pending && S.pending.by === 'mc') {
+      if (e.key === '1') resolvePending('ok');
+      if (e.key === '2') resolvePending('fail');
+    }
+  });
+  window.addEventListener('resize', renderTokens);
+  setInterval(() => {
+    // 線上狀態 + 擲骰倒數
+    const now = Date.now();
+    const changed = Object.values(S.players).some((p) => p.on !== (now - (lastSeen[p.pid] || 0) < 25000));
+    if (changed) sync();
+    $('timer').textContent = S.phase === 'roll' ? `${Math.max(0, Math.ceil((S.rollDeadline - now) / 1000))} 秒後自動擲骰` : '';
+  }, 1000);
+}
+init();
+</script>
+</body>
+</html>
