@@ -145,7 +145,7 @@
           const dE = Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
           res(r1(Math.max(0, 100 - dE)));
         };
-        const stop = timer(o, 25000, finish);
+        const stop = timer(o, 15000, finish);
         o.querySelector('#done').onclick = finish;
       });
     },
@@ -249,14 +249,22 @@
         o.innerHTML = head('⚡ 反應力', `第 ${i + 1}/3 次：變綠就按！`) + `<div class="mg-body"><div class="react" id="rx" style="background:var(--red)">等一下…</div></div>`;
         const rx = o.querySelector('#rx');
         report({ stage: 'play', trial: i + 1, light: 'red', times: times.slice() });
-        const delay = 1000 + R() * 2200;
+        // 假動作：先跑出老闆（不能按），DAINY 出現才能按
+        const delay = 1400 + R() * 2400;
+        const decoy = R() < 0.6 ? 500 + R() * (delay - 1100) : -1;
         const t = await new Promise((res) => {
           let green = false, t0 = 0;
-          const to = setTimeout(() => { green = true; t0 = now(); rx.style.background = 'var(--green)'; rx.textContent = '按！'; report({ light: 'green' }); }, delay);
+          const tos = [];
+          const set = (bg, txt, light) => { rx.style.background = bg; rx.textContent = txt; report({ light }); };
+          if (decoy > 0) {
+            tos.push(setTimeout(() => set('var(--yellow)', '👔 老闆來了！別按！', 'decoy'), decoy));
+            tos.push(setTimeout(() => set('var(--red)', '等一下…', 'red'), decoy + 650));
+          }
+          tos.push(setTimeout(() => { green = true; t0 = now(); set('var(--green)', '🤖 DAINY！按！', 'green'); }, delay));
           const miss = setTimeout(() => res(1.5), delay + 1500);
           rx.addEventListener('pointerdown', () => {
             clearTimeout(miss);
-            if (!green) { clearTimeout(to); rx.textContent = '太早了！'; res(1.2); }
+            if (!green) { tos.forEach(clearTimeout); rx.style.background = 'var(--red)'; rx.textContent = '太早了！'; res(1.2); }
             else res((now() - t0) / 1000);
           }, { once: true });
         });
@@ -345,33 +353,141 @@
 
     // 人流估算：分數 = 誤差 %
     async M10(R) {
-      const n = 40 + Math.floor(R() * 110);
+      const n = 15 + Math.floor(R() * 46);
       const o = overlay();
-      const dots = Array.from({ length: n }, () => `<span style="left:${4 + R() * 92}%;top:${4 + R() * 92}%">🙂</span>`).join('');
+      const dots = Array.from({ length: n }, () => `<span style="left:${5 + R() * 90}%;top:${5 + R() * 90}%">🙂</span>`).join('');
       o.innerHTML = head('👥 人流估算', '記住大概有幾個人！') + `<div class="mg-body"><div class="crowd">${dots}</div></div>`;
       report({ stage: 'play', crowd: 'show', guess: '' });
-      await wait(2500);
-      let input = '';
-      o.innerHTML = head('👥 人流估算', '剛剛有幾個人？') + `<div class="mg-body"><div class="ans" id="ans"></div>${KP}</div>`;
+      await wait(4000);
+      // 4 選 1：正確答案 + 3 個差 20%～45% 的干擾選項
+      const opts = [n];
+      while (opts.length < 4) {
+        const k = Math.round(n * (1 + (R() < 0.5 ? -1 : 1) * (0.2 + R() * 0.25)));
+        if (k > 3 && opts.every((x) => Math.abs(x - k) >= Math.max(3, n * 0.12))) opts.push(k);
+      }
+      opts.sort(() => R() - 0.5);
+      o.innerHTML = head('👥 人流估算', '剛剛有幾個人？選一個！') + `<div class="mg-body"><div class="kp" style="grid-template-columns:1fr 1fr">${opts.map((v) => `<button data-v="${v}" style="font-size:34px;padding:22px 0">${v}</button>`).join('')}</div></div>`;
+      report({ crowd: 'guess', guess: '', opts });
+      const v = await new Promise((res) => {
+        const to = setTimeout(() => res(100), 15000);
+        o.querySelectorAll('[data-v]').forEach((b) => b.addEventListener('pointerdown', (e) => {
+          e.preventDefault(); clearTimeout(to);
+          const g = +b.dataset.v;
+          report({ guess: String(g) });
+          b.style.background = g === n ? 'var(--green)' : '#f6a596';
+          res(r1(Math.abs(g - n) / n * 100));
+        }, { once: true }));
+      });
+      report({ answer: n });
+      await wait(500);
+      o.innerHTML = `<div class="mg-done">答案是 ${n} 人</div>`;
+      await wait(1200);
+      return v;
+    },
+
+    // 手機感應 PK 共用：先按一下（iPhone 要允許動作感應、打開聲音），最多等 20 秒
+    async S_ready(o, title, desc) {
+      o.innerHTML = head(title, desc) + `<div class="mg-body"><button class="tapbtn" id="go" style="background:var(--green);font-size:30px">我準備好了</button><p style="font-weight:700;color:var(--muted);text-align:center">按下去後倒數 3 秒開始<br>iPhone 跳出「動作與方向」請按允許</p></div>`;
+      report({ stage: 'play', sensor: 'wait' });
+      await new Promise((res) => { const to = setTimeout(res, 20000); o.querySelector('#go').onclick = () => { clearTimeout(to); beepOn(); window.Shake && Shake.ask(); res(); }; });
+      for (const k of [3, 2, 1]) { o.innerHTML = head(title, desc) + `<div class="mg-count">${k}</div>`; report({ sensor: 'count', count: k }); beep(660, 0.15); vib(80); await wait(1000); }
+      beep(1320, 0.3); vib(200);
+    },
+
+    // 金雞獨立：手機握在胸前單腳站，晃太大就出局。分數 = 撐住的秒數（撐滿 60 秒再比誰晃得少）
+    async S1() {
+      const o = overlay();
+      await GAMES.S_ready(o, '🦩 金雞獨立', '手機握在胸前，單腳站好，手機晃太大就出局！');
+      const STEPS = [[0, '單腳站好！', '🦩'], [15, '閉上眼睛！', '🙈'], [30, '另一隻手摸鼻子！', '👃'], [45, '踮腳尖！', '🩰']];
+      const LIMIT = 60, TH = 3.2, GRACE = 2.5;
+      o.innerHTML = head('🦩 金雞獨立', '手機晃太大就出局') + `<div class="mg-bar"><i></i></div><div class="mg-body">
+        <div style="font-size:70px;line-height:1" id="s1i">🦩</div><div class="mg-big" id="s1s">單腳站好！</div>
+        <div class="mg-count" style="flex:none;font-size:90px" id="s1t">0.0</div>
+        <div style="width:100%;font-weight:900;font-size:14px">晃動量（超過紅線就出局）</div>
+        <div style="position:relative;width:100%;height:26px;border:3px solid var(--ink);border-radius:99px;background:#fff;overflow:hidden"><i id="s1m" style="display:block;height:100%;width:0;background:var(--green)"></i><span style="position:absolute;top:0;bottom:0;left:80%;width:4px;background:var(--red)"></span></div>
+        <button class="btn paper" id="s1d" style="width:100%">我腳落地了 😵</button></div>`;
+      const noSensor = !(window.Shake && Shake.seen);
+      if (noSensor) o.querySelector('#s1s').insertAdjacentHTML('afterend', '<div style="font-weight:700;color:var(--red);font-size:13px">這支手機偵測不到晃動，請誠實按「腳落地了」</div>');
+      const t0 = now();
+      let ema = 0, sum = 0, n = 0, step = 0, graceUntil = t0 + GRACE * 1000, out = false;
       return new Promise((res) => {
-        const to = setTimeout(() => res(100), 20000);
-        keypad(o, (k) => {
-          if (k === 'del') input = input.slice(0, -1);
-          else if (k === 'ok') { if (input) { clearTimeout(to); res(r1(Math.abs(+input - n) / n * 100)); } return; }
-          else if (input.length < 3) input += k;
-          o.querySelector('#ans').textContent = input;
-          report({ crowd: 'guess', guess: input });
-        });
-      }).then(async (v) => { report({ answer: n }); o.innerHTML = `<div class="mg-done">答案是 ${n} 人</div>`; await wait(1200); return v; });
+        const end = (why) => {
+          if (out) return; out = true; clearInterval(iv);
+          const t = Math.min(LIMIT, (now() - t0) / 1000);
+          const avg = n ? sum / n : 0;
+          const score = t >= LIMIT ? r2(LIMIT + Math.max(0, 5 - avg) / 10) : r1(t);
+          report({ s1: why, t: r1(t), wob: ema });
+          if (why === 'out') { vib([300, 100, 300]); beep(220, 0.5, 'sawtooth'); }
+          o.querySelector('#s1s').textContent = why === 'full' ? '撐滿 60 秒！太強了' : why === 'out' ? '晃太大，出局！' : '落地了！';
+          setTimeout(() => res(score), 1200);
+        };
+        o.querySelector('#s1d').onclick = () => end('down');
+        const iv = setInterval(() => {
+          const t = (now() - t0) / 1000;
+          const lv = window.Shake ? Shake.level : 0;
+          ema = ema * 0.7 + lv * 0.3;
+          const graced = now() < graceUntil;
+          if (!graced) { sum += ema; n++; }
+          const nx = STEPS.findIndex((s, i) => i > step && t >= s[0]);
+          if (nx > step) { step = nx; graceUntil = now() + GRACE * 1000; o.querySelector('#s1i').textContent = STEPS[step][2]; o.querySelector('#s1s').textContent = STEPS[step][1]; beep(880, 0.2); beep(1175, 0.25, 'square', 0.08, 0.15); vib([150, 80, 150]); }
+          o.querySelector('#s1t').textContent = t.toFixed(1);
+          const pct = Math.min(100, ema / TH * 80);
+          const m = o.querySelector('#s1m'); m.style.width = pct + '%'; m.style.background = pct > 60 ? 'var(--red)' : pct > 35 ? 'var(--yellow)' : 'var(--green)';
+          o.querySelector('.mg-bar i').style.width = Math.max(0, 100 - t / LIMIT * 100) + '%';
+          report({ s1: 'play', t: r1(t), wob: r2(ema), th: TH, step, inst: STEPS[step][1], graced });
+          if (t >= LIMIT) end('full');
+          else if (!graced && !noSensor && ema > TH) end('out');
+        }, 80);
+      });
+    },
+
+    // 搖手機耐力賽：60 秒，搖越多下越好
+    async S2() {
+      const o = overlay();
+      await GAMES.S_ready(o, '📱 搖手機耐力賽', '60 秒用力搖，搖到手痠也不能停！');
+      const LIMIT = 60000;
+      o.innerHTML = head('📱 搖手機耐力賽', '不要停！') + `<div class="mg-bar"><i></i></div><div class="mg-body">
+        <div class="mg-big" id="s2h">用力搖！</div><div class="mg-count" style="flex:none" id="s2n">0</div><div style="font-weight:900;font-size:20px" id="s2l">還剩 60 秒</div></div>`;
+      let cnt = 0, tap = false, t0 = now();
+      const bump = () => {
+        if (now() - t0 > LIMIT) return;
+        cnt++;
+        const el = o.querySelector('#s2n'); if (el) el.textContent = cnt;
+        beep(330 + (cnt % 40) * 15, 0.04); vib(12);
+        report({ n: cnt });
+      };
+      const enableTap = () => { if (tap) return; tap = true; o.querySelector('#s2h').textContent = '偵測不到搖晃，改成狂點螢幕！'; o.onpointerdown = (e) => { e.preventDefault(); bump(); }; };
+      if (window.Shake) Shake.on(bump);
+      if (!(window.Shake && Shake.seen)) enableTap();
+      return new Promise((res) => {
+        const iv = setInterval(() => {
+          const el = now() - t0, left = Math.max(0, LIMIT - el);
+          if (!tap && cnt === 0 && el > 2500) enableTap();
+          o.querySelector('#s2l').textContent = `還剩 ${Math.ceil(left / 1000)} 秒`;
+          o.querySelector('.mg-bar i').style.width = (left / LIMIT * 100) + '%';
+          if (left <= 10000 && left > 0 && Math.ceil(left / 1000) !== Math.ceil((left + 100) / 1000)) beep(990, 0.08);
+          report({ n: cnt, left: left / LIMIT, last10: left <= 10000 });
+          if (left <= 0) { clearInterval(iv); if (window.Shake) Shake.off(); o.onpointerdown = null; vib([200, 80, 200]); res(cnt); }
+        }, 100);
+      });
     },
   };
+
+  // 小遊戲裡的音效（手機要先點過一次畫面才有聲音）
+  let actx = null;
+  function beepOn() { try { actx = actx || new (window.AudioContext || window.webkitAudioContext)(); if (actx.state === 'suspended') actx.resume(); } catch (e) {} }
+  function beep(f, d = 0.06, type = 'square', vol = 0.08, delay = 0) {
+    if (!actx) return;
+    try { const o = actx.createOscillator(), g = actx.createGain(), t = actx.currentTime + delay; o.type = type; o.frequency.setValueAtTime(f, t); g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + d); o.connect(g).connect(actx.destination); o.start(t); o.stop(t + d); } catch (e) {}
+  }
+  const vib = (p) => { try { navigator.vibrate && navigator.vibrate(p); } catch (e) {} };
 
   window.MiniGames = {
     async play(code, opts = {}) {
       const def = G.games[code];
       const R = rng(opts.seed || 1);
       state = { game: code }; emit = opts.onProgress || null; lastSent = 0;
-      await countdown(`${def.icon} ${def.name}`, opts.title || def.desc);
+      if (!/^S/.test(code)) await countdown(`${def.icon} ${def.name}`, opts.title || def.desc); // 感應遊戲自己有準備畫面
       let score;
       try { score = await GAMES[code](R, opts.variant); }
       catch (e) { console.error(e); score = def.better === 'high' ? 0 : 99; }

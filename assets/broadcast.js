@@ -54,7 +54,7 @@
         return `<div class="bc-type">${ph.map((c, i) => `<span class="${i >= ty.length ? 'todo' : ty[i] === c ? 'ok' : 'no'}">${esc(c)}</span>`).join('')}</div><div class="bc-sub">已打 ${Math.min(ty.length, ph.length)} / ${ph.length} 字</div>`;
       }
       case 'M5': return `<div class="bc-huge">${d.n || 0}</div><div class="bc-meter"><i style="width:${Math.min(100, (d.n || 0) / 90 * 100)}%;background:var(--red)"></i></div><div class="bc-sub">10 秒狂點</div>`;
-      case 'M6': return `<div class="bc-lamp" style="background:${d.light === 'green' ? 'var(--green)' : d.light === 'red' ? 'var(--red)' : '#ddd'}"></div>
+      case 'M6': return `<div class="bc-lamp" style="background:${d.light === 'green' ? 'var(--green)' : d.light === 'decoy' ? 'var(--yellow)' : d.light === 'red' ? 'var(--red)' : '#ddd'}"></div>${d.light === 'decoy' ? '<div class="bc-mid">👔 假動作！</div>' : ''}
         <div class="bc-mid">第 ${d.trial} / 3 次</div><div class="bc-sub">${(d.times || []).map((t) => t >= 1.2 ? '失誤' : t.toFixed(3) + 's').join('　') || '等變綠…'}</div>`;
       case 'M7':
         if (d.timing === 'running') return `<div class="bc-big bc-pulse">⏱️ 計時中…</div><div class="bc-sub">目標：剛好 5.00 秒（全場不准幫忙數！）</div>`;
@@ -70,7 +70,19 @@
         return `<div class="bc-big">擺回 ${d.placed} / 4 件</div><div class="bc-dots">${[1, 2, 3, 4].map((i) => `<i class="${i <= d.placed ? 'on' : ''}"></i>`).join('')}</div>`;
       case 'M10':
         if (d.crowd === 'show') return `<div class="bc-big bc-pulse">👥 觀察人潮中…</div>`;
-        return `<div class="bc-sub">猜有幾個人？</div><div class="bc-huge">${esc(d.guess) || '?'}</div>`;
+        return `<div class="bc-sub">猜有幾個人？${d.opts ? '（' + d.opts.join('／') + '）' : ''}</div><div class="bc-huge">${esc(d.guess) || '?'}</div>`;
+      case 'S1': {
+        if (d.sensor === 'wait') return `<div class="bc-big bc-pulse">🦩 準備中…</div>`;
+        if (d.sensor === 'count' && !d.s1) return `<div class="bc-huge">${d.count}</div>`;
+        const pct = Math.min(100, (d.wob || 0) / (d.th || 3.2) * 80);
+        const out = d.s1 === 'out' || d.s1 === 'down';
+        return `<div class="bc-mid">${out ? '😵 出局！' : d.s1 === 'full' ? '🏆 撐滿 60 秒！' : esc(d.inst || '')}</div><div class="bc-huge" style="${out ? 'color:var(--red)' : ''}">${(d.t || 0).toFixed(1)}<span style="font-size:.35em">秒</span></div>
+          <div class="bc-meter"><i style="width:${pct}%;background:${pct > 60 ? 'var(--red)' : pct > 35 ? 'var(--yellow)' : 'var(--green)'}"></i></div><div class="bc-sub">晃動量</div>`;
+      }
+      case 'S2':
+        if (d.sensor === 'wait') return `<div class="bc-big bc-pulse">📱 準備中…</div>`;
+        if (d.sensor === 'count' && d.n == null) return `<div class="bc-huge">${d.count}</div>`;
+        return `<div class="bc-huge">${d.n || 0}</div><div class="bc-meter"><i style="width:${Math.min(100, (d.n || 0) / 300 * 100)}%;background:var(--red)"></i></div><div class="bc-mid">${d.last10 ? '🔥 最後 10 秒！' : '搖！搖！搖！'}</div>`;
     }
     return '';
   }

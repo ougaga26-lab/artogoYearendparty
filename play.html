@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#f9c9b5">
 <title>藝途發財夢｜手機控制器</title>
-<link rel="stylesheet" href="assets/style.css?v=20261113i">
+<link rel="stylesheet" href="assets/style.css?v=20261113j">
 <style>
   body { min-height: 100svh; padding: 14px 16px calc(24px + env(safe-area-inset-bottom)); max-width: 520px; margin: 0 auto; user-select: none; -webkit-user-select: none; }
   header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
@@ -112,10 +112,10 @@
 <div class="cerov hidden" id="cerov"></div>
 
 <script src="https://unpkg.com/mqtt@5.10.1/dist/mqtt.min.js"></script>
-<script src="assets/game-data.js?v=20261113i"></script>
-<script src="assets/net.js?v=20261113i"></script>
-<script src="assets/games.js?v=20261113i"></script>
-<script src="assets/shake.js?v=20261113i"></script>
+<script src="assets/game-data.js?v=20261113j"></script>
+<script src="assets/net.js?v=20261113j"></script>
+<script src="assets/games.js?v=20261113j"></script>
+<script src="assets/shake.js?v=20261113j"></script>
 <script>
 const G = window.GAME;
 const $ = (id) => document.getElementById(id);
@@ -485,6 +485,10 @@ function renderGuest(me) {
   else if (S.phase === 'ended') {
     const ok = S.final && S.final.bettors.includes(PID);
     act = `<div class="big">${ok ? '🏆 你押中了！<br>最強董事就是你' : '感謝董事會的參與！'}</div><div class="small">請看大螢幕拆禮物</div>`;
+  } else if (pd && pd.kind === 'game' && pd.players.includes(PID)) {
+    act = `${cardMini()}<div class="big">🦸 代打中！</div>`;
+  } else if (pd && pd.kind === 'realpk' && pd.players.includes(PID)) {
+    act = answered[pd.id] ? `${cardMini()}<div class="big">已回報，等對方確認…</div>` : `${cardMini()}<div class="big">🦸 代打比完了嗎？誰贏了？</div><div class="opts">${pd.players.map((x) => `<button class="btn ${x === PID ? '' : 'paper'}" data-win="${x}"><span>${P(x).avatar} ${esc(P(x).name)} 贏</span></button>`).join('')}</div>`;
   } else if (S.phase === 'ceremony') {
     act = guestCer(me);
   } else if (pd && pd.kind === 'vote') {
@@ -509,6 +513,7 @@ function renderGuest(me) {
   bindChoices();
   document.querySelectorAll('[data-vote]').forEach((b) => b.onclick = () => { send({ t: 'vote', id: S.pending.id, v: b.dataset.vote }); answered[S.pending.id] = true; vib(30); render(); });
   document.querySelectorAll('[data-bet]').forEach((b) => b.onclick = () => { send({ t: 'bet', target: b.dataset.bet }); vib(30); });
+  document.querySelectorAll('[data-win]').forEach((b) => b.onclick = () => { send({ t: 'pkWinner', id: S.pending.id, winner: b.dataset.win }); answered[S.pending.id] = true; vib(30); render(); });
   document.querySelectorAll('[data-gb]').forEach((b) => b.onclick = () => { send({ t: 'gbet', n: +b.dataset.gb }); S.cer.gbets[PID] = +b.dataset.gb; vib(30); render(); });
   const tb = $('tipBtn'); if (tb) tb.addEventListener('pointerdown', (e) => { e.preventDefault(); tipTaps++; vib(15); });
 }

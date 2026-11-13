@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>藝途發財夢｜主畫面</title>
-<link rel="stylesheet" href="assets/style.css?v=20261113i">
+<link rel="stylesheet" href="assets/style.css?v=20261113j">
 <style>
   body { overflow: hidden; height: 100vh; }
 
@@ -422,9 +422,9 @@
 
 <script src="https://unpkg.com/mqtt@5.10.1/dist/mqtt.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-<script src="assets/game-data.js?v=20261113i"></script>
-<script src="assets/net.js?v=20261113i"></script>
-<script src="assets/broadcast.js?v=20261113i"></script>
+<script src="assets/game-data.js?v=20261113j"></script>
+<script src="assets/net.js?v=20261113j"></script>
+<script src="assets/broadcast.js?v=20261113j"></script>
 <script>
 const G = window.GAME;
 const N = G.tiles.length;
@@ -911,29 +911,48 @@ async function playSolo(p, game, variant, title) {
   return ok;
 }
 
+// 代打卡：PK 開始前可以請任何人（同事或外賓）替你上場
+async function chooseSub(x, foe, taken) {
+  if (!x.items.includes('sub')) return x;
+  const cands = Object.values(S.players).filter((c) => c.on && c.pid !== x.pid && c.pid !== foe.pid && !taken.includes(c.pid));
+  if (!cands.length) return x;
+  const v = await ask({ kind: 'pick', by: 'player', pid: x.pid, title: '🦸 要用代打卡，請人替你上場嗎？', options: [{ v: 'keep', label: '我自己上！' }].concat(cands.map((c) => ({ v: c.pid, label: `${c.avatar} ${c.name}`, sub: G.roles[c.role].name }))) }, 25000, 'keep');
+  const f = v !== 'keep' && P(v);
+  if (!f) return x;
+  x.items.splice(x.items.indexOf('sub'), 1);
+  toast(`🦸 ${f.name} 替 ${x.name} 上場！`); sfx('fanfare');
+  return f;
+}
 async function pkFlow(a, b, game) {
   const d = def(game);
-  setLive(`⚔️ ${a.avatar} ${a.name} vs ${b.avatar} ${b.name}：${d.icon}${d.name}！${d.real ? d.desc : ''}`);
+  const fa = await chooseSub(a, b, []);
+  const fb = await chooseSub(b, a, [fa.pid]);
+  const nm = (x, f) => f === x ? `${x.avatar} ${x.name}` : `${x.avatar} ${x.name}（🦸 ${f.name} 代打）`;
+  const owner = (pid) => pid === fa.pid ? a : pid === fb.pid ? b : P(pid);
+  setLive(`⚔️ ${nm(a, fa)} vs ${nm(b, fb)}：${d.icon}${d.name}！${d.real ? d.desc : ''}`);
   sfx('fanfare');
   let w;
   if (d.real) {
-    let v = await ask({ kind: 'realpk', game, players: [a.pid, b.pid], res: {}, title: `${d.icon} ${d.name}：誰贏了？` }, 0);
+    let v = await ask({ kind: 'realpk', game, players: [fa.pid, fb.pid], res: {}, title: `${d.icon} ${d.name}：誰贏了？` }, 0);
     if (v === 'DISAGREE') {
       setStatus('兩人說法不同！交給董事會投票');
-      v = await guestVote(`${d.name}：誰贏了？`, [a, b].map((x) => ({ v: x.pid, label: `${x.avatar} ${x.name}` })));
-      if (!v) v = await ask({ kind: 'judge', by: 'mc', title: '兩人說法不同，請主持人判定', options: [a, b].map((x) => ({ v: x.pid, label: `${x.avatar} ${x.name} 贏` })) }, 0);
+      v = await guestVote(`${d.name}：誰贏了？`, [fa, fb].map((x) => ({ v: x.pid, label: `${x.avatar} ${x.name}` })));
+      if (!v) v = await ask({ kind: 'judge', by: 'mc', title: '兩人說法不同，請主持人判定', options: [fa, fb].map((x) => ({ v: x.pid, label: `${x.avatar} ${x.name} 贏` })) }, 0);
     }
-    w = P(v);
+    w = owner(v);
   } else {
-    const res = await collect({ kind: 'game', mode: 'pk', game, seed: 1 + Math.floor(Math.random() * 1e9), players: [a.pid, b.pid] }, 90000);
-    const sa = res[a.pid], sb = res[b.pid];
+    const res = await collect({ kind: 'game', mode: 'pk', game, seed: 1 + Math.floor(Math.random() * 1e9), players: [fa.pid, fb.pid] }, /^S/.test(game) ? 150000 : 90000);
+    const sa = res[fa.pid], sb = res[fb.pid];
     w = better(game, sa, sb) ? a : better(game, sb, sa) ? b : pickOne([a, b]);
-    setStatus(`${a.name} ${fmtScore(game, sa)}　vs　${b.name} ${fmtScore(game, sb)}`);
-    await sleep(1600);
+    setStatus(`${fa.name} ${fmtScore(game, sa)}　vs　${fb.name} ${fmtScore(game, sb)}`);
+    await sleep(1800);
   }
   w.stats.wins++;
-  setStatus(`🏆 ${w.name} 贏了！`); sfx('fanfare');
-  await sleep(1500);
+  const wf = w === a ? fa : fb;
+  let thanks = '';
+  if (wf !== w) { thanks = `\n感謝 ${wf.name} 代打！`; if (wf.role !== 'guest') { addCoins(wf, 10, true); thanks += '（代打費 +10）'; } }
+  setStatus(`🏆 ${w.name} 贏了！${thanks}`); sfx('fanfare');
+  await sleep(thanks ? 2200 : 1500);
   return w;
 }
 
@@ -1016,16 +1035,35 @@ async function giftTile(p) {
   await sleep(2400);
 }
 
+// PK 格抽遊戲：照 game-data.js 的權重，動身體的比較常出現
+function pickPkGame() {
+  const list = Object.entries(G.pkGames);
+  let r = Math.random() * list.reduce((a, [, w]) => a + w, 0);
+  for (const [g, w] of list) { r -= w; if (r < 0) return g; }
+  return list[0][0];
+}
 async function pkTile(p) {
-  const game = pickOne(G.pkGames);
+  const game = pickPkGame();
   const d = def(game);
-  showCard({ deck: 'pk', icon: '⚔️', title: `PK：${d.icon} ${d.name}`, text: `${d.desc}。指定一個人對決！正式員工之間贏的人可以換禮物，有紅包玩家參與則贏 ${G.pkCoins} 幣` }, p);
-  await sleep(1600);
+  showCard({ deck: 'pk', icon: '⚔️', title: `PK：${d.icon} ${d.name}`, text: `${d.desc}。指定一個人對決，再決定要賭什麼！` }, p);
+  await readWait(readMs(d.desc) - 1000);
   const others = boardPlayers().filter((x) => x.pid !== p.pid);
   const t = await pickPlayer(p, `要跟誰 PK「${d.name}」？`, others);
   if (!t) return;
+  // 發起的人選賭注：禮物（兩人都是正式員工才有）或錢
+  const ga = giftOf(p.pid), gt = giftOf(t.pid);
+  const opts = [];
+  if (p.role === 'staff' && t.role === 'staff' && ga && gt && !gt.locked) opts.push({ v: 'gift', label: '🎁 賭禮物', sub: `你贏了可以拿${tierName(ga)}換他的${tierName(gt)}` });
+  G.pkStakes.forEach((n) => opts.push({ v: String(n), label: `💰 賭 ${n} 幣`, sub: '贏的人從輸的人身上拿' }));
+  const stake = await ask({ kind: 'pick', by: 'player', pid: p.pid, title: `要跟 ${t.name} 賭什麼？`, options: opts }, 30000, opts[0].v);
+  if (S.card) { S.card.text = `${p.name} vs ${t.name}・賭注：${stake === 'gift' ? '🎁 禮物' : `💰 ${stake} 幣`}`; sync(); }
   const w = await pkFlow(p, t, game);
   const l = w === p ? t : p;
+  if (stake !== 'gift') {
+    const a = transfer(l, w, +stake);
+    setStatus(`${w.name} 從 ${l.name} 手上贏走 ${a} 幣！`); await sleep(1800);
+    return;
+  }
   const gw = giftOf(w.pid), gl = giftOf(l.pid);
   if (w.role === 'staff' && l.role === 'staff' && gw && gl && !gl.locked) {
     const v = await ask({ kind: 'pick', by: 'player', pid: w.pid, title: `要用你的${giftText(gw)}，換 ${l.name} 的${giftText(gl)}嗎？`, options: [{ v: 'swap', label: '換！' }, { v: 'keep', label: '不換，留著我的' }] }, 30000, 'keep');

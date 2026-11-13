@@ -1,4 +1,4 @@
-window.APP_VER = '20261113i'; // 每次更新程式都改這個版本號，手機會自動要求重新整理
+window.APP_VER = '20261113j'; // 每次更新程式都改這個版本號，手機會自動要求重新整理
 
 /* =========================================================
    藝途發財夢 v2 — 遊戲內容設定檔
@@ -161,15 +161,15 @@ window.GAME = {
   tiles: [
     { type: 'start' },
     { type: 'event', cat: 'voice' }, { type: 'event', cat: 'biz' }, { type: 'gift' },
-    { type: 'event', cat: 'web' }, { type: 'fate' }, { type: 'event', cat: 'expo' },
+    { type: 'pk' }, { type: 'fate' }, { type: 'event', cat: 'expo' },
     { type: 'event', cat: 'admin', corner: true },
     { type: 'event', cat: 'dainy' }, { type: 'pk' }, { type: 'event', cat: 'fin' },
     { type: 'chance' }, { type: 'peek' }, { type: 'event', cat: 'tea' },
     { type: 'event', cat: 'boss', corner: true },
-    { type: 'event', cat: 'proj' }, { type: 'gift' }, { type: 'event', cat: 'web' },
+    { type: 'pk' }, { type: 'gift' }, { type: 'event', cat: 'web' },
     { type: 'fate' }, { type: 'event', cat: 'expo' }, { type: 'pk' },
     { type: 'event', cat: 'party', corner: true },
-    { type: 'event', cat: 'social' }, { type: 'event', cat: 'proj' }, { type: 'peek' },
+    { type: 'event', cat: 'social' }, { type: 'event', cat: 'proj' }, { type: 'pk' },
     { type: 'event', cat: 'biz' }, { type: 'chance' }, { type: 'gift' },
   ],
   special: {
@@ -186,6 +186,7 @@ window.GAME = {
     { title: '免死金牌', text: '遇到壞事時亮出來，直接抵銷一次。老闆親簽，效力等同請假條', effect: { item: 'shield' } },
     { title: '禮物防盜鎖', text: '下次有人要搶你的禮物，自動擋下來。比公司門禁還可靠', effect: { item: 'lock', alt: { coins: 40 } } },
     { title: '偷看券', text: '隨時可以在手機上偷看一份禮物。看完記得裝沒事', effect: { item: 'peek' } },
+    { title: '代打卡', text: 'PK 時可以請任何人（同事或外賓都行）替你上場。比腕力打不過？找個壯的！', effect: { item: 'sub' } },
     { title: '神秘交換券', text: '免費跟任一人交換禮物。對方會不會恨你，不在這張卡的保固範圍', effect: { swapPick: true, alt: { coins: 50 } } },
     { title: '年終獎金提前發', text: '會計手滑，年終獎金提前發了！+80（先別問會不會收回）', effect: { coins: 80 } },
     { title: '主管請客', text: '主管請下午茶，你負責點餐，順手幫自己點了大杯。+30', effect: { coins: 30 } },
@@ -205,7 +206,7 @@ window.GAME = {
     { title: '硬碟掛了', text: '外接硬碟發出「喀、喀」兩聲，然後就再也沒醒來。−50', effect: { coins: -50 }, bad: true, rescue: 'M9', rescueText: '憑記憶重建' },
     { title: '颱風假', text: '宣布放颱風假！你在家耍廢一整天，還領到 20 補助', effect: { coins: 20 } },
     { title: '開會開到天荒地老', text: '「十分鐘就好」的會開了三小時，午餐沒了只好叫外送。−30', effect: { coins: -30 }, bad: true, rescue: 'M6', rescueText: '趁空檔溜出會議室' },
-    { title: '中了發票', text: '發票對中兩百元！雖然不多，但這是今年運氣最好的一天。+20', effect: { coins: 20 } },
+    { title: '找到神隊友', text: '你在茶水間結交了一位神隊友，他說 PK 時可以幫你上場。得到代打卡', effect: { item: 'sub' } },
     { title: '老闆心情好', text: '老闆今天心情特別好，看到你就說「不錯喔！」順手塞了個紅包。+40', effect: { coins: 40 } },
     { title: 'Deadline 提前', text: '客戶：「上線日可以提前一週嗎？我們老闆想先看。」−40', effect: { coins: -40 }, bad: true, rescue: 'M7', rescueText: '抓準 Deadline' },
     { title: '被派去寄包裹', text: '被派去寄包裹，郵資自己先墊，收據就這樣消失在抽屜裡了。−20', effect: { coins: -20 } },
@@ -221,18 +222,19 @@ window.GAME = {
     M3: { name: '找 Bug', icon: '🐞', desc: '在一整片字裡找出唯一不一樣的那個，共 3 關', better: 'low', pass: 15, unit: ' 秒' },
     M4: { name: '打字', icon: '⌨️', desc: '照著畫面一字不差打出來', better: 'low', pass: 25, unit: ' 秒' },
     M5: { name: '狂點', icon: '👆', desc: '10 秒內瘋狂點按鈕', better: 'high', pass: 60, unit: ' 下' },
-    M6: { name: '反應力', icon: '⚡', desc: '畫面變綠的瞬間按下去，共 3 次', better: 'low', pass: 0.45, unit: ' 秒' },
+    M6: { name: '反應力', icon: '⚡', desc: 'DAINY 出現的瞬間按下去，老闆出現不能按，共 3 次', better: 'low', pass: 0.42, unit: ' 秒' },
     M7: { name: '精準計時', icon: '⏱️', desc: '憑感覺在剛好 5.00 秒時按停', better: 'low', pass: 0.3, unit: ' 秒誤差' },
     M8: { name: '對齊', icon: '📐', desc: '把方塊拖到框框的正中間', better: 'low', pass: 3, unit: '% 誤差' },
     M9: { name: '記憶', icon: '🧠', desc: '記住 4 件作品的位置，再擺回去', better: 'high', pass: 4, unit: ' 件' },
-    M10: { name: '人流估算', icon: '👥', desc: '畫面閃過一群人，猜有幾個', better: 'low', pass: 15, unit: '% 誤差' },
-    R1: { name: '比腕力', icon: '💪', desc: '兩人現場比腕力', real: true },
-    R2: { name: '柔軟度', icon: '🤸', desc: '站姿體前彎，誰的手摸得比較低', real: true },
-    R3: { name: '單腳站立', icon: '🦩', desc: '單腳站立，先放下腳的人輸', real: true },
-    R4: { name: '不眨眼', icon: '👀', desc: '互瞪，先眨眼或先笑的人輸', real: true },
-    R5: { name: '猜拳', icon: '✊', desc: '三戰兩勝', real: true },
+    M10: { name: '人流估算', icon: '👥', desc: '畫面出現一群人 4 秒，從 4 個數字選出正確人數', better: 'low', pass: 15, unit: '% 誤差' },
+    S1: { name: '金雞獨立', icon: '🦩', desc: '手機握在胸前單腳站，手機晃太大就出局，最多 60 秒', better: 'high', pass: 30, unit: ' 秒', body: true },
+    S2: { name: '搖手機耐力賽', icon: '📱', desc: '60 秒用力搖手機，搖越多下越好', better: 'high', pass: 150, unit: ' 下', body: true },
+    R1: { name: '比腕力', icon: '💪', desc: '兩人現場比腕力', real: true, body: true },
+    R2: { name: '柔軟度', icon: '🤸', desc: '站姿體前彎，誰的手摸得比較低', real: true, body: true },
   },
-  pkGames: ['M1', 'M2', 'M3', 'M5', 'M6', 'M7', 'M8', 'M9', 'R1', 'R2', 'R3', 'R4', 'R5'],
+  // PK 格抽遊戲：數字是權重，動身體的（真人、手機感應）比較常出現
+  pkGames: { M1: 1, M2: 1, M3: 1, M6: 1, M7: 1, M9: 1, R1: 3, R2: 3, S1: 3, S2: 3 },
+  pkStakes: [50, 100],   // PK 可以選的賭金
   typingPhrases: ['台北市藝途路二百號', '尾牙快樂大家發大財', 'DAINY請整理會議記錄', '請在週五前回覆確認', '展覽開幕記得帶名牌'],
   typoPairs: [['己', '已'], ['未', '末'], ['天', '夭'], ['王', '玉'], ['日', '曰'], ['人', '入'], ['大', '太'], ['土', '士']],
   bugPairs: [['0', 'O'], ['1', 'l'], ['5', 'S'], ['8', 'B']],
@@ -241,6 +243,7 @@ window.GAME = {
     shield: { name: '免死金牌', icon: '🛡️' },
     lock: { name: '防盜鎖', icon: '🔒' },
     peek: { name: '偷看券', icon: '👀' },
+    sub: { name: '代打卡', icon: '🦸' },
   },
   roles: {
     staff: { name: '正式員工', tag: '' },
