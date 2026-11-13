@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>藝途發財夢｜主畫面</title>
-<link rel="stylesheet" href="assets/style.css?v=20261113g">
+<link rel="stylesheet" href="assets/style.css?v=20261113h">
 <style>
   body { overflow: hidden; height: 100vh; }
 
@@ -418,9 +418,9 @@
 
 <script src="https://unpkg.com/mqtt@5.10.1/dist/mqtt.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-<script src="assets/game-data.js?v=20261113g"></script>
-<script src="assets/net.js?v=20261113g"></script>
-<script src="assets/broadcast.js?v=20261113g"></script>
+<script src="assets/game-data.js?v=20261113h"></script>
+<script src="assets/net.js?v=20261113h"></script>
+<script src="assets/broadcast.js?v=20261113h"></script>
 <script>
 const G = window.GAME;
 const N = G.tiles.length;
@@ -437,7 +437,8 @@ try { photos = JSON.parse(localStorage.getItem(LS_PHOTOS)) || {}; } catch (e) {}
 /* ================= 狀態 ================= */
 function loadGifts() {
   try { const g = JSON.parse(localStorage.getItem(LS_GIFTS)); if (Array.isArray(g) && g.length) return g; } catch (e) {}
-  return G.defaultGifts.map((g, i) => Object.assign({ id: 'g' + (i + 1) }, g));
+  // 沒設定過 → 用示範獎品，順便畫假照片
+  return G.defaultGifts.map((g, i) => { const id = 'demo' + (i + 1); if (!photos[id]) photos[id] = demoPhoto(g); return { id, tier: g.tier, name: g.name, public: g.public }; });
 }
 function newState(room, broker, maxRounds) {
   return {
@@ -1533,7 +1534,7 @@ function showGiftSetup() {
         <td>${photos[g.id] ? `<img src="${photos[g.id]}"> ` : ''}<input type="file" accept="image/*" data-i="${i}" data-f="photo" style="width:120px"></td>
         <td><button class="btn sm red" data-del="${i}">×</button></td></tr>`).join('')}
       </table>
-      <div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap"><button class="btn sm paper" id="gAdd">＋ 新增一份</button><span style="flex:1"></span>
+      <div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap"><button class="btn sm paper" id="gAdd">＋ 新增一份</button><button class="btn sm paper" id="gDemo">填入示範獎品</button><span style="flex:1"></span>
       <span style="font-weight:900;align-self:center">共 ${rows.length} 份</span><button class="btn" id="gSave">儲存</button><button class="btn paper" id="gCancel">取消</button></div></div>`;
     m.querySelectorAll('[data-f]').forEach((el) => el.onchange = el.oninput = async () => {
       const g = rows[+el.dataset.i], f = el.dataset.f;
@@ -1544,6 +1545,12 @@ function showGiftSetup() {
     });
     m.querySelectorAll('[data-del]').forEach((b) => b.onclick = () => { rows.splice(+b.dataset.del, 1); draw(); });
     $('gAdd').onclick = () => { rows.push({ id: 'g' + Date.now().toString(36), tier: 4, name: '新禮物', public: false }); draw(); };
+    $('gDemo').onclick = () => {
+      if (!confirm('用 7 份示範獎品取代目前的清單？（按儲存才會生效）')) return;
+      rows = G.defaultGifts.map((g, i) => ({ id: 'demo' + (i + 1), tier: g.tier, name: g.name, public: g.public }));
+      G.defaultGifts.forEach((g, i) => { photos['demo' + (i + 1)] = demoPhoto(g); });
+      draw();
+    };
     $('gCancel').onclick = () => m.classList.add('hidden');
     $('gSave').onclick = () => {
       rows.sort((a, b) => a.tier - b.tier);
@@ -1554,6 +1561,16 @@ function showGiftSetup() {
   };
   draw();
   m.classList.remove('hidden');
+}
+// 示範獎品的假照片：用 emoji 畫一張圖
+function demoPhoto(g) {
+  const c = document.createElement('canvas'); c.width = 360; c.height = 240;
+  const x = c.getContext('2d');
+  x.fillStyle = { 1: '#f7c948', 2: '#dfe6ee', 3: '#f0c39a', 4: '#fffdf6' }[g.tier] || '#fff'; x.fillRect(0, 0, 360, 240);
+  x.textAlign = 'center'; x.textBaseline = 'middle';
+  x.font = '120px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif'; x.fillText(g.icon || '🎁', 180, 100);
+  x.fillStyle = '#1f2a3a'; x.font = '900 28px "Noto Sans TC",sans-serif'; x.fillText(g.name, 180, 205);
+  return c.toDataURL('image/jpeg', 0.8);
 }
 function shrink(file) {
   return new Promise((res) => {

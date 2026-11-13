@@ -1,4 +1,4 @@
-window.APP_VER = '20261113g'; // 每次更新程式都改這個版本號，手機會自動要求重新整理
+window.APP_VER = '20261113h'; // 每次更新程式都改這個版本號，手機會自動要求重新整理
 
 /* =========================================================
    藝途發財夢 v2 — 遊戲內容設定檔
@@ -50,14 +50,15 @@ window.GAME = {
   brokerFee: 30,       // 紅包玩家當禮物仲介的抽成
   pkCoins: 50,         // PK 有紅包玩家參與時，贏的人拿的錢
   privilegeTop: 3,     // 結算前首富特權的名額
+  // 示範獎品（測試用）：正式活動前請在大廳「🎁 禮物設定」改成真的禮物
   defaultGifts: [
-    { tier: 1, name: '頭獎禮物', public: true },
-    { tier: 2, name: '二獎禮物 A', public: false },
-    { tier: 2, name: '二獎禮物 B', public: false },
-    { tier: 3, name: '三獎禮物 A', public: false },
-    { tier: 3, name: '三獎禮物 B', public: false },
-    { tier: 4, name: '普獎禮物 A', public: false },
-    { tier: 4, name: '普獎禮物 B', public: false },
+    { tier: 1, name: 'iPhone 17 Pro', public: true, icon: '📱' },
+    { tier: 2, name: 'Dyson 吹風機', public: false, icon: '💨' },
+    { tier: 2, name: 'Switch 2 遊戲機', public: false, icon: '🎮' },
+    { tier: 3, name: 'AirPods 4', public: false, icon: '🎧' },
+    { tier: 3, name: '星巴克隨行卡 3,000 元', public: false, icon: '☕' },
+    { tier: 4, name: '全聯禮券 500 元', public: false, icon: '🛒' },
+    { tier: 4, name: '辦公室按摩枕', public: false, icon: '💆' },
   ],
   // 試用期紅包：依最終名次（全部玩家一起排）
   redPacket: [
