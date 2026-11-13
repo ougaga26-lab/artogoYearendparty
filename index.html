@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>藝途發財夢｜主畫面</title>
-<link rel="stylesheet" href="assets/style.css?v=20261113h">
+<link rel="stylesheet" href="assets/style.css?v=20261113i">
 <style>
   body { overflow: hidden; height: 100vh; }
 
@@ -67,7 +67,11 @@
   .cardview .deck { font-size: 2cqw; font-weight: 900; background: var(--ink); color: #fff; padding: .3cqw 1.8cqw; border-radius: 99px; }
   .cardview .cic { font-size: 8cqw; line-height: 1; }
   .cardview h2 { font-size: 4.6cqw; margin: 0; font-weight: 900; line-height: 1.15; }
-  .cardview p { font-size: 2.5cqw; margin: 0; font-weight: 700; line-height: 1.4; }
+  .cardview p { font-size: 2.7cqw; margin: 0; font-weight: 700; line-height: 1.4; }
+  .cardview .readbar { width: 56%; height: 1cqw; background: #fff; border: 2px solid var(--ink); border-radius: 99px; overflow: hidden; }
+  .cardview .readbar i { display: block; height: 100%; background: var(--ink); animation: readbar linear forwards; }
+  @keyframes readbar { from { width: 100%; } to { width: 0; } }
+  .cardview .readhint { font-size: 1.5cqw; font-weight: 700; color: var(--muted); }
   .cardview .owner { font-size: 1.8cqw; font-weight: 700; color: var(--muted); }
   .cardview .live { font-size: 2.8cqw; font-weight: 900; background: #fff; border: 3px dashed var(--ink); border-radius: 14px; padding: 1cqw 2cqw; line-height: 1.35; }
   .cardview .status { font-size: 2.3cqw; font-weight: 900; }
@@ -418,9 +422,9 @@
 
 <script src="https://unpkg.com/mqtt@5.10.1/dist/mqtt.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-<script src="assets/game-data.js?v=20261113h"></script>
-<script src="assets/net.js?v=20261113h"></script>
-<script src="assets/broadcast.js?v=20261113h"></script>
+<script src="assets/game-data.js?v=20261113i"></script>
+<script src="assets/net.js?v=20261113i"></script>
+<script src="assets/broadcast.js?v=20261113i"></script>
 <script>
 const G = window.GAME;
 const N = G.tiles.length;
@@ -569,6 +573,7 @@ function onMsg(m) {
     case 'bet':
       if (p && p.role === 'guest' && !(inGame() && S.round >= S.maxRounds) && S.phase !== 'ended') { p.bet = m.target || null; sync(); }
       break;
+    case 'skip': if (skipFn && m.pid === curPid()) skipFn(); break;
     case 'mc': if (String(m.key) === S.mcKey) handleMc(m); break;
   }
 }
@@ -607,6 +612,7 @@ function handleMc(m) {
     case 'end': if (inGame()) endGame(); break;
     case 'choose': if (S.pending && S.pending.id === m.id) resolvePending(m.v); break;
     case 'cerGo': goShake(); break;
+    case 'skip': if (skipFn) skipFn(); break;
     case 'cerSkip': skipCeremony(); break;
     case 'adj': { const p = P(m.pid); if (p) { addCoins(p, m.n | 0); sync(); } break; }
   }
@@ -617,6 +623,7 @@ const sleep = (ms) => { const id = runId; return new Promise((res, rej) => setTi
 function run(fn) { Promise.resolve().then(fn).catch((e) => { if (e !== STOP) console.error(e); }); }
 function cancelChain() {
   runId++;
+  skipFn = null; if (S) S.read = null;
   if (waiter) { clearTimeout(waiter.timer); waiter.rej(STOP); waiter = null; }
   clearTimeout(autoTimer);
   S.pending = null;
@@ -645,6 +652,18 @@ async function pickPlayer(p, title, cands, timeout = 40000) {
   if (!cands.length) return null;
   const v = await ask({ kind: 'pick', by: 'player', pid: p.pid, title, options: cands.map((c) => ({ v: c.pid, label: `${c.avatar} ${c.name}`, sub: `${c.coins} 幣` })) }, timeout, pickOne(cands).pid);
   return P(v);
+}
+// 讓大家看清楚卡片：倒數條跑完才往下，當事人手機可以按「看完了」提早繼續
+let skipFn = null;
+const readMs = (txt) => Math.min(9000, Math.max(4500, 2500 + String(txt || '').length * 110));
+function readWait(ms) {
+  const id = runId;
+  S.read = { from: Date.now(), ms }; sync();
+  return new Promise((res, rej) => {
+    const done = () => { clearTimeout(t); if (skipFn === done) skipFn = null; if (S.read) { S.read = null; sync(); } if (id === runId) res(); else rej(STOP); };
+    const t = setTimeout(done, ms);
+    skipFn = done;
+  });
 }
 function setStatus(t) { if (S.card) S.card.status = t; sync(); }
 function setLive(t) { if (S.card) S.card.live = t; sync(); }
@@ -788,7 +807,7 @@ async function doRoll() {
   const ctx = { extra: false, depth: 0 };
   await land(p, ctx);
   S.pending = null; S.phase = 'result'; sync();
-  await sleep(2600);
+  await readWait(3800);
   S.card = null;
   if (ctx.extra) { S.phase = 'roll'; S.dice = null; S.msg = `${p.name} 再擲一次！`; S.rollDeadline = Date.now() + 45000; sync(); armAutoRoll(); return; }
   return nextTurn();
@@ -840,7 +859,8 @@ async function land(p, ctx) {
 async function resolveCard(card, p, ctx) {
   if (!card.deck) card.deck = card.bad ? 'bad' : 'good';
   showCard({ deck: card.deck, icon: card.icon, title: card.title, text: card.text, cat: card.cat, bad: !!card.bad }, p);
-  await sleep(1800);
+  // 壞事接著要選怎麼辦，選項出現前先讓大家看完；好事看完才發錢
+  await readWait(card.bad ? Math.min(6000, readMs(card.text) - 1000) : readMs(card.text));
   if (card.bad) {
     const saved = await rescue(p, card);
     if (saved) return;
@@ -1379,6 +1399,7 @@ function renderCard() {
     <div class="cic">${c.icon}</div><h2>${esc(c.title)}</h2>${c.text ? `<p>${esc(c.text)}</p>` : ''}`;
   if (c.live && !(S.pending && S.pending.kind === 'realpk')) h += `<div class="live">${esc(c.live)}</div>`;
   if (c.status) h += `<div class="status">${esc(c.status).replace(/\n/g, '<br>')}</div>`;
+  if (S.read && !S.pending) { const left = S.read.ms - (Date.now() - S.read.from); h += `<div class="readbar"><i style="animation-duration:${S.read.ms}ms;animation-delay:${left - S.read.ms}ms"></i></div><div class="readhint">看完了？${owner ? esc(owner.name) + ' 在手機按「繼續」' : '按 Enter 繼續'}</div>`; }
   if (S.pending) h += pendingHTML(S.pending);
   if (owner) h += `<div class="owner">${owner.avatar} ${esc(owner.name)} 停在「${esc(c.tile)}」</div>`;
   cv.innerHTML = h;
@@ -1863,6 +1884,7 @@ function init() {
     if (e.target.tagName === 'INPUT') return;
     if (e.code === 'Space' && S.phase === 'roll') { e.preventDefault(); run(() => doRoll()); }
     if (e.code === 'Space' && S.phase === 'ceremony') { e.preventDefault(); goShake(); }
+    if (e.key === 'Enter' && skipFn) { e.preventDefault(); skipFn(); }
     if ((e.key === 'n' || e.key === 'N') && inGame() && S.phase !== 'privilege') forceNext();
   });
   window.addEventListener('resize', renderTokens);

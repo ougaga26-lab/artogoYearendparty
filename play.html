@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#f9c9b5">
 <title>藝途發財夢｜手機控制器</title>
-<link rel="stylesheet" href="assets/style.css?v=20261113h">
+<link rel="stylesheet" href="assets/style.css?v=20261113i">
 <style>
   body { min-height: 100svh; padding: 14px 16px calc(24px + env(safe-area-inset-bottom)); max-width: 520px; margin: 0 auto; user-select: none; -webkit-user-select: none; }
   header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
@@ -112,10 +112,10 @@
 <div class="cerov hidden" id="cerov"></div>
 
 <script src="https://unpkg.com/mqtt@5.10.1/dist/mqtt.min.js"></script>
-<script src="assets/game-data.js?v=20261113h"></script>
-<script src="assets/net.js?v=20261113h"></script>
-<script src="assets/games.js?v=20261113h"></script>
-<script src="assets/shake.js?v=20261113h"></script>
+<script src="assets/game-data.js?v=20261113i"></script>
+<script src="assets/net.js?v=20261113i"></script>
+<script src="assets/games.js?v=20261113i"></script>
+<script src="assets/shake.js?v=20261113i"></script>
 <script>
 const G = window.GAME;
 const $ = (id) => document.getElementById(id);
@@ -317,6 +317,7 @@ function actionHTML(me) {
     return `<div class="big">輪到你了！</div><button class="dicebtn" id="rollBtn"><span><span class="ic">🎲</span>擲骰子</span></button><div class="small">也可以搖一搖手機擲骰</div>`;
   }
   if (S.phase === 'privilege') return `${cardMini()}<div class="small">👑 首富特權進行中，請看大螢幕</div>`;
+  if (S.read && curPid() === PID) return `${cardMini() || `<div class="small">${esc(S.msg || '')}</div>`}<button class="btn wide" id="skipBtn" style="margin-top:12px;font-size:20px">看完了，繼續 👍</button><div class="small">大家都看完再按喔</div>`;
   return `<div class="turnwho">${cp ? av(cp) : ''}<div class="big">${cp ? esc(cp.name) : ''} 的回合</div></div>${cardMini() || `<div class="small">${esc(S.msg || '請看大螢幕')}</div>`}`;
 }
 
@@ -324,6 +325,7 @@ function bind(me) {
   const roll = $('rollBtn'); if (roll) roll.onclick = doRoll;
   const ed = $('editBtn'); if (ed) ed.onclick = () => { form = { name: me.name, role: me.role, avatar: me.avatar }; renderJoin(true); };
   const up = $('usePeek'); if (up) up.onclick = () => choosePeek();
+  const sk = $('skipBtn'); if (sk) sk.onclick = () => { send({ t: 'skip' }); sk.disabled = true; vib(30); };
   bindChoices();
   document.querySelectorAll('[data-win]').forEach((b) => b.onclick = () => { send({ t: 'pkWinner', id: S.pending.id, winner: b.dataset.win }); answered[S.pending.id] = true; vib(30); render(); });
 }
@@ -567,6 +569,7 @@ function renderMC() {
       ${S.phase === 'lobby' ? '<button class="btn red" data-c="start">開始遊戲</button>' : ''}
       ${pd && pd.kind === 'shake' && !pd.go ? '<button class="btn red" data-c="cerGo">開始搖！</button>' : ''}
       ${S.phase === 'ceremony' ? '<button class="btn paper" data-c="cerSkip">跳過典禮</button>' : ''}
+      ${S.read ? '<button class="btn" data-c="skip">看完了，繼續</button>' : ''}
       <button class="btn" data-c="roll" ${S.phase !== 'roll' ? 'disabled' : ''}>代擲骰子</button>
       <button class="btn paper" data-c="next" ${!inGame() || S.phase === 'privilege' ? 'disabled' : ''}>跳到下一位</button>
       <button class="btn red" data-c="end" ${!inGame() || S.phase === 'privilege' ? 'disabled' : ''}>結束遊戲</button>
