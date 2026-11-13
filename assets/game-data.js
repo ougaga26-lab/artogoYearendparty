@@ -1,4 +1,4 @@
-window.APP_VER = '20261113l'; // 每次更新程式都改這個版本號，手機會自動要求重新整理
+window.APP_VER = '20261113m'; // 每次更新程式都改這個版本號，手機會自動要求重新整理
 
 /* =========================================================
    藝途發財夢 v2 — 遊戲內容設定檔
@@ -70,7 +70,7 @@ window.GAME = {
   /* ---------- 事件類別（棋盤上只顯示類別） ---------- */
   categories: {
     voice: { name: '語音導覽', icon: '🎧', color: 'peach', events: [
-      { title: '電鑽聲入鏡', text: '配音老師正錄到最感人的那句，隔壁裝潢「滋——」一聲電鑽入鏡。老師的眼神已經死了，整段重錄', effect: { coins: -30 }, bad: true, rescue: 'M7', rescueText: '抓準電鑽停下的空檔重錄' },
+      { title: '電鑽聲入鏡', text: '配音老師正錄到最感人的那句，隔壁裝潢「滋——」一聲電鑽入鏡。老師的眼神已經死了，整段重錄', effect: { coins: -30 }, bad: true, rescue: 'M6', rescueText: '電鑽一停就馬上按錄音' },
       { title: 'AI 語音失控', text: 'AI 把「莫內《睡蓮》」唸成「沒內睡臉」，還用很專業的語氣解說了三分鐘', effect: { coins: -40 }, bad: true, rescue: 'M3', variant: 'typo', rescueText: '把唸錯的字抓出來' },
       { title: '機器人腔', text: 'AI 導覽突然變成捷運廣播腔：「下一幅作品，梵谷。Next painting…」觀眾以為自己要下車了', effect: { coins: -30 }, bad: true, rescue: 'M7', rescueText: '把語速節奏調回來' },
       { title: '一次 OK', text: '配音老師一次 OK，提早兩小時收工！剩下的錄音室時間，你偷偷錄了一首歌', effect: { drawChance: true } },
@@ -80,7 +80,7 @@ window.GAME = {
     web: { name: '官網・伺服器', icon: '💻', color: 'sky', events: [
       { title: '官網有 Bug', text: '官網「關於我們」一點下去，跳出 404 和一隻在跳舞的貓。工程師說他也不知道貓是哪來的', effect: { coins: -40 }, bad: true, rescue: 'M3', rescueText: '把 Bug 找出來' },
       { title: '表單壞了', text: '聯絡表單壞了三天都沒人發現，直到客戶打電話來問：「你們是不是不想接案？」', effect: { coins: -40 }, bad: true, rescue: 'M3', rescueText: '把 Bug 找出來' },
-      { title: '伺服器當機', text: '開幕當天伺服器當機，全公司圍著一台電腦，緊張得像在看世足 PK 賽', effect: { coins: -50 }, bad: true, rescue: 'M6', rescueText: '救火要快' },
+      { title: '伺服器當機', text: '開幕當天伺服器當機，全公司圍著一台電腦，緊張得像在看世足 PK 賽', effect: { coins: -50 }, bad: true, rescue: 'M10', rescueText: '估算湧進來的人數，開對主機數量就免罰' },
       { title: '帳單爆表', text: '雲端主機帳單寄來，後面多了一個零。原來有台測試機開了半年忘記關', effect: { coins: -50 }, bad: true, rescue: 'M2', rescueText: '算清楚帳單就免罰' },
       { title: '官網改版', text: '官網改版上線，詢問信多到信箱快爆了。業務第一次覺得收信是一種幸福', effect: { coins: 50 } },
       { title: '流量爆表', text: '線上展覽上了新聞，流量直接衝上天。伺服器居然撐住了！工程師感動到想哭', effect: { coins: 60 } },
@@ -114,7 +114,7 @@ window.GAME = {
     ] },
     admin: { name: '行政', icon: '📮', color: 'red', events: [
       { title: '跑郵局', text: '老闆要寄 200 封邀請函，你在郵局待到連號碼牌的叫號聲都會唱了', effect: { coins: -40 }, bad: true, rescue: 'S1', rescueText: '排隊排到腳痠：單腳站撐 30 秒就免罰' },
-      { title: '採購螢幕', text: '老闆說要買新螢幕：「要大、要好、要便宜。」你比價比到懷疑人生', effect: { coins: -50 }, bad: true, rescue: 'M2', rescueText: '比價算對就免罰' },
+      { title: '採購螢幕', text: '老闆說要買新螢幕：「要大、要好、要便宜。」你比價比到懷疑人生', effect: { coins: -50 }, bad: true, rescue: 'M4', rescueText: '把螢幕型號一字不差打進採購單就免罰' },
       { title: '公文漏蓋章', text: '補助公文送出去才發現漏蓋一個章，承辦人很溫柔地說：「麻煩再跑一趟喔～」', effect: { coins: -20 }, bad: true, rescue: 'M8', rescueText: '印章蓋正就免罰' },
       { title: '郵局阿姨', text: '郵局阿姨已經認得你了，一看到你就說「又是你喔～」順手幫你先處理', effect: { drawChance: true } },
       { title: '政府補助', text: '申請了半年的政府補助終於核准！你把核准公文看了五遍，確定不是詐騙', effect: { coins: 80 } },
@@ -126,7 +126,7 @@ window.GAME = {
       { title: 'DAINY 神救援', text: '老闆急著找三年前的合約，DAINY 一秒撈出來，還附上重點摘要。今天的 DAINY 是神', effect: { coins: 60 } },
     ] },
     fin: { name: '財務・報帳', icon: '🧾', color: 'mint', events: [
-      { title: '發票遺失', text: '報帳時發票不見了，最後在外套口袋找到……一張洗過的發票', effect: { coins: -30 }, bad: true, rescue: 'M2', rescueText: '算對就免罰' },
+      { title: '發票遺失', text: '報帳時發票不見了，最後在外套口袋找到……一張洗過的發票', effect: { coins: -30 }, bad: true, rescue: 'M9', rescueText: '回想發票塞在哪：記住位置就免罰' },
       { title: '年中紅利', text: '會計說：「這個月有加發紅利喔。」你以為聽錯，請她再說一次', effect: { coins: 50 } },
       { title: '報稅季', text: '報稅季到了，國稅局溫柔地提醒你：請繳身上 10% 的稅', effect: { taxPct: 10 }, bad: true, rescue: 'M2', rescueText: '自己算稅就免繳' },
       { title: '退稅', text: '會計發現你之前多繳了錢，退款入帳的簡訊比任何情書都動人', effect: { coins: 40 } },
@@ -208,7 +208,7 @@ window.GAME = {
     { title: '開會開到天荒地老', text: '「十分鐘就好」的會開了三小時，午餐沒了只好叫外送。−30', effect: { coins: -30 }, bad: true, rescue: 'M6', rescueText: '趁空檔溜出會議室' },
     { title: '找到神隊友', text: '你在茶水間結交了一位神隊友，他說 PK 時可以幫你上場。得到代打卡', effect: { item: 'sub' } },
     { title: '老闆心情好', text: '老闆今天心情特別好，看到你就說「不錯喔！」順手塞了個紅包。+40', effect: { coins: 40 } },
-    { title: 'Deadline 提前', text: '客戶：「上線日可以提前一週嗎？我們老闆想先看。」−40', effect: { coins: -40 }, bad: true, rescue: 'M7', rescueText: '抓準 Deadline' },
+    { title: 'Deadline 提前', text: '客戶：「上線日可以提前一週嗎？我們老闆想先看。」−40', effect: { coins: -40 }, bad: true, rescue: 'M5', rescueText: '狂點加速趕工' },
     { title: '被派去寄包裹', text: '被派去寄包裹，郵資自己先墊，收據就這樣消失在抽屜裡了。−20', effect: { coins: -20 } },
     { title: '本月最佳員工', text: '你當選本月最佳員工！每位玩家付你 10 幣當賀禮', effect: { collectAll: 10 } },
     { title: '董事會指定交換', text: '命運交給董事會！翻牌的外賓決定你要跟誰交換禮物', effect: { fateSwap: true, alt: { coins: -30 } } },
@@ -235,6 +235,7 @@ window.GAME = {
   // PK 格抽遊戲：數字是權重，動身體的（真人、手機感應）比較常出現
   pkGames: { M1: 1, M2: 1, M3: 1, M6: 1, M7: 1, M9: 1, R1: 3, R2: 3, S1: 3, S2: 3 },
   pkStakes: [50, 100],   // PK 可以選的賭金
+  pkSwapCost: 20,        // 被挑戰的人換項目要付的錢（付給發起的人）
   typingPhrases: ['台北市藝途路二百號', '尾牙快樂大家發大財', 'DAINY請整理會議記錄', '請在週五前回覆確認', '展覽開幕記得帶名牌'],
   typoPairs: [['己', '已'], ['未', '末'], ['天', '夭'], ['王', '玉'], ['日', '曰'], ['人', '入'], ['大', '太'], ['土', '士']],
   bugPairs: [['0', 'O'], ['1', 'l'], ['5', 'S'], ['8', 'B']],

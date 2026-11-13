@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>藝途發財夢｜主畫面</title>
-<link rel="stylesheet" href="assets/style.css?v=20261113l">
+<link rel="stylesheet" href="assets/style.css?v=20261113m">
 <style>
   body { overflow: hidden; height: 100vh; }
 
@@ -68,6 +68,11 @@
   .cardview .cic { font-size: 8cqw; line-height: 1; }
   .cardview h2 { font-size: 4.6cqw; margin: 0; font-weight: 900; line-height: 1.15; }
   .cardview p { font-size: 2.7cqw; margin: 0; font-weight: 700; line-height: 1.4; }
+  .pkdeck { display: flex; gap: 1.6cqw; }
+  .pkc { width: 13cqw; padding: 1.2cqw .6cqw; background: #fff; border: 3px solid var(--ink); border-radius: 12px; box-shadow: 0 .6cqw 0 var(--ink); text-align: center; animation: pkflip .5s ease both; }
+  .pkc .i { font-size: 5cqw; line-height: 1.1; } .pkc .n { font-size: 1.9cqw; font-weight: 900; } .pkc .t { font-size: 1.2cqw; font-weight: 700; color: var(--muted); }
+  .pkc.on { background: var(--yellow); transform: translateY(-.8cqw) scale(1.06); }
+  @keyframes pkflip { from { transform: rotateY(90deg); opacity: 0; } to { transform: none; opacity: 1; } }
   .cardview .readbar { width: 56%; height: 1cqw; background: #fff; border: 2px solid var(--ink); border-radius: 99px; overflow: hidden; }
   .cardview .readbar i { display: block; height: 100%; background: var(--ink); animation: readbar linear forwards; }
   @keyframes readbar { from { width: 100%; } to { width: 0; } }
@@ -422,9 +427,9 @@
 
 <script src="https://unpkg.com/mqtt@5.10.1/dist/mqtt.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-<script src="assets/game-data.js?v=20261113l"></script>
-<script src="assets/net.js?v=20261113l"></script>
-<script src="assets/broadcast.js?v=20261113l"></script>
+<script src="assets/game-data.js?v=20261113m"></script>
+<script src="assets/net.js?v=20261113m"></script>
+<script src="assets/broadcast.js?v=20261113m"></script>
 <script>
 const G = window.GAME;
 const N = G.tiles.length;
@@ -1035,20 +1040,20 @@ async function giftTile(p) {
   await sleep(2400);
 }
 
-// PK 格抽遊戲：照 game-data.js 的權重，動身體的比較常出現
-function pickPkGame() {
-  const list = Object.entries(G.pkGames);
-  let r = Math.random() * list.reduce((a, [, w]) => a + w, 0);
-  for (const [g, w] of list) { r -= w; if (r < 0) return g; }
-  return list[0][0];
+// PK 格：抽 3 張遊戲卡（照 game-data.js 的權重，至少 1 張動身體的），發起的人挑一張
+function drawPkCards() {
+  const pool = Object.entries(G.pkGames).map(([g, w]) => ({ g, w }));
+  const pick = (list) => { let r = Math.random() * list.reduce((a, x) => a + x.w, 0); for (const x of list) { r -= x.w; if (r < 0) return x.g; } return list[0].g; };
+  const out = [pick(pool.filter((x) => def(x.g).body))];
+  while (out.length < 3 && pool.some((x) => !out.includes(x.g))) out.push(pick(pool.filter((x) => !out.includes(x.g))));
+  return shuffle(out);
 }
+const gameOpt = (g) => ({ v: g, label: `${def(g).icon} ${def(g).name}`, sub: def(g).desc });
 async function pkTile(p) {
-  const game = pickPkGame();
-  const d = def(game);
-  showCard({ deck: 'pk', icon: '⚔️', title: `PK：${d.icon} ${d.name}`, text: `${d.desc}。指定一個人對決，再決定要賭什麼！` }, p);
-  await readWait(readMs(d.desc) - 1000);
+  showCard({ deck: 'pk', icon: '⚔️', title: 'PK 對決！', text: '指定一個人、決定賭注，再從 3 張遊戲卡挑一個項目！被挑戰的人可以花錢換項目' }, p);
+  await readWait(4500);
   const others = boardPlayers().filter((x) => x.pid !== p.pid);
-  const t = await pickPlayer(p, `要跟誰 PK「${d.name}」？`, others);
+  const t = await pickPlayer(p, '要跟誰 PK？', others);
   if (!t) return;
   // 發起的人選賭注：禮物（兩人都是正式員工才有）或錢
   const ga = giftOf(p.pid), gt = giftOf(t.pid);
@@ -1056,7 +1061,29 @@ async function pkTile(p) {
   if (p.role === 'staff' && t.role === 'staff' && ga && gt && !gt.locked) opts.push({ v: 'gift', label: '🎁 賭禮物', sub: `你贏了可以拿${tierName(ga)}換他的${tierName(gt)}` });
   G.pkStakes.forEach((n) => opts.push({ v: String(n), label: `💰 賭 ${n} 幣`, sub: '贏的人從輸的人身上拿' }));
   const stake = await ask({ kind: 'pick', by: 'player', pid: p.pid, title: `要跟 ${t.name} 賭什麼？`, options: opts }, 30000, opts[0].v);
-  if (S.card) { S.card.text = `${p.name} vs ${t.name}・賭注：${stake === 'gift' ? '🎁 禮物' : `💰 ${stake} 幣`}`; sync(); }
+  const stakeTxt = stake === 'gift' ? '🎁 禮物' : `💰 ${stake} 幣`;
+  if (S.card) { S.card.text = `${p.name} vs ${t.name}・賭注：${stakeTxt}`; sync(); }
+  // 抽 3 張遊戲卡，發起的人挑
+  const cards = drawPkCards();
+  sfx('card');
+  let game = await ask({ kind: 'pick', by: 'player', pid: p.pid, title: `🎴 挑一個項目跟 ${t.name} 比！`, cards, options: cards.map(gameOpt) }, 30000, pickOne(cards));
+  if (!cards.includes(game)) game = pickOne(cards);
+  setStatus(`${p.name} 選了「${def(game).icon} ${def(game).name}」！`); sfx('fanfare');
+  await sleep(1500);
+  // 被挑戰的人可以花錢換成另外兩張其中一張（付給發起的人）
+  const cost = G.pkSwapCost;
+  if (t.coins >= cost) {
+    const rest = cards.filter((g) => g !== game);
+    const v = await ask({ kind: 'pick', by: 'player', pid: t.pid, title: `${p.name} 選了「${def(game).name}」！要花 ${cost} 幣換項目嗎？`, cards, mark: game, options: [{ v: 'keep', label: '💪 接受挑戰！' }].concat(rest.map((g) => ({ v: g, label: `💸 換成 ${def(g).icon} ${def(g).name}`, sub: `付 ${cost} 幣給 ${p.name}` }))) }, 25000, 'keep');
+    if (rest.includes(v)) {
+      transfer(t, p, cost);
+      game = v;
+      setStatus(`💸 ${t.name} 花 ${cost} 幣，把項目換成「${def(game).icon} ${def(game).name}」！`); sfx('bad');
+      await sleep(2200);
+    } else { setStatus(`${t.name}：「來啊！」接受挑戰`); await sleep(1300); }
+  }
+  setStatus(null);
+  if (S.card) { S.card.title = `PK：${def(game).icon} ${def(game).name}`; S.card.text = `${p.name} vs ${t.name}・賭注：${stakeTxt}`; sync(); }
   const w = await pkFlow(p, t, game);
   const l = w === p ? t : p;
   if (stake !== 'gift') {
@@ -1389,7 +1416,13 @@ function rollAnim(count) {
 }
 
 const DECK_LABEL = { chance: '機會', fate: '命運', bad: '', good: '', gift: '禮物', pk: 'PK 對決', peek: '偷看', start: '發薪日' };
-function pendingHTML(pd) {
+// PK 的 3 張遊戲卡（挑項目、換項目時顯示在大螢幕）
+function pkDeckHTML(pd) {
+  if (!pd.cards) return '';
+  return `<div class="pkdeck">${pd.cards.map((g, i) => { const d = def(g); return `<div class="pkc${pd.mark === g ? ' on' : ''}" style="animation-delay:${i * 0.15}s"><div class="i">${d.icon}</div><div class="n">${esc(d.name)}</div><div class="t">${d.real ? '真人' : d.body ? '手機感應' : '手機小遊戲'}</div></div>`; }).join('')}</div>`;
+}
+function pendingHTML(pd) { return pkDeckHTML(pd) + pendingInner(pd); }
+function pendingInner(pd) {
   const left = pd.until ? `<span class="pd-timer" data-until="${pd.until}"></span>` : '';
   const nm = (pid) => { const x = P(pid); return x ? `${x.avatar} ${esc(x.name)}` : ''; };
   const btns = (cls = 'sm paper') => `<div class="opts">${pd.options.map((o) => `<button class="btn ${cls}" data-v="${esc(o.v)}">${esc(o.label)}</button>`).join('')}</div>`;
