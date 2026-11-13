@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>藝途發財夢｜主畫面</title>
-<link rel="stylesheet" href="assets/style.css">
+<link rel="stylesheet" href="assets/style.css?v=20261113c">
 <style>
   body { overflow: hidden; height: 100vh; }
 
@@ -300,9 +300,9 @@
 
 <script src="https://unpkg.com/mqtt@5.10.1/dist/mqtt.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-<script src="assets/game-data.js"></script>
-<script src="assets/net.js"></script>
-<script src="assets/broadcast.js"></script>
+<script src="assets/game-data.js?v=20261113c"></script>
+<script src="assets/net.js?v=20261113c"></script>
+<script src="assets/broadcast.js?v=20261113c"></script>
 <script>
 const G = window.GAME;
 const N = G.tiles.length;
@@ -347,7 +347,7 @@ function sync() {
   const now = Date.now();
   for (const p of Object.values(S.players)) p.on = now - (lastSeen[p.pid] || 0) < 25000;
   save();
-  const pub = Object.assign({}, S);
+  const pub = Object.assign({}, S, { ver: window.APP_VER });
   delete pub.mcKey; delete pub.decks;
   pub.gifts = S.gifts.map((g) => Object.assign({}, g, { name: (g.public || S.phase === 'ended') ? g.name : null }));
   if (net) net.send({ t: 'state', s: pub }, { retain: true });
@@ -1216,7 +1216,7 @@ function baseUrl() {
   if (custom) return custom.endsWith('/') ? custom : custom + '/';
   return location.href.replace(/[?#].*$/, '').replace(/[^/]*$/, '');
 }
-function joinUrl(mc) { return `${baseUrl()}play.html?r=${S.room}&b=${S.broker}${mc ? '&mc=' + S.mcKey : ''}`; }
+function joinUrl(mc) { return `${baseUrl()}play.html?r=${S.room}&b=${S.broker}${mc ? '&mc=' + S.mcKey : ''}&v=${window.APP_VER}`; }
 let qrKey = '';
 function makeQR(el, text, size) { el.innerHTML = ''; new QRCode(el, { text, width: size, height: size, colorDark: '#1f2a3a', colorLight: '#fffdf6', correctLevel: QRCode.CorrectLevel.M }); }
 function renderLobby() {

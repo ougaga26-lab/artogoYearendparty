@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#f9c9b5">
 <title>藝途發財夢｜手機控制器</title>
-<link rel="stylesheet" href="assets/style.css">
+<link rel="stylesheet" href="assets/style.css?v=20261113c">
 <style>
   body { min-height: 100svh; padding: 14px 16px calc(24px + env(safe-area-inset-bottom)); max-width: 520px; margin: 0 auto; user-select: none; -webkit-user-select: none; }
   header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
@@ -89,9 +89,9 @@
 <div class="modal hidden" id="modal"></div>
 
 <script src="https://unpkg.com/mqtt@5.10.1/dist/mqtt.min.js"></script>
-<script src="assets/game-data.js"></script>
-<script src="assets/net.js"></script>
-<script src="assets/games.js"></script>
+<script src="assets/game-data.js?v=20261113c"></script>
+<script src="assets/net.js?v=20261113c"></script>
+<script src="assets/games.js?v=20261113c"></script>
 <script>
 const G = window.GAME;
 const $ = (id) => document.getElementById(id);
@@ -130,6 +130,7 @@ if (!ROOM) {
       if (m.to) { if (m.to === PID) onPrivate(m); return; }
       if (m.t === 'state') {
         S = m.s;
+        checkVersion();
         if (!MC && profile && !S.players[PID] && !joinSent) { joinSent = true; send(Object.assign({ t: 'join' }, profile)); setTimeout(() => joinSent = false, 3000); }
         render();
       }
@@ -137,6 +138,16 @@ if (!ROOM) {
   });
   setInterval(() => send({ t: 'ping' }), 8000);
   setInterval(() => { if (tipTaps && S && S.pending && S.pending.kind === 'tip') { send({ t: 'tip', id: S.pending.id, n: tipTaps }); } tipTaps = 0; }, 450);
+}
+// 主畫面和手機的版本不一樣（手機抓到舊的快取）→ 請玩家重新整理
+function checkVersion() {
+  if (!S.ver || S.ver === window.APP_VER || document.getElementById('verBar')) return;
+  const bar = document.createElement('div');
+  bar.id = 'verBar';
+  bar.style.cssText = 'position:fixed;left:12px;right:12px;bottom:12px;z-index:200;background:var(--red);color:#fff;border:3px solid var(--ink);border-radius:14px;padding:12px 14px;font-weight:900;box-shadow:0 5px 0 var(--ink);display:flex;gap:10px;align-items:center';
+  bar.innerHTML = '<span style="flex:1">遊戲有更新，請重新整理才能正常玩！</span><button class="btn sm">重新整理</button>';
+  bar.querySelector('button').onclick = () => { const q = new URLSearchParams(location.search); q.set('v', S.ver); location.replace(location.pathname + '?' + q.toString()); };
+  document.body.appendChild(bar);
 }
 function send(o, opts) { if (net) net.send(Object.assign({ pid: PID }, o), opts); }
 const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));

@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#f9c9b5">
 <title>藝途發財夢｜小遊戲測試場</title>
-<link rel="stylesheet" href="assets/style.css">
+<link rel="stylesheet" href="assets/style.css?v=20261113c">
 <style>
   body { min-height: 100svh; user-select: none; -webkit-user-select: none; }
   .wrap { display: grid; grid-template-columns: minmax(0, 520px); justify-content: center; gap: 24px; padding: 14px 16px 40px; }
@@ -30,11 +30,13 @@
   .verdict { display: inline-block; font-weight: 900; font-size: 22px; padding: 4px 16px; border: 3px solid var(--ink); border-radius: 99px; margin: 6px 0 12px; }
   .verdict.ok { background: var(--mint); } .verdict.no { background: #f6a596; }
   .hidden { display: none !important; }
+  .narrow { color: var(--red); }
+  @media (min-width: 760px) { .narrow { display: none; } }
 
   /* 電腦寬螢幕：左邊模擬手機，右邊看大螢幕轉播 */
-  @media (min-width: 980px) {
-    .wrap { grid-template-columns: 440px minmax(0, 1fr); justify-content: stretch; max-width: 1500px; margin: 0 auto; }
-    .mg { right: auto !important; width: 440px; border-right: 4px solid var(--ink); }
+  @media (min-width: 760px) {
+    .wrap { grid-template-columns: 400px minmax(0, 1fr); justify-content: stretch; max-width: 1500px; margin: 0 auto; }
+    .mg { right: auto !important; width: 400px; border-right: 4px solid var(--ink); }
     .preview { display: flex; flex-direction: column; gap: 12px; position: sticky; top: 14px; height: calc(100vh - 28px); }
     .screen { flex: 1; min-height: 0; background: var(--ink); border-radius: 24px; padding: 14px; display: flex; }
     .screen-in { flex: 1; background: var(--cream); border: 3px solid var(--ink); border-radius: 16px; display: flex; flex-direction: column; padding: 18px; gap: 12px; font-size: clamp(14px, 1.6vw, 26px); }
@@ -49,7 +51,7 @@
 <div class="wrap">
   <div>
     <header><div class="title-3d logo">藝途發財夢</div><span class="ribbon">小遊戲測試場</span></header>
-    <div class="intro">每個小遊戲都可以單獨玩，結束後會顯示成績和「過關／沒過」（依照救援的門檻）。<br>用電腦打開時，右邊會同時顯示大螢幕的即時轉播畫面。<br>過關門檻可以在 assets/game-data.js 裡調整。</div>
+    <div class="intro">每個小遊戲都可以單獨玩，結束後會顯示成績和「過關／沒過」（依照救援的門檻）。<br>用電腦打開時，右邊會同時顯示大螢幕的即時轉播畫面<span class="narrow">（你現在的螢幕太窄，看不到轉播預覽；請用電腦開這個網址）</span>。<br>過關門檻可以在 assets/game-data.js 裡調整。</div>
     <div class="list" id="list"></div>
     <div class="sec">⚡ 全場搶按</div>
     <div class="card g"><div class="ic">⚡</div><div><div class="nm">搶按</div><div class="ds">畫面變綠就按，太早按算最後一名</div><div class="best" id="best_rush"></div></div>
@@ -64,9 +66,9 @@
 </div>
 <div class="modal hidden" id="modal"></div>
 
-<script src="assets/game-data.js"></script>
-<script src="assets/games.js"></script>
-<script src="assets/broadcast.js"></script>
+<script src="assets/game-data.js?v=20261113c"></script>
+<script src="assets/games.js?v=20261113c"></script>
+<script src="assets/broadcast.js?v=20261113c"></script>
 <script>
 const G = window.GAME;
 const $ = (id) => document.getElementById(id);
