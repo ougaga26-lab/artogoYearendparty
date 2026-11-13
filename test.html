@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#f9c9b5">
 <title>藝途發財夢｜小遊戲測試場</title>
-<link rel="stylesheet" href="assets/style.css?v=20261113c">
+<link rel="stylesheet" href="assets/style.css?v=20261113d">
 <style>
   body { min-height: 100svh; user-select: none; -webkit-user-select: none; }
   .wrap { display: grid; grid-template-columns: minmax(0, 520px); justify-content: center; gap: 24px; padding: 14px 16px 40px; }
@@ -31,6 +31,11 @@
   .verdict.ok { background: var(--mint); } .verdict.no { background: #f6a596; }
   .hidden { display: none !important; }
   .narrow { color: var(--red); }
+  .linked { padding: 12px 14px; margin-bottom: 12px; }
+  .linkbox { display: flex; gap: 14px; align-items: center; padding: 12px 14px; }
+  .lqr { width: 112px; height: 112px; flex: none; background: var(--paper); }
+  .lqr img, .lqr canvas { width: 100% !important; height: 100% !important; }
+  .reslog { display: flex; flex-direction: column; gap: 4px; font-weight: 900; font-size: .8em; max-height: 6.5em; overflow: hidden; }
   @media (min-width: 760px) { .narrow { display: none; } }
 
   /* 電腦寬螢幕：左邊模擬手機，右邊看大螢幕轉播 */
@@ -52,6 +57,11 @@
   <div>
     <header><div class="title-3d logo">藝途發財夢</div><span class="ribbon">小遊戲測試場</span></header>
     <div class="intro">每個小遊戲都可以單獨玩，結束後會顯示成績和「過關／沒過」（依照救援的門檻）。<br>用電腦打開時，右邊會同時顯示大螢幕的即時轉播畫面<span class="narrow">（你現在的螢幕太窄，看不到轉播預覽；請用電腦開這個網址）</span>。<br>過關門檻可以在 assets/game-data.js 裡調整。</div>
+    <div class="card linked hidden" id="linked">
+      <div style="font-weight:900">📡 已連到電腦轉播（<span id="lroom"></span>）<span class="dot" id="pdot" style="margin-left:4px"></span></div>
+      <div style="font-weight:700;font-size:13px;color:var(--muted);margin:4px 0 8px">你在手機上玩的畫面，會即時出現在電腦上</div>
+      <label style="font-weight:900;font-size:14px">轉播顯示的名字 <input type="text" id="myname" maxlength="8" style="font:inherit;font-weight:900;border:2px solid var(--ink);border-radius:10px;padding:4px 8px;width:9em"></label>
+    </div>
     <div class="list" id="list"></div>
     <div class="sec">⚡ 全場搶按</div>
     <div class="card g"><div class="ic">⚡</div><div><div class="nm">搶按</div><div class="ds">畫面變綠就按，太早按算最後一名</div><div class="best" id="best_rush"></div></div>
@@ -60,15 +70,24 @@
     <div class="card real" id="real"></div>
   </div>
   <div class="preview">
+    <div class="linkbox card" id="linkbox">
+      <div class="lqr" id="lqr"></div>
+      <div><div style="font-weight:900;font-size:18px">📱 用手機掃這個，在手機玩、這裡轉播</div>
+      <div style="font-weight:700;font-size:13px;color:var(--muted);margin-top:4px">也可以直接在左邊用電腦玩。可以多支手機一起掃，最多同時轉播 2 支。</div>
+      <div class="netst" style="margin-top:6px;font-weight:900;font-size:13px"><span class="dot" id="ldot"></span> <span id="ltxt">連線中…</span></div></div>
+    </div>
     <div style="font-weight:900;font-size:18px">📺 大螢幕轉播預覽</div>
     <div class="screen"><div class="screen-in" id="screen"><div class="empty">在左邊選一個小遊戲開始，<br>這裡會即時顯示大螢幕上的轉播畫面</div></div></div>
   </div>
 </div>
 <div class="modal hidden" id="modal"></div>
 
-<script src="assets/game-data.js?v=20261113c"></script>
-<script src="assets/games.js?v=20261113c"></script>
-<script src="assets/broadcast.js?v=20261113c"></script>
+<script src="https://unpkg.com/mqtt@5.10.1/dist/mqtt.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="assets/game-data.js?v=20261113d"></script>
+<script src="assets/net.js?v=20261113d"></script>
+<script src="assets/games.js?v=20261113d"></script>
+<script src="assets/broadcast.js?v=20261113d"></script>
 <script>
 const G = window.GAME;
 const $ = (id) => document.getElementById(id);
@@ -99,10 +118,64 @@ function showScreen(code, d) {
   $('screen').innerHTML = `<div class="stitle">${def.icon} ${def.name}・PK 轉播示意</div><div class="live-wrap">${Broadcast.panel(me, code, d)}<div class="vsx">VS</div>${Broadcast.panel(ghost, code, null)}</div>`;
 }
 
+/* ---------- 手機 ↔ 電腦連線轉播 ---------- */
+const qs = new URLSearchParams(location.search);
+const ROOM = (qs.get('r') || '').toUpperCase();
+const PID = 't' + Math.random().toString(36).slice(2, 8);
+let net = null;
+const remote = {}, results = [];
+const wide = () => matchMedia('(min-width: 760px)').matches;
+const statusTxt = { online: ['on', '已連線'], reconnecting: ['warn', '重新連線中…'], offline: ['off', '離線'], error: ['off', '連線錯誤'] };
+
+if (ROOM) {
+  // 手機端：把進度送到電腦
+  $('linked').classList.remove('hidden');
+  $('lroom').textContent = '房號 ' + ROOM;
+  $('myname').value = ls('wy26test_name') || '';
+  $('myname').placeholder = '例如：小明';
+  $('myname').oninput = () => ls('wy26test_name', $('myname').value.trim());
+  net = netConnect({ room: 'test-' + ROOM, broker: +(qs.get('b') || 0), role: 'phone', onMsg() {}, onStatus(s) { $('pdot').className = 'dot ' + (statusTxt[s] || [''])[0]; } });
+} else if (wide()) {
+  // 電腦端：顯示 QR，接收手機進度
+  const room = makeCode(5);
+  const url = location.href.replace(/[?#].*$/, '') + `?r=${room}&b=0&v=${window.APP_VER}`;
+  new QRCode($('lqr'), { text: url, width: 200, height: 200, colorDark: '#1f2a3a', colorLight: '#fffdf6', correctLevel: QRCode.CorrectLevel.M });
+  net = netConnect({
+    room: 'test-' + room, broker: 0, role: 'host',
+    onStatus(s) { const [c, t] = statusTxt[s] || ['', '連線中…']; $('ldot').className = 'dot ' + c; $('ltxt').textContent = `${t}・房號 ${room}`; },
+    onMsg(m) {
+      if (!m || !m.pid) return;
+      const r = remote[m.pid] = remote[m.pid] || { color: G.colors[Object.keys(remote).length % G.colors.length] };
+      r.name = m.name || '手機玩家'; r.ts = Date.now();
+      if (m.t === 'prog') { r.game = m.d.game; r.d = m.d; showRemote(); }
+      if (m.t === 'res') {
+        results.unshift(`📱 ${r.name}：${G.games[m.game].icon} ${G.games[m.game].name} ${fmt(m.game, m.score)} ${passes(m.game, m.score) ? '✓ 過關' : '✗ 沒過'}`);
+        results.length = Math.min(results.length, 4);
+        showRemote();
+      }
+    },
+  });
+} else {
+  $('linkbox') && $('linkbox').classList.add('hidden');
+}
+function showRemote() {
+  const active = Object.values(remote).filter((r) => r.d && Date.now() - r.ts < 60000).sort((a, b) => b.ts - a.ts).slice(0, 2);
+  if (!active.length) return;
+  const games = [...new Set(active.map((r) => r.game))];
+  $('screen').innerHTML = `<div class="stitle">📱 手機即時轉播${games.length === 1 ? `・${G.games[games[0]].icon} ${G.games[games[0]].name}` : ''}</div>
+    <div class="live-wrap">${active.map((r) => Broadcast.panel({ name: r.name, avatar: '📱', color: r.color }, r.game, r.d)).join('<div class="vsx">VS</div>')}</div>
+    ${results.length ? `<div class="reslog">${results.map((t) => `<div>${t}</div>`).join('')}</div>` : ''}`;
+}
+const myName = () => (ls('wy26test_name') || '').trim() || '手機玩家';
+
 async function play(code, variant) {
   const d = G.games[code];
-  showScreen(code, null);
-  const score = await MiniGames.play(code, { seed: 1 + Math.floor(Math.random() * 1e9), variant, onProgress: (p) => showScreen(code, p) });
+  if (!ROOM) showScreen(code, null);
+  const score = await MiniGames.play(code, { seed: 1 + Math.floor(Math.random() * 1e9), variant, onProgress: (p) => {
+    if (ROOM && net) net.send({ t: 'prog', pid: PID, name: myName(), d: p }, { qos: 0 });
+    else showScreen(code, p);
+  } });
+  if (ROOM && net) net.send({ t: 'res', pid: PID, name: myName(), game: code, score });
   const ok = passes(code, score);
   const best = ls('wy26test_' + code);
   const better = best == null || (d.better === 'high' ? score > +best : score < +best);
