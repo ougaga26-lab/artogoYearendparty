@@ -138,7 +138,7 @@ if (!ROOM) {
   setInterval(() => send({ t: 'ping' }), 8000);
   setInterval(() => { if (tipTaps && S && S.pending && S.pending.kind === 'tip') { send({ t: 'tip', id: S.pending.id, n: tipTaps }); } tipTaps = 0; }, 450);
 }
-function send(o) { if (net) net.send(Object.assign({ pid: PID }, o)); }
+function send(o, opts) { if (net) net.send(Object.assign({ pid: PID }, o), opts); }
 const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const av = (p, cls = '') => `<span class="avatar ${cls}" style="--c:${p.color}">${p.avatar}</span>`;
 const vib = (p) => { try { navigator.vibrate && navigator.vibrate(p); } catch (e) {} };
@@ -193,7 +193,7 @@ function handleLaunches(me) {
   if (!pd || launched[pd.id]) return;
   if (pd.kind === 'game' && pd.players.includes(PID)) {
     launched[pd.id] = true;
-    MiniGames.play(pd.game, { seed: pd.seed, variant: pd.variant, title: pd.title }).then((score) => send({ t: 'gameResult', id: pd.id, score }));
+    MiniGames.play(pd.game, { seed: pd.seed, variant: pd.variant, title: pd.title, onProgress: (d) => send({ t: 'prog', id: pd.id, d }, { qos: 0 }) }).then((score) => send({ t: 'gameResult', id: pd.id, score }));
   }
   if (pd.kind === 'rush' && pd.players.includes(PID)) {
     launched[pd.id] = true;

@@ -63,11 +63,22 @@
     return ov;
   }
   function close() { if (ov) { ov.classList.add('hidden'); ov.innerHTML = ''; } }
+
+  /* ---------- 即時進度回傳（給大螢幕轉播） ---------- */
+  let state = {}, emit = null, lastSent = 0, sendTimer = null;
+  function flush() { clearTimeout(sendTimer); sendTimer = null; lastSent = Date.now(); if (emit) try { emit(Object.assign({}, state)); } catch (e) {} }
+  function report(patch) {
+    Object.assign(state, patch);
+    if (!emit) return;
+    const gap = Date.now() - lastSent;
+    if (gap >= 180) flush(); else if (!sendTimer) sendTimer = setTimeout(flush, 180 - gap);
+  }
   function head(title, desc) { return `<div class="mg-head"><h2>${title}</h2><p>${desc}</p></div>`; }
   async function countdown(title, desc) {
     const o = overlay();
     for (let i = 3; i > 0; i--) {
       o.innerHTML = head(title, desc) + `<div class="mg-count">${i}</div>`;
+      report({ stage: 'ready', count: i });
       try { navigator.vibrate && navigator.vibrate(30); } catch (e) {}
       await wait(750);
     }
@@ -75,16 +86,18 @@
   function timer(o, ms, onEnd) {
     const bar = o.querySelector('.mg-bar i');
     const t0 = now();
+    let lr = 0;
     const iv = setInterval(() => {
       const left = Math.max(0, ms - (now() - t0));
       if (bar) bar.style.width = (left / ms * 100) + '%';
+      if (now() - lr > 450) { lr = now(); report({ left: left / ms }); }
       if (left <= 0) { clearInterval(iv); onEnd(); }
     }, 50);
     return () => clearInterval(iv);
   }
   async function showDone(text) {
     const o = overlay();
-    o.innerHTML = `<div class="mg-done"><div>${text}<div style="font-size:16px;color:var(--muted);margin-top:8px">請看大螢幕</div></div></div>`;
+    o.innerHTML = `<div class="mg-done"><div>${text}<div style="font-size:16px;color:var(--muted);margin-top:8px">${window.MG_DONE_HINT || '請看大螢幕'}</div></div></div>`;
     await wait(1800);
   }
   function keypad(o, onKey) {
@@ -120,7 +133,8 @@
         <label class="sl">彩度<input type="range" id="s" min="0" max="100" value="${s}"></label>
         <label class="sl">明度<input type="range" id="l" min="0" max="100" value="${l}"></label>
         <button class="btn green" id="done" style="width:100%;font-size:24px">完成！</button></div>`;
-      const paint = () => { o.querySelector('#mine').style.background = `hsl(${h},${s}%,${l}%)`; };
+      const simOf = () => { const a = rgb2lab(hsl2rgb(th, ts, tl)), b = rgb2lab(hsl2rgb(h, s, l)); return r1(Math.max(0, 100 - Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]))); };
+      const paint = () => { o.querySelector('#mine').style.background = `hsl(${h},${s}%,${l}%)`; report({ stage: 'play', target: [th, ts, tl], cur: [h, s, l], sim: simOf() }); };
       paint();
       ['h', 's', 'l'].forEach((k) => o.querySelector('#' + k).addEventListener('input', (e) => { if (k === 'h') h = +e.target.value; if (k === 's') s = +e.target.value; if (k === 'l') l = +e.target.value; paint(); }));
       return new Promise((res) => {
@@ -148,7 +162,7 @@
       let cur = q(), input = '', score = 0;
       o.innerHTML = head('🧮 速算', '20 秒內答對越多越好') + `<div class="mg-bar"><i></i></div><div class="mg-body">
         <div style="font-weight:900">答對 <span id="sc">0</span> 題</div><div class="mg-big" id="q"></div><div class="ans" id="ans"></div>${KP}</div>`;
-      const draw = () => { o.querySelector('#q').textContent = cur[0] + ' = ?'; o.querySelector('#ans').textContent = input; o.querySelector('#sc').textContent = score; };
+      const draw = () => { o.querySelector('#q').textContent = cur[0] + ' = ?'; o.querySelector('#ans').textContent = input; o.querySelector('#sc').textContent = score; report({ stage: 'play', q: cur[0], input, score }); };
       draw();
       return new Promise((res) => {
         let done = false;
@@ -181,11 +195,12 @@
           <div class="grid-find" style="grid-template-columns:repeat(${cols},1fr)">${Array.from({ length: n }, (_, i) => `<button data-i="${i}">${i === oi ? odd : norm}</button>`).join('')}</div></div>`;
         const t0 = now();
         let pen = 0;
+        report({ stage: 'play', round: round + 1, wrong: 0, total: r1(total) });
         const res = await new Promise((r) => {
           const to = setTimeout(() => r(false), 20000);
           o.querySelectorAll('.grid-find button').forEach((b) => b.addEventListener('pointerdown', () => {
             if (+b.dataset.i === oi) { clearTimeout(to); r(true); }
-            else { pen += 2; b.classList.add('bad'); try { navigator.vibrate && navigator.vibrate(80); } catch (e) {} }
+            else { pen += 2; report({ wrong: pen / 2 }); b.classList.add('bad'); try { navigator.vibrate && navigator.vibrate(80); } catch (e) {} }
           }));
         });
         if (!res) return 99;
@@ -203,6 +218,8 @@
       const tx = o.querySelector('#tx');
       setTimeout(() => tx.focus(), 50);
       const t0 = now();
+      report({ stage: 'play', phrase, typed: '' });
+      tx.addEventListener('input', () => report({ typed: tx.value }));
       return new Promise((res) => {
         let done = false;
         const check = () => { if (!done && tx.value.replace(/\s/g, '') === phrase.replace(/\s/g, '')) { done = true; stop(); tx.blur(); res(r1((now() - t0) / 1000)); } };
@@ -216,9 +233,10 @@
       const o = overlay();
       let n = 0;
       o.innerHTML = head('👆 狂點', '10 秒內越多下越好！') + `<div class="mg-bar"><i></i></div><div class="mg-body"><div class="mg-big" id="n">0</div><button class="tapbtn" id="tap">點！</button></div>`;
+      report({ stage: 'play', n: 0 });
       return new Promise((res) => {
         let done = false;
-        o.querySelector('#tap').addEventListener('pointerdown', (e) => { e.preventDefault(); if (done) return; n++; o.querySelector('#n').textContent = n; });
+        o.querySelector('#tap').addEventListener('pointerdown', (e) => { e.preventDefault(); if (done) return; n++; o.querySelector('#n').textContent = n; report({ stage: 'play', n }); });
         timer(o, 10000, () => { done = true; res(n); });
       });
     },
@@ -230,10 +248,11 @@
       for (let i = 0; i < 3; i++) {
         o.innerHTML = head('⚡ 反應力', `第 ${i + 1}/3 次：變綠就按！`) + `<div class="mg-body"><div class="react" id="rx" style="background:var(--red)">等一下…</div></div>`;
         const rx = o.querySelector('#rx');
+        report({ stage: 'play', trial: i + 1, light: 'red', times: times.slice() });
         const delay = 1000 + R() * 2200;
         const t = await new Promise((res) => {
           let green = false, t0 = 0;
-          const to = setTimeout(() => { green = true; t0 = now(); rx.style.background = 'var(--green)'; rx.textContent = '按！'; }, delay);
+          const to = setTimeout(() => { green = true; t0 = now(); rx.style.background = 'var(--green)'; rx.textContent = '按！'; report({ light: 'green' }); }, delay);
           const miss = setTimeout(() => res(1.5), delay + 1500);
           rx.addEventListener('pointerdown', () => {
             clearTimeout(miss);
@@ -242,6 +261,7 @@
           }, { once: true });
         });
         times.push(t);
+        report({ light: 'result', times: times.slice() });
         rx.textContent = t >= 1.2 ? '太早或太慢 😵' : t.toFixed(3) + ' 秒';
         await wait(900);
       }
@@ -253,7 +273,9 @@
       const o = overlay();
       o.innerHTML = head('⏱️ 精準計時', '按開始後，在心裡數到剛好 5.00 秒按停') + `<div class="mg-body"><button class="tapbtn" id="b" style="background:var(--green)">開始</button><div class="mg-big" id="t"></div></div>`;
       const b = o.querySelector('#b');
+      report({ stage: 'play', timing: 'idle' });
       await new Promise((r) => b.addEventListener('pointerdown', r, { once: true }));
+      report({ timing: 'running' });
       const t0 = now();
       b.textContent = '停！'; b.style.background = 'var(--red)';
       o.querySelector('#t').textContent = '計時中…';
@@ -262,6 +284,7 @@
         setTimeout(() => b.addEventListener('pointerdown', () => { clearTimeout(to); r((now() - t0) / 1000); }, { once: true }), 150);
       });
       o.querySelector('#t').textContent = el.toFixed(2) + ' 秒';
+      report({ timing: 'done', elapsed: r2(el) });
       await wait(1300);
       return r2(Math.abs(el - 5));
     },
@@ -278,7 +301,7 @@
       Object.assign(tg.style, { left: tx + 'px', top: ty + 'px', width: S + 'px', height: S + 'px' });
       let bxp = R() < 0.5 ? 4 : W - S - 4, byp = R() < 0.5 ? 4 : W - S - 4;
       if (Math.abs(bxp - tx) < S && Math.abs(byp - ty) < S) { bxp = W - S - 4 - bxp; }
-      const place = () => Object.assign(bx.style, { left: bxp + 'px', top: byp + 'px', width: S + 'px', height: S + 'px' });
+      const place = () => { Object.assign(bx.style, { left: bxp + 'px', top: byp + 'px', width: S + 'px', height: S + 'px' }); report({ stage: 'play', box: [bxp / W, byp / W], target: [tx / W, ty / W], size: S / W }); };
       place();
       let drag = null;
       bx.addEventListener('pointerdown', (e) => { drag = { x: e.clientX - bxp, y: e.clientY - byp }; bx.setPointerCapture(e.pointerId); });
@@ -299,6 +322,7 @@
       const o = overlay();
       const grid = (show) => `<div class="mem">${Array.from({ length: 9 }, (_, i) => `<button data-i="${i}">${show && cells.includes(i) ? icons[cells.indexOf(i)] : ''}</button>`).join('')}</div>`;
       o.innerHTML = head('🧠 記憶', '記住每件作品的位置！') + `<div class="mg-body">${grid(true)}<div class="mg-big" id="cd">3</div></div>`;
+      report({ stage: 'play', mem: 'show', placed: 0 });
       for (let i = 3; i > 0; i--) { o.querySelector('#cd').textContent = i; await wait(1000); }
       let correct = 0;
       const t0 = now();
@@ -310,6 +334,7 @@
         });
         const ok = i === cells[k];
         if (ok) correct++;
+        report({ mem: 'place', placed: k + 1 });
         const btn = o.querySelector(`.mem button[data-i="${i}"]`);
         if (btn) { btn.classList.add(ok ? 'ok' : 'no'); btn.textContent = icons[k]; }
         await wait(400);
@@ -324,6 +349,7 @@
       const o = overlay();
       const dots = Array.from({ length: n }, () => `<span style="left:${4 + R() * 92}%;top:${4 + R() * 92}%">🙂</span>`).join('');
       o.innerHTML = head('👥 人流估算', '記住大概有幾個人！') + `<div class="mg-body"><div class="crowd">${dots}</div></div>`;
+      report({ stage: 'play', crowd: 'show', guess: '' });
       await wait(2500);
       let input = '';
       o.innerHTML = head('👥 人流估算', '剛剛有幾個人？') + `<div class="mg-body"><div class="ans" id="ans"></div>${KP}</div>`;
@@ -334,8 +360,9 @@
           else if (k === 'ok') { if (input) { clearTimeout(to); res(r1(Math.abs(+input - n) / n * 100)); } return; }
           else if (input.length < 3) input += k;
           o.querySelector('#ans').textContent = input;
+          report({ crowd: 'guess', guess: input });
         });
-      }).then(async (v) => { o.innerHTML = `<div class="mg-done">答案是 ${n} 人</div>`; await wait(1200); return v; });
+      }).then(async (v) => { report({ answer: n }); o.innerHTML = `<div class="mg-done">答案是 ${n} 人</div>`; await wait(1200); return v; });
     },
   };
 
@@ -343,13 +370,16 @@
     async play(code, opts = {}) {
       const def = G.games[code];
       const R = rng(opts.seed || 1);
+      state = { game: code }; emit = opts.onProgress || null; lastSent = 0;
       await countdown(`${def.icon} ${def.name}`, opts.title || def.desc);
       let score;
       try { score = await GAMES[code](R, opts.variant); }
       catch (e) { console.error(e); score = def.better === 'high' ? 0 : 99; }
+      report({ stage: 'done', score }); flush();
       const shown = code === 'M9' ? Math.floor(score) : score;
       await showDone(`${def.icon} 你的成績<br><span style="font-size:44px">${shown}${def.unit}</span>`);
       close();
+      emit = null;
       return score;
     },
     // 全場搶按：回傳反應毫秒（太早按 = 99999）

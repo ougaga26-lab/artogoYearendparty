@@ -80,6 +80,26 @@
   .cardview .chips span.ok { background: var(--mint); }
   .cardview .fatecards { display: flex; gap: 2cqw; }
   .cardview .fatecards div { width: 9cqw; height: 13cqw; border: 3px solid var(--ink); border-radius: 12px; background: repeating-linear-gradient(45deg, var(--navy), var(--navy) 8px, #5583a8 8px, #5583a8 16px); box-shadow: var(--shadow-sm); }
+  /* 轉播 */
+  .cardview.bcast { justify-content: flex-start; gap: 1cqw; padding: 1.6cqw 1.8cqw; }
+  .bc-title { font-size: 2.4cqw; font-weight: 900; }
+  .live-wrap { flex: 1; min-height: 0; width: 100%; display: flex; gap: 1cqw; align-items: stretch; font-size: 1.75cqw; }
+  .vsx { align-self: center; font-size: 3.4cqw; font-weight: 900; color: var(--red); -webkit-text-stroke: 3px var(--ink); paint-order: stroke fill; }
+  .vs { flex: 1; width: 100%; display: flex; align-items: center; justify-content: space-around; gap: 1cqw; }
+  .vs-side { display: flex; flex-direction: column; align-items: center; gap: .8cqw; }
+  .vs-side .avatar { width: 13cqw; height: 13cqw; font-size: 8.5cqw; animation: bob 1s ease-in-out infinite; }
+  .vs-name { font-size: 3.4cqw; font-weight: 900; }
+  .vs-ok { font-size: 1.8cqw; font-weight: 900; color: var(--green); min-height: 2.2cqw; }
+  .vs-side .btn { font-size: 1.8cqw; padding: .6cqw 2cqw; }
+  .vs-mid { text-align: center; }
+  .vs-x { font-size: 10cqw; font-weight: 900; color: var(--red); -webkit-text-stroke: .9cqw var(--ink); paint-order: stroke fill; line-height: 1; animation: pop .6s ease; }
+  .vs-game { font-size: 3.4cqw; font-weight: 900; margin-top: 1cqw; }
+  .vs-desc { font-size: 1.9cqw; font-weight: 700; color: var(--muted); max-width: 24cqw; }
+  .rushlist { display: flex; flex-wrap: wrap; gap: .8cqw; justify-content: center; font-size: 2.2cqw; font-weight: 900; }
+  .rushlist span { background: #fff; border: 3px solid var(--ink); border-radius: 12px; padding: .3cqw 1.2cqw; animation: pop .35s ease; }
+  .rushlist span.ok:nth-child(-n+3) { background: var(--yellow); }
+  .rushlist span.no { background: #f6a596; }
+  .rushlist b { margin-right: .6cqw; color: var(--red); }
   .d-chance { background: #fde9a6 !important; } .d-fate { background: var(--lilac) !important; }
   .d-bad { background: #fbd0c4 !important; } .d-good { background: #d5eedc !important; }
   .d-gift { background: #fbd0c4 !important; } .d-pk { background: #c7daea !important; } .d-peek { background: var(--sun) !important; } .d-start { background: var(--sun) !important; }
@@ -212,6 +232,7 @@
         <label>伺服器 <select id="brokerSel"></select></label>
         <button class="btn sm paper" id="newRoom">換新房號</button>
         <button class="btn sm paper" id="mcBtn1">主持人手機 QR</button>
+        <a class="btn sm paper" href="test.html" target="_blank" style="text-decoration:none">🧪 小遊戲測試場</a>
       </div>
       <div class="warn hidden" id="giftWarn" style="margin-top:12px"></div>
       <div class="warn hidden" id="fileWarn" style="margin-top:12px">
@@ -281,6 +302,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="assets/game-data.js"></script>
 <script src="assets/net.js"></script>
+<script src="assets/broadcast.js"></script>
 <script>
 const G = window.GAME;
 const N = G.tiles.length;
@@ -356,6 +378,9 @@ function onMsg(m) {
     case 'join': handleJoin(m); break;
     case 'roll': if (S.phase === 'roll' && curPid() === m.pid) run(() => doRoll()); break;
     case 'choose': if (match && pd.by === 'player' && pd.pid === m.pid) resolvePending(m.v); break;
+    case 'prog':
+      if (match && pd.kind === 'game' && pd.players.includes(m.pid) && m.d) { live[m.pid] = m.d; paintLive(); }
+      break;
     case 'gameResult':
       if (match && pd.kind === 'game' && pd.players.includes(m.pid) && !(m.pid in pd.res)) {
         pd.res[m.pid] = typeof m.score === 'number' ? m.score : null;
@@ -451,6 +476,7 @@ function ask(pending, timeout, def) {
   const id = runId;
   pending.id = ++pendingSeq;
   if (timeout) pending.until = Date.now() + timeout;
+  if (pending.kind === 'game') live = {};
   S.pending = pending; sync();
   return new Promise((res, rej) => {
     waiter = { res, rej, timer: timeout ? setTimeout(() => resolvePending(def), timeout) : null };
@@ -1046,16 +1072,24 @@ function pendingHTML(pd) {
   const btns = (cls = 'sm paper') => `<div class="opts">${pd.options.map((o) => `<button class="btn ${cls}" data-v="${esc(o.v)}">${esc(o.label)}</button>`).join('')}</div>`;
   switch (pd.kind) {
     case 'game':
-      return `<div class="pd">🎮 ${pd.mode === 'pk' ? 'PK 進行中' : '挑戰中'}，請看手機 ${left}</div><div class="chips">${pd.players.map((x) => `<span class="${x in pd.res ? 'ok' : ''}">${nm(x)} ${x in pd.res ? '✓ 完成' : '…'}</span>`).join('')}</div><div class="opts"><button class="btn sm paper" data-v="__end">提早結束</button></div>`;
-    case 'rush':
-      return `<div class="pd">⚡ 全場搶按中！ ${left}</div><div class="chips">${pd.players.map((x) => `<span class="${x in pd.res ? 'ok' : ''}">${nm(x)}</span>`).join('')}</div>`;
+      return `<div class="live-wrap" id="liveWrap"></div><div class="opts"><button class="btn sm paper" data-v="__end">提早結束 ${left}</button></div>`;
+    case 'rush': {
+      const done = pd.players.filter((x) => x in pd.res).sort((a, b) => pd.res[a] - pd.res[b]);
+      const t = (x) => pd.res[x] >= 99999 ? '太早' : pd.res[x] >= 9000 ? '沒按到' : (pd.res[x] / 1000).toFixed(2) + 's';
+      return `<div class="pd">⚡ 全場搶按中！看手機，變綠就按！ ${left}</div>
+        <div class="rushlist">${done.map((x, i) => `<span class="${pd.res[x] < 9000 ? 'ok' : 'no'}"><b>${i + 1}</b>${nm(x)} ${t(x)}</span>`).join('')}</div>
+        <div class="chips">${pd.players.filter((x) => !(x in pd.res)).map((x) => `<span>${nm(x)}</span>`).join('')}</div>`;
+    }
     case 'vote':
       return `<div class="pd">🗳️ 董事會投票：${esc(pd.title)} ${left}</div><div class="chips">${pd.options.map((o) => `<span>${esc(o.label)}：${Object.values(pd.res).filter((v) => v === o.v).length} 票</span>`).join('')}</div>`;
     case 'tip':
       return `<div class="pd">💸 董事會打賞中！已打賞 ${pd.total || 0} 幣 ${left}</div>`;
-    case 'realpk':
-      return `<div class="pd">比完後兩人在手機上按「誰贏了」（${pd.players.map((x) => `${nm(x)}${pd.res[x] ? ' ✓' : ''}`).join('、')}）</div>
-        <div class="opts">${pd.players.map((x) => `<button class="btn big paper" data-v="${x}">${nm(x)} 贏</button>`).join('')}</div>`;
+    case 'realpk': {
+      const d = def(pd.game);
+      const side = (x) => { const p = P(x); return `<div class="vs-side"><span class="avatar" style="--c:${p.color}">${p.avatar}</span><div class="vs-name">${esc(p.name)}</div><div class="vs-ok">${pd.res[x] ? '✓ 已回報' : ''}</div><button class="btn paper" data-v="${x}">${esc(p.name)} 贏</button></div>`; };
+      return `<div class="vs">${side(pd.players[0])}<div class="vs-mid"><div class="vs-x">VS</div><div class="vs-game">${d.icon} ${d.name}</div><div class="vs-desc">${esc(d.desc)}</div></div>${side(pd.players[1])}</div>
+        <div class="pd">比完後兩人在手機上按「誰贏了」</div>`;
+    }
     case 'judge':
       return `<div class="pd">${esc(pd.title)}</div>${btns('big paper')}`;
     case 'fatePick':
@@ -1071,17 +1105,28 @@ function renderCard() {
   const owner = P(c.pid);
   const key = c.title + c.pid + c.tile;
   if (cv.dataset.key !== key) { cv.classList.add('hidden'); void cv.offsetWidth; cv.dataset.key = key; }
-  cv.className = `cardview d-${c.deck}`;
+  const pk = S.pending && ['game', 'realpk'].includes(S.pending.kind);
+  cv.className = `cardview d-${c.deck}${pk ? ' bcast' : ''}`;
   const label = DECK_LABEL[c.deck] || c.cat || '';
-  let h = `${label || c.cat ? `<span class="deck">${esc(c.cat && c.deck !== 'chance' && c.deck !== 'fate' ? c.cat : label)}</span>` : ''}
+  let h = pk
+    ? `<div class="bc-title">${c.icon} ${esc(c.title)}</div>`
+    : `${label || c.cat ? `<span class="deck">${esc(c.cat && c.deck !== 'chance' && c.deck !== 'fate' ? c.cat : label)}</span>` : ''}
     <div class="cic">${c.icon}</div><h2>${esc(c.title)}</h2>${c.text ? `<p>${esc(c.text)}</p>` : ''}`;
-  if (c.live) h += `<div class="live">${esc(c.live)}</div>`;
+  if (c.live && !(S.pending && S.pending.kind === 'realpk')) h += `<div class="live">${esc(c.live)}</div>`;
   if (c.status) h += `<div class="status">${esc(c.status).replace(/\n/g, '<br>')}</div>`;
   if (S.pending) h += pendingHTML(S.pending);
   if (owner) h += `<div class="owner">${owner.avatar} ${esc(owner.name)} 停在「${esc(c.tile)}」</div>`;
   cv.innerHTML = h;
   cv.querySelectorAll('[data-v]').forEach((b) => b.onclick = () => resolvePending(b.dataset.v === '__end' ? null : b.dataset.v));
+  paintLive();
   tickTimers();
+}
+// 小遊戲轉播：手機回傳的進度只存在主畫面，不廣播給其他手機
+let live = {};
+function paintLive() {
+  const el = $('liveWrap'), pd = S.pending;
+  if (!el || !pd || pd.kind !== 'game') return;
+  el.innerHTML = pd.players.map((x) => Broadcast.panel(P(x), pd.game, live[x])).join(pd.mode === 'pk' ? '<div class="vsx">VS</div>' : '');
 }
 function tickTimers() {
   document.querySelectorAll('.pd-timer').forEach((el) => { el.textContent = `（${Math.max(0, Math.ceil((+el.dataset.until - Date.now()) / 1000))} 秒）`; });
