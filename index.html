@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>藝觸即發｜主畫面</title>
-<link rel="stylesheet" href="assets/style.css?v=20261116b">
+<link rel="stylesheet" href="assets/style.css?v=20261116c">
 <style>
   body { overflow: hidden; height: 100vh; }
 
@@ -329,7 +329,7 @@
   .guide .gsub { text-align: center; font-weight: 900; font-size: 20px; margin-top: 6px; }
   .guide h3 { margin: 0 0 14px; font-size: 28px; font-weight: 900; display: flex; align-items: center; gap: 10px; }
   .guide h3 .no { display: inline-grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; background: var(--ink); color: #fff; font-size: 20px; }
-  .gflow { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; }
+  .gflow { display: grid; grid-template-columns: repeat(5, 1fr); gap: 18px; }
   .gstep { position: relative; padding: 18px 16px; text-align: center; }
   .gstep .ic { font-size: 54px; line-height: 1.1; }
   .gstep .t { font-size: 22px; font-weight: 900; margin: 6px 0 4px; }
@@ -488,9 +488,9 @@
 
 <script src="https://unpkg.com/mqtt@5.10.1/dist/mqtt.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-<script src="assets/game-data.js?v=20261116b"></script>
-<script src="assets/net.js?v=20261116b"></script>
-<script src="assets/broadcast.js?v=20261116b"></script>
+<script src="assets/game-data.js?v=20261116c"></script>
+<script src="assets/net.js?v=20261116c"></script>
+<script src="assets/broadcast.js?v=20261116c"></script>
 <script>
 const G = window.GAME;
 const N = G.tiles.length;
@@ -750,7 +750,7 @@ function startGame() {
   for (let i = S.order.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [S.order[i], S.order[j]] = [S.order[j], S.order[i]]; }
   for (const p of Object.values(S.players)) Object.assign(p, { pos: 0, coins: G.startCoins, items: [], drinks: null, stats: { wins: 0, bad: 0, steals: 0, laps: 0 } });
   // 禮物先裝進盒子，開場典禮再一盒一盒拆
-  S.gifts = loadGifts().map((g) => Object.assign({}, g, { holder: null, steals: 0, locked: false }));
+  S.gifts = loadGifts().map((g) => Object.assign({}, g, { holder: null, steals: 0, guard: null }));
   const gs = shuffle(S.gifts.slice());
   const cer = { step: 'intro', cur: null, openBox: null, boxes: gs.map((g, i) => ({ n: i + 1, gift: g.id, by: null, open: false })), shake: null, gbets: {}, prophets: [], topOpened: false, reveal: null };
   Object.assign(S, { phase: 'ceremony', round: 1, turn: 0, card: null, pending: null, dice: null, final: null, decks: {}, cer, prophets: [] });
@@ -846,6 +846,7 @@ async function startTurn() {
   S.card = null; S.pending = null; S.dice = null;
   const p = P(curPid());
   if (!p) return nextTurn();
+  S.gifts.forEach((g) => { if (g.guard === p.pid) g.guard = null; });
   S.phase = 'roll'; S.msg = `輪到 ${p.name} 擲骰子！`;
   S.rollDeadline = Date.now() + 45000;
   sync(); sfx('turn');
@@ -865,7 +866,7 @@ function nextTurn() {
   }
   return startTurn();
 }
-function forceNext() { if (S.phase === 'ceremony') return; cancelChain(); S.card = null; run(nextTurn); }
+function forceNext() { if (S.phase === 'ceremony' || S.phase === 'bonus') return; cancelChain(); S.card = null; run(nextTurn); }
 
 const d6 = () => 1 + Math.floor(Math.random() * 6);
 async function doRoll() {
@@ -1113,20 +1114,23 @@ function swapGifts(a, b, countSteal) {
   if (ga) ga.holder = b.pid;
   if (gb) {
     gb.holder = a.pid;
-    if (countSteal) { gb.steals++; if (gb.steals >= G.lockAfter) gb.locked = true; }
+    if (countSteal) { gb.steals++; gb.guard = a.pid; } // 剛搶到：到搶的人下次擲骰前都不能被搶
   }
   sfx('coin');
   return gb;
 }
+// 禮物身價：每被搶一次漲 stealRise（越早搶越便宜），取整到 10
+const giftPrice = (g) => Math.round(G.tiers[g.tier].price * Math.pow(1 + G.stealRise, g.steals) / 10) * 10;
+const guarded = (g) => !!g && !!g.guard && g.guard === g.holder;
 const giftCands = (p, opts = {}) => boardPlayers().filter((t) => t.pid !== p.pid && t.role === 'staff')
-  .map((t) => ({ t, g: giftOf(t.pid) })).filter((x) => x.g && !x.g.locked && (!opts.afford || G.tiers[x.g.tier].price <= p.coins));
-const giftOpt = (x, price) => ({ v: x.t.pid, label: `${giftText(x.g)}（${x.t.avatar} ${x.t.name}）`, sub: price ? `${G.tiers[x.g.tier].price} 幣` : `被搶 ${x.g.steals} 次` });
+  .map((t) => ({ t, g: giftOf(t.pid) })).filter((x) => x.g && (opts.ignoreGuard || !guarded(x.g)) && (!opts.afford || giftPrice(x.g) <= p.coins));
+const giftOpt = (x, price) => ({ v: x.t.pid, label: `${giftText(x.g)}（${x.t.avatar} ${x.t.name}）`, sub: price ? `${giftPrice(x.g)} 幣` : `被搶 ${x.g.steals} 次` });
 
 async function stealFrom(p, t, how) {
   if (blockedByLock(t)) { setStatus(`🔒 ${t.name} 的防盜鎖擋下來了！`); sfx('bad'); await sleep(1800); return false; }
   const g = swapGifts(p, t, true);
   p.stats.steals++;
-  setStatus(`${how}：${p.name} 拿走了 ${t.name} 的${giftText(g)}！${g.locked ? '　🔒 這份已鎖定' : ''}`);
+  setStatus(`${how}：${p.name} 拿走了 ${t.name} 的${giftText(g)}！身價漲到 ${giftPrice(g)} 幣`);
   await sleep(2200);
   return true;
 }
@@ -1147,18 +1151,18 @@ async function giftTile(p) {
     setStatus(`🤝 ${A.name} 和 ${B.name} 的禮物互換了！${p.name} 抽仲介費 ${G.brokerFee}`);
     await sleep(2200); return;
   }
-  showCard({ deck: 'gift', icon: '🎁', title: '搶禮物', text: '付錢和任何人交換禮物，禮物越好越貴（錢付給被搶的人）' }, p);
+  showCard({ deck: 'gift', icon: '🎁', title: '搶禮物', text: '付錢和任何人交換禮物，錢付給被搶的人。禮物每被搶一次就漲價，越早搶越便宜！' }, p);
   await sleep(1600);
   const cands = giftCands(p, { afford: true });
   if (!cands.length) { setStatus('沒有搶得起的禮物…'); await sleep(1600); return; }
   const v = await ask({ kind: 'pick', by: 'player', pid: p.pid, title: '要搶誰的禮物？', options: cands.map((x) => giftOpt(x, true)).concat([{ v: 'none', label: '先不搶' }]) }, 45000, 'none');
   if (v === 'none') { setStatus('這次先忍住'); await sleep(1200); return; }
-  const t = P(v), g = giftOf(t.pid), price = G.tiers[g.tier].price;
+  const t = P(v), g = giftOf(t.pid), price = giftPrice(g);
   if (blockedByLock(t)) { setStatus(`🔒 ${t.name} 的防盜鎖擋下來了！錢沒有付出去`); sfx('bad'); await sleep(1800); return; }
   transfer(p, t, price);
   const got = swapGifts(p, t, true);
   p.stats.steals++;
-  setStatus(`💰 ${p.name} 付 ${price} 幣，搶走 ${t.name} 的${giftText(got)}！${got.locked ? '　🔒 這份已鎖定' : ''}`);
+  setStatus(`💰 ${p.name} 付 ${price} 幣，搶走 ${t.name} 的${giftText(got)}！🛡️ 到他下次擲骰前不會被搶，身價漲到 ${giftPrice(got)} 幣`);
   await sleep(2400);
 }
 
@@ -1180,7 +1184,7 @@ async function pkTile(p) {
   // 發起的人選賭注：禮物（兩人都是正式員工才有）或錢
   const ga = giftOf(p.pid), gt = giftOf(t.pid);
   const opts = [];
-  if (p.role === 'staff' && t.role === 'staff' && ga && gt && !gt.locked) opts.push({ v: 'gift', label: '🎁 賭禮物', sub: `你贏了可以拿${tierName(ga)}換他的${tierName(gt)}` });
+  if (p.role === 'staff' && t.role === 'staff' && ga && gt && !guarded(gt) && !guarded(ga)) opts.push({ v: 'gift', label: '🎁 賭禮物', sub: `你贏了可以拿${tierName(ga)}換他的${tierName(gt)}` });
   G.pkStakes.forEach((n) => opts.push({ v: String(n), label: `💰 賭 ${n} 幣`, sub: '贏的人從輸的人身上拿' }));
   const stake = await ask({ kind: 'pick', by: 'player', pid: p.pid, title: `要跟 ${t.name} 賭什麼？`, options: opts }, 30000, opts[0].v);
   let stakeTxt = stake === 'gift' ? '🎁 禮物' : `💰 ${stake} 幣`;
@@ -1223,7 +1227,7 @@ async function pkTile(p) {
     return;
   }
   const gw = giftOf(w.pid), gl = giftOf(l.pid);
-  if (w.role === 'staff' && l.role === 'staff' && gw && gl && !gl.locked) {
+  if (w.role === 'staff' && l.role === 'staff' && gw && gl && !guarded(gl)) {
     const v = await ask({ kind: 'pick', by: 'player', pid: w.pid, title: `要用你的${giftText(gw)}，換 ${l.name} 的${giftText(gl)}嗎？`, options: [{ v: 'swap', label: '換！' }, { v: 'keep', label: '不換，留著我的' }] }, 30000, 'keep');
     if (v === 'swap') await stealFrom(w, l, 'PK 戰利品');
     else { setStatus(`${w.name} 決定保留自己的禮物`); await sleep(1200); }
@@ -1443,11 +1447,32 @@ function showBigFx() {
 
 /* ================= 結算 ================= */
 function endGame() {
-  if (S.phase === 'ceremony') return;
+  if (S.phase === 'ceremony' || S.phase === 'bonus' || S.phase === 'privilege') return;
   cancelChain();
-  S.phase = 'privilege'; S.card = null; S.dice = null; S.msg = '首富特權時間！';
-  sync();
-  run(privilegeFlow);
+  S.card = null; S.dice = null;
+  run(async () => { await bonusFlow(); S.phase = 'privilege'; S.card = null; S.msg = '首富特權時間！'; sync(); await privilegeFlow(); });
+}
+// 最後加碼：藝途幣前 3 名一起搖手機 90 秒，搖最多 ×2、中間 ×1、最後一名 ×0
+async function bonusFlow() {
+  const B = G.bonus;
+  const ps = boardPlayers().slice().sort((a, b) => b.coins - a.coins).slice(0, B.top);
+  if (ps.length < 2) return;
+  S.phase = 'bonus'; S.msg = '';
+  const mults = ps.length >= B.mult.length ? B.mult : [B.mult[0], B.mult[B.mult.length - 1]];
+  showCard({ deck: 'pk', icon: '📱', title: '最後加碼：搖手機大決戰！', text: `藝途幣前 ${ps.length} 名一起搖手機 ${B.secs} 秒！搖最多的人藝途幣 ×${mults[0]}，最後一名 ×${mults[mults.length - 1]}，${mults.length > 2 ? '中間的不變' : ''}` }, ps[0]);
+  S.phase = 'bonus';
+  setLive(`📱 ${ps.map((p) => `${p.avatar} ${p.name}（${p.coins}）`).join('　vs　')}`);
+  sfx('fanfare');
+  await readWait(8000);
+  const res = await collect({ kind: 'game', mode: 'bonus', game: 'S2', seed: 1, secs: B.secs, players: ps.map((p) => p.pid) }, (B.secs + 45) * 1000);
+  const order = ps.slice().sort((a, b) => (res[b.pid] ?? -1) - (res[a.pid] ?? -1) || b.coins - a.coins);
+  setStatus(order.map((p, i) => `${['🥇', '🥈', '🥉'][i]} ${p.name} ${res[p.pid] ?? 0} 下 → ×${mults[i]}`).join('\n'));
+  await sleep(3000);
+  order.forEach((p, i) => addCoins(p, p.coins * (mults[i] - 1), true));
+  sync(); sfx('big');
+  setStatus(order.map((p, i) => `${['🥇', '🥈', '🥉'][i]} ${p.name} ×${mults[i]} → ${p.coins} 幣`).join('\n'));
+  await sleep(4500);
+  S.card = null;
 }
 async function privilegeFlow() {
   const ranked = boardPlayers().slice().sort((a, b) => b.coins - a.coins);
@@ -1458,7 +1483,7 @@ async function privilegeFlow() {
     showCard({ deck: 'gift', icon: '👑', title: `首富特權：第 ${i + 1} 名`, text: `${p.name} 可以免費搶一份還沒鎖定的禮物` }, p);
     S.phase = 'privilege'; sync();
     await sleep(1600);
-    const cands = giftCands(p);
+    const cands = giftCands(p, { ignoreGuard: true });
     if (!cands.length) { setStatus('沒有可以搶的禮物了'); await sleep(1400); continue; }
     const v = await ask({ kind: 'pick', by: 'player', pid: p.pid, title: '首富特權：要換誰的禮物？', options: cands.map((x) => giftOpt(x)).concat([{ v: 'none', label: '我很滿意，不換' }]) }, 45000, 'none');
     if (v === 'none') { setStatus(`${p.name} 對自己的禮物很滿意`); await sleep(1400); }
@@ -1520,7 +1545,7 @@ function render() {
   $('final').classList.toggle('hidden', S.phase !== 'ended');
   renderLobby(); renderNet();
   if (S.phase === 'ended') renderFinal();
-  $('roundTxt').textContent = S.phase === 'privilege' ? '👑 首富特權' : `第 ${S.round} / ${S.maxRounds} 輪${S.round === S.maxRounds && inGame() ? '・最後一輪！' : ''}`;
+  $('roundTxt').textContent = S.phase === 'privilege' ? '👑 首富特權' : S.phase === 'bonus' ? '📱 最後加碼' : `第 ${S.round} / ${S.maxRounds} 輪${S.round === S.maxRounds && inGame() ? '・最後一輪！' : ''}`;
   const cp = P(curPid());
   $('turnBox').innerHTML = cp && inGame()
     ? `${avatarHTML(cp)}<div><div class="who">${esc(cp.name)}</div><div class="sub">的回合・${G.roles[cp.role].name}</div></div>`
@@ -1635,7 +1660,7 @@ function renderLB() {
   $('lb').innerHTML = list.map((p, i) => {
     const g = giftOf(p.pid);
     const gift = p.role === 'probation' ? '<span class="gtag rp">🧧 紅包</span>'
-      : g ? `<span class="gtag t${g.tier}">🎁 ${esc(giftText(g))}${g.locked ? ' 🔒' : g.steals ? ' ' + '●'.repeat(g.steals) : ''}</span>` : '';
+      : g ? `<span class="gtag t${g.tier}">🎁 ${esc(giftText(g))}・${giftPrice(g)}${guarded(g) ? ' 🛡️' : ''}</span>` : '';
     const fl = rowFlash[p.pid] && rowFlash[p.pid].until > Date.now() ? ' ' + rowFlash[p.pid].dir : '';
     return `<div class="row${p.pid === cp && inGame() ? ' cur' : ''}${fl}" id="row_${p.pid}">
       <span class="rk">${i + 1}</span>${avatarHTML(p)}
@@ -1994,6 +2019,7 @@ function buildGuide() {
       <div class="gflow">
         <div class="card gstep"><div class="ic">🎁</div><div class="t">開場抽獎典禮</div><div class="d">全場搖手機搶順序<br>正式員工輪流挑禮物盒、當場搖開<br>試用期拆紅包</div></div>
         <div class="card gstep"><div class="ic">🎲</div><div class="t">擲骰走棋盤</div><div class="d">一共 <b id="guideRounds">${S ? S.maxRounds : G.defaultRounds}</b> 輪，輪到你就在手機擲骰<br>踩到格子才知道發生什麼事</div></div>
+        <div class="card gstep"><div class="ic">📱</div><div class="t">最後加碼</div><div class="d">藝途幣前 ${G.bonus.top} 名搖手機 ${G.bonus.secs} 秒<br>第 1 名藝途幣 ×${G.bonus.mult[0]}<br>最後一名歸零！</div></div>
         <div class="card gstep"><div class="ic">👑</div><div class="t">首富特權</div><div class="d">藝途幣前 ${G.privilegeTop} 名的正式員工<br>各可以免費換一份禮物</div></div>
         <div class="card gstep"><div class="ic">🎉</div><div class="t">全場拆禮物</div><div class="d">揭曉每個人最後抱回家的禮物<br>試用期領紅包、頒發各種獎</div></div>
       </div></div>
@@ -2003,7 +2029,8 @@ function buildGuide() {
         <div class="card grole"><div class="top bg-red"><span class="ic">🎁</span><div><div class="n">正式員工</div><div class="g">目標：最後抱走最好的禮物</div></div></div>
           <ul>${li('📦', `開場挑一個禮物盒，可能開出<b>頭獎、二獎、三獎或普獎</b>`)}
             ${li('💸', `踩到 🎁 搶禮物格：付錢跟任何人換禮物<br>頭獎 ${t[1].price}・二獎 ${t[2].price}・三獎 ${t[3].price}・普獎 ${t[4].price} 幣，錢付給被搶的人`)}
-            ${li('🔒', `每份禮物被搶 <b>${G.lockAfter} 次</b>就鎖定，誰都搶不走`)}
+            ${li('📈', `每被搶一次<b>漲價 ${Math.round(G.stealRise * 100)}%</b>，越早搶越便宜`)}
+            ${li('🛡️', '剛搶到的禮物，到你<b>下次擲骰前</b>不會被搶走')}
             ${li('⚔️', 'PK 時可以<b>賭禮物</b>，贏了直接換')}
             ${li('👑', `最後藝途幣前 ${G.privilegeTop} 名有<b>首富特權</b>，再免費換一次`)}</ul></div>
         <div class="card grole"><div class="top bg-sun"><span class="ic">🧧</span><div><div class="n">試用期</div><div class="g">目標：名次越前面，紅包越大</div></div></div>
@@ -2184,16 +2211,16 @@ function init() {
   $('toHelp').onclick = () => $('guide').scrollIntoView({ behavior: 'smooth' });
   $('toTop').onclick = () => $('lobby').scrollTo({ top: 0, behavior: 'smooth' });
   $('cRoll').onclick = () => { if (S.phase === 'roll') run(() => doRoll()); };
-  $('cNext').onclick = () => { if (inGame() && S.phase !== 'privilege') forceNext(); };
+  $('cNext').onclick = () => { if (inGame() && S.phase !== 'privilege' && S.phase !== 'bonus') forceNext(); };
   $('cSound').onclick = () => { soundOn = !soundOn; $('cSound').textContent = '音效：' + (soundOn ? '開' : '關'); };
   $('cerSkip').onclick = () => { if (confirm('跳過典禮？還沒拆的禮物會直接隨機分配。')) skipCeremony(); };
-  $('cEnd').onclick = () => { if (inGame() && S.phase !== 'privilege' && confirm('確定要結束遊戲，進入首富特權和結算嗎？')) endGame(); };
+  $('cEnd').onclick = () => { if (inGame() && S.phase !== 'privilege' && S.phase !== 'bonus' && confirm('確定要結束遊戲，進入首富特權和結算嗎？')) endGame(); };
   document.addEventListener('keydown', (e) => {
     if (e.target.tagName === 'INPUT') return;
     if (e.code === 'Space' && S.phase === 'roll') { e.preventDefault(); run(() => doRoll()); }
     if (e.code === 'Space' && S.phase === 'ceremony') { e.preventDefault(); goShake(); }
     if (e.key === 'Enter' && skipFn) { e.preventDefault(); skipFn(); }
-    if ((e.key === 'n' || e.key === 'N') && inGame() && S.phase !== 'privilege') forceNext();
+    if ((e.key === 'n' || e.key === 'N') && inGame() && S.phase !== 'privilege' && S.phase !== 'bonus') forceNext();
   });
   window.addEventListener('resize', renderTokens);
   setInterval(tickCeremony, 120);

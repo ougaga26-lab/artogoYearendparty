@@ -494,12 +494,13 @@
     },
 
     // 搖手機耐力賽：60 秒，搖越多下越好
-    async S2(R, variant, goal) {
+    async S2(R, variant, goal, secs) {
       const o = overlay();
-      await GAMES.S_ready(o, '📱 搖手機耐力賽', '60 秒用力搖，搖到手痠也不能停！');
-      const LIMIT = 60000;
+      const SEC = secs || 60;
+      await GAMES.S_ready(o, '📱 搖手機耐力賽', `${SEC} 秒用力搖，搖到手痠也不能停！`);
+      const LIMIT = SEC * 1000;
       o.innerHTML = head('📱 搖手機耐力賽', '不要停！') + `<div class="mg-bar"><i></i></div><div class="mg-body">
-        <div class="mg-big" id="s2h">用力搖！</div><div class="mg-count" style="flex:none" id="s2n">0</div><div style="font-weight:900;font-size:20px" id="s2l">還剩 60 秒</div></div>`;
+        <div class="mg-big" id="s2h">用力搖！</div><div class="mg-count" style="flex:none" id="s2n">0</div><div style="font-weight:900;font-size:20px" id="s2l">還剩 ${SEC} 秒</div></div>`;
       let cnt = 0, tap = false, t0 = now();
       const bump = () => {
         if (now() - t0 > LIMIT) return;
@@ -542,7 +543,7 @@
       state = { game: code }; emit = opts.onProgress || null; lastSent = 0;
       if (!/^S/.test(code)) await countdown(`${def.icon} ${def.name}`, opts.title || def.desc); // 感應遊戲自己有準備畫面
       let score;
-      try { score = await GAMES[code](R, opts.variant, opts.goal); }
+      try { score = await GAMES[code](R, opts.variant, opts.goal, opts.secs); }
       catch (e) { console.error(e); score = def.better === 'high' ? 0 : 99; }
       report({ stage: 'done', score }); flush();
       const shown = code === 'M9' ? Math.floor(score) : score;

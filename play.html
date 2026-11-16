@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#f9c9b5">
 <title>藝觸即發｜手機控制器</title>
-<link rel="stylesheet" href="assets/style.css?v=20261116b">
+<link rel="stylesheet" href="assets/style.css?v=20261116c">
 <style>
   body { min-height: 100svh; padding: 14px 16px calc(24px + env(safe-area-inset-bottom)); max-width: 520px; margin: 0 auto; user-select: none; -webkit-user-select: none; }
   header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
@@ -114,10 +114,10 @@
 <div class="cerov hidden" id="cerov"></div>
 
 <script src="https://unpkg.com/mqtt@5.10.1/dist/mqtt.min.js"></script>
-<script src="assets/game-data.js?v=20261116b"></script>
-<script src="assets/net.js?v=20261116b"></script>
-<script src="assets/games.js?v=20261116b"></script>
-<script src="assets/shake.js?v=20261116b"></script>
+<script src="assets/game-data.js?v=20261116c"></script>
+<script src="assets/net.js?v=20261116c"></script>
+<script src="assets/games.js?v=20261116c"></script>
+<script src="assets/shake.js?v=20261116c"></script>
 <script>
 const G = window.GAME;
 const $ = (id) => document.getElementById(id);
@@ -260,7 +260,7 @@ function handleLaunches(me) {
   if (!pd || launched[pd.id]) return;
   if (pd.kind === 'game' && pd.players.includes(PID)) {
     launched[pd.id] = true;
-    MiniGames.play(pd.game, { seed: pd.seed, variant: pd.variant, title: pd.title, goal: pd.mode === 'solo' && /^S/.test(pd.game) ? G.games[pd.game].pass : null, onProgress: (d) => send({ t: 'prog', id: pd.id, d }, { qos: 0 }) }).then((score) => send({ t: 'gameResult', id: pd.id, score }));
+    MiniGames.play(pd.game, { seed: pd.seed, variant: pd.variant, title: pd.title, goal: pd.mode === 'solo' && /^S/.test(pd.game) ? G.games[pd.game].pass : null, secs: pd.secs, onProgress: (d) => send({ t: 'prog', id: pd.id, d }, { qos: 0 }) }).then((score) => send({ t: 'gameResult', id: pd.id, score }));
   }
   if (pd.kind === 'rush' && pd.players.includes(PID)) {
     launched[pd.id] = true;
@@ -281,7 +281,7 @@ function meCard(me) {
     const g = giftOf(PID);
     const gn = S.phase === 'ended' ? null : giftName(g); // 結算時統一看大螢幕
     gift = g ? `<div class="giftbox"><span class="gi">🎁</span><div>${tierName(g)}${gn ? '・' + esc(gn) : '（內容保密）'}
-      <small>${g.locked ? '🔒 已鎖定，不會再被搶' : `被搶 ${g.steals} 次，${G.lockAfter} 次後鎖定`}</small></div></div>` : S.phase === 'ceremony' ? '<div class="giftbox"><span class="gi">🎁</span><div>還沒抽禮物<small>等一下輪到你挑盒子！</small></div></div>' : (inGame() ? '<div class="giftbox"><span class="gi">🎁</span><div>目前沒有禮物</div></div>' : '');
+      <small>${g.guard === PID ? '🛡️ 保護中：到你下次擲骰前不會被搶・' : ''}被搶 ${g.steals} 次・現在身價 ${Math.round(G.tiers[g.tier].price * Math.pow(1 + G.stealRise, g.steals) / 10) * 10} 幣</small></div></div>` : S.phase === 'ceremony' ? '<div class="giftbox"><span class="gi">🎁</span><div>還沒抽禮物<small>等一下輪到你挑盒子！</small></div></div>' : (inGame() ? '<div class="giftbox"><span class="gi">🎁</span><div>目前沒有禮物</div></div>' : '');
   }
   const items = me.items.map((it) => it === 'peek'
     ? `<button class="item" id="usePeek">${G.items[it].icon} ${G.items[it].name}（點我用）</button>`
@@ -326,6 +326,7 @@ function actionHTML(me) {
     return `<div class="big">輪到你了！</div><button class="dicebtn" id="rollBtn"><span><span class="ic">🎲</span>擲骰子</span></button><div class="small">也可以搖一搖手機擲骰</div>`;
   }
   if (S.phase === 'privilege') return `${cardMini()}<div class="small">👑 首富特權進行中，請看大螢幕</div>`;
+  if (S.phase === 'bonus') return `${cardMini()}<div class="small">📱 最後加碼進行中，請看大螢幕</div>`;
   if (S.read && curPid() === PID) return `${cardMini() || `<div class="small">${esc(S.msg || '')}</div>`}<button class="btn wide" id="skipBtn" style="margin-top:12px;font-size:20px">看完了，繼續 👍</button><div class="small">大家都看完再按喔</div>`;
   return `<div class="turnwho">${cp ? av(cp) : ''}<div class="big">${cp ? esc(cp.name) : ''} 的回合</div></div>${cardMini() || `<div class="small">${esc(S.msg || '請看大螢幕')}</div>`}`;
 }
@@ -480,7 +481,7 @@ function miniBoard() {
   const list = ranked();
   return `<div class="card"><h2 style="font-size:18px">排行榜・第 ${S.round}/${S.maxRounds} 輪</h2><div class="mini">${list.map((p, i) => {
     const g = giftOf(p.pid);
-    const tag = p.role === 'probation' ? '🧧' : g ? `${tierName(g)}${g.locked ? '🔒' : ''}` : '';
+    const tag = p.role === 'probation' ? '🧧' : g ? `${tierName(g)}${g.guard && g.guard === g.holder ? '🛡️' : ''}` : '';
     return `<div class="r${p.pid === PID ? ' me2' : ''}"><span>${i + 1}</span>${av(p)}<span>${esc(p.name)}</span><span class="g">${tag}</span><span>${p.coins}</span></div>`;
   }).join('')}</div></div>`;
 }
@@ -588,8 +589,8 @@ function renderMC() {
       ${S.phase === 'ceremony' ? '<button class="btn paper" data-c="cerSkip">跳過典禮</button>' : ''}
       ${S.read ? '<button class="btn" data-c="skip">看完了，繼續</button>' : ''}
       <button class="btn" data-c="roll" ${S.phase !== 'roll' ? 'disabled' : ''}>代擲骰子</button>
-      <button class="btn paper" data-c="next" ${!inGame() || S.phase === 'privilege' ? 'disabled' : ''}>跳到下一位</button>
-      <button class="btn red" data-c="end" ${!inGame() || S.phase === 'privilege' ? 'disabled' : ''}>結束遊戲</button>
+      <button class="btn paper" data-c="next" ${!inGame() || S.phase === 'privilege' || S.phase === 'bonus' ? 'disabled' : ''}>跳到下一位</button>
+      <button class="btn red" data-c="end" ${!inGame() || S.phase === 'privilege' || S.phase === 'bonus' ? 'disabled' : ''}>結束遊戲</button>
     </div></div>`;
   h += `<div class="card"><h2 style="font-size:18px">手動加扣錢</h2>${ranked().map((p) => `
     <div class="adj"><span>${p.avatar} ${esc(p.name)}・${p.coins}</span>
