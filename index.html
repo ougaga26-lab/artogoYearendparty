@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>藝觸即發｜主畫面</title>
-<link rel="stylesheet" href="assets/style.css?v=20261116c">
+<link rel="stylesheet" href="assets/style.css?v=20261116d">
 <style>
   body { overflow: hidden; height: 100vh; }
 
@@ -488,9 +488,9 @@
 
 <script src="https://unpkg.com/mqtt@5.10.1/dist/mqtt.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-<script src="assets/game-data.js?v=20261116c"></script>
-<script src="assets/net.js?v=20261116c"></script>
-<script src="assets/broadcast.js?v=20261116c"></script>
+<script src="assets/game-data.js?v=20261116d"></script>
+<script src="assets/net.js?v=20261116d"></script>
+<script src="assets/broadcast.js?v=20261116d"></script>
 <script>
 const G = window.GAME;
 const N = G.tiles.length;
@@ -1450,28 +1450,31 @@ function endGame() {
   if (S.phase === 'ceremony' || S.phase === 'bonus' || S.phase === 'privilege') return;
   cancelChain();
   S.card = null; S.dice = null;
-  run(async () => { await bonusFlow(); S.phase = 'privilege'; S.card = null; S.msg = '首富特權時間！'; sync(); await privilegeFlow(); });
+  S.phase = 'privilege'; S.msg = '首富特權時間！'; sync();
+  run(privilegeFlow); // 首富特權結束後才是搖手機大決戰
 }
-// 最後加碼：藝途幣前 3 名一起搖手機 90 秒，搖最多 ×2、中間 ×1、最後一名 ×0
+// 搖手機大決戰（壓軸）：首富特權結束後，藝途幣前 3 名搖手機 90 秒，把藝途幣換成現金
+// 搖最多 ×2、中間 ×1、最後一名 0 元。藝途幣、名次、紅包都不變，現金另外發
 async function bonusFlow() {
   const B = G.bonus;
   const ps = boardPlayers().slice().sort((a, b) => b.coins - a.coins).slice(0, B.top);
   if (ps.length < 2) return;
-  S.phase = 'bonus'; S.msg = '';
+  S.phase = 'bonus'; S.msg = ''; S.bonusResult = null;
   const mults = ps.length >= B.mult.length ? B.mult : [B.mult[0], B.mult[B.mult.length - 1]];
-  showCard({ deck: 'pk', icon: '📱', title: '最後加碼：搖手機大決戰！', text: `藝途幣前 ${ps.length} 名一起搖手機 ${B.secs} 秒！搖最多的人藝途幣 ×${mults[0]}，最後一名 ×${mults[mults.length - 1]}，${mults.length > 2 ? '中間的不變' : ''}` }, ps[0]);
+  const cash = (p, m) => Math.round(p.coins * m * B.rate);
+  showCard({ deck: 'pk', icon: '📱', title: '壓軸：搖手機大決戰！', text: `藝途幣前 ${ps.length} 名搖手機 ${B.secs} 秒，把藝途幣換成現金！搖最多的人領 ${mults[0]} 倍，${mults.length > 2 ? `第二名領 ${mults[1]} 倍，` : ''}最後一名 0 元` }, ps[0]);
   S.phase = 'bonus';
-  setLive(`📱 ${ps.map((p) => `${p.avatar} ${p.name}（${p.coins}）`).join('　vs　')}`);
+  setLive(`📱 ${ps.map((p) => `${p.avatar} ${p.name}（${p.coins} 幣）`).join('　vs　')}`);
   sfx('fanfare');
   await readWait(8000);
   const res = await collect({ kind: 'game', mode: 'bonus', game: 'S2', seed: 1, secs: B.secs, players: ps.map((p) => p.pid) }, (B.secs + 45) * 1000);
   const order = ps.slice().sort((a, b) => (res[b.pid] ?? -1) - (res[a.pid] ?? -1) || b.coins - a.coins);
   setStatus(order.map((p, i) => `${['🥇', '🥈', '🥉'][i]} ${p.name} ${res[p.pid] ?? 0} 下 → ×${mults[i]}`).join('\n'));
   await sleep(3000);
-  order.forEach((p, i) => addCoins(p, p.coins * (mults[i] - 1), true));
-  sync(); sfx('big');
-  setStatus(order.map((p, i) => `${['🥇', '🥈', '🥉'][i]} ${p.name} ×${mults[i]} → ${p.coins} 幣`).join('\n'));
-  await sleep(4500);
+  S.bonusResult = order.map((p, i) => ({ pid: p.pid, n: res[p.pid] ?? 0, mult: mults[i], coins: p.coins, cash: cash(p, mults[i]) }));
+  sfx('fanfare'); setTimeout(() => sfx('big'), 600);
+  setStatus(S.bonusResult.map((r, i) => `${['🥇', '🥈', '🥉'][i]} ${P(r.pid).name}：${r.coins} 幣 ×${r.mult} → 💵 現金 ${r.cash.toLocaleString()} 元`).join('\n'));
+  await sleep(6000);
   S.card = null;
 }
 async function privilegeFlow() {
@@ -1489,6 +1492,7 @@ async function privilegeFlow() {
     if (v === 'none') { setStatus(`${p.name} 對自己的禮物很滿意`); await sleep(1400); }
     else await stealFrom(p, P(v), '首富特權');
   }
+  await bonusFlow();
   finalize();
 }
 function finalize() {
@@ -1502,6 +1506,7 @@ function finalize() {
     red,
     topHolder: g1 ? g1.holder : null,
     bettors: guests().filter((g) => g1 && g.bet && g.bet === g1.holder).map((g) => g.pid),
+    bonus: S.bonusResult || [],
     prophets: (S.prophets || []).filter((x) => P(x)),
     awards: [
       { t: '小遊戲之王', pid: maxBy((p) => p.stats.wins), d: '小遊戲和 PK 贏最多次' },
@@ -1545,7 +1550,7 @@ function render() {
   $('final').classList.toggle('hidden', S.phase !== 'ended');
   renderLobby(); renderNet();
   if (S.phase === 'ended') renderFinal();
-  $('roundTxt').textContent = S.phase === 'privilege' ? '👑 首富特權' : S.phase === 'bonus' ? '📱 最後加碼' : `第 ${S.round} / ${S.maxRounds} 輪${S.round === S.maxRounds && inGame() ? '・最後一輪！' : ''}`;
+  $('roundTxt').textContent = S.phase === 'privilege' ? '👑 首富特權' : S.phase === 'bonus' ? '📱 搖手機大決戰' : `第 ${S.round} / ${S.maxRounds} 輪${S.round === S.maxRounds && inGame() ? '・最後一輪！' : ''}`;
   const cp = P(curPid());
   $('turnBox').innerHTML = cp && inGame()
     ? `${avatarHTML(cp)}<div><div class="who">${esc(cp.name)}</div><div class="sub">的回合・${G.roles[cp.role].name}</div></div>`
@@ -2019,8 +2024,8 @@ function buildGuide() {
       <div class="gflow">
         <div class="card gstep"><div class="ic">🎁</div><div class="t">開場抽獎典禮</div><div class="d">全場搖手機搶順序<br>正式員工輪流挑禮物盒、當場搖開<br>試用期拆紅包</div></div>
         <div class="card gstep"><div class="ic">🎲</div><div class="t">擲骰走棋盤</div><div class="d">一共 <b id="guideRounds">${S ? S.maxRounds : G.defaultRounds}</b> 輪，輪到你就在手機擲骰<br>踩到格子才知道發生什麼事</div></div>
-        <div class="card gstep"><div class="ic">📱</div><div class="t">最後加碼</div><div class="d">藝途幣前 ${G.bonus.top} 名搖手機 ${G.bonus.secs} 秒<br>第 1 名藝途幣 ×${G.bonus.mult[0]}<br>最後一名歸零！</div></div>
         <div class="card gstep"><div class="ic">👑</div><div class="t">首富特權</div><div class="d">藝途幣前 ${G.privilegeTop} 名的正式員工<br>各可以免費換一份禮物</div></div>
+        <div class="card gstep"><div class="ic">📱</div><div class="t">搖手機大決戰</div><div class="d">藝途幣前 ${G.bonus.top} 名搖手機 ${G.bonus.secs} 秒<br>把藝途幣換成<b>現金</b><br>搖最多領 ${G.bonus.mult[0]} 倍，最後一名 0 元！</div></div>
         <div class="card gstep"><div class="ic">🎉</div><div class="t">全場拆禮物</div><div class="d">揭曉每個人最後抱回家的禮物<br>試用期領紅包、頒發各種獎</div></div>
       </div></div>
 
@@ -2119,6 +2124,7 @@ function renderFinal() {
       <div class="b">${photos[g.id] ? `<img src="${photos[g.id]}">` : '<div style="font-size:48px">🎉</div>'}<div class="gn">${esc(g.name)}</div><div class="who">${tierName(g)}・${h.avatar} ${esc(h.name)}</div></div>
     </div></div>`; }).join('')}</div>
     <button class="btn sm paper" id="openAll">全部翻開</button>
+    ${f.bonus && f.bonus.length ? `<h3>📱 搖手機大決戰・現金獎</h3><div class="finrow">${f.bonus.map((r, i) => { const p = P(r.pid); return p ? `<div class="card finbox"><div class="t">${['🥇', '🥈', '🥉'][i]} 搖了 ${r.n} 下・×${r.mult}</div><div class="w">${p.avatar} ${esc(p.name)}</div><div class="w" style="color:var(--red)">💵 ${r.cash.toLocaleString()} 元</div><div class="d">${r.coins} 藝途幣 × ${r.mult}</div></div>` : ''; }).join('')}</div>` : ''}
     ${red.length ? `<h3>🧧 紅包</h3><div class="finrow">${red.map(([pid, amt]) => { const p = P(pid); return `<div class="card finbox"><div class="t">第 ${f.ranking.indexOf(pid) + 1} 名</div><div class="w">${p.avatar} ${esc(p.name)}</div><div class="w" style="color:var(--red)">${amt} 元</div></div>`; }).join('')}</div>` : ''}
     <div class="finrow">
       ${guests().length ? `<div class="card finbox"><div class="t">🏛️ 最強董事</div><div class="w">${bettors.length ? bettors.map((b) => b.avatar + ' ' + esc(b.name)).join('、') : '沒有人押中'}</div><div class="d">押中頭獎得主：${f.topHolder && P(f.topHolder) ? esc(P(f.topHolder).name) : '-'}</div></div>` : ''}

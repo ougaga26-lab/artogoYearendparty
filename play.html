@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#f9c9b5">
 <title>藝觸即發｜手機控制器</title>
-<link rel="stylesheet" href="assets/style.css?v=20261116c">
+<link rel="stylesheet" href="assets/style.css?v=20261116d">
 <style>
   body { min-height: 100svh; padding: 14px 16px calc(24px + env(safe-area-inset-bottom)); max-width: 520px; margin: 0 auto; user-select: none; -webkit-user-select: none; }
   header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
@@ -114,10 +114,10 @@
 <div class="cerov hidden" id="cerov"></div>
 
 <script src="https://unpkg.com/mqtt@5.10.1/dist/mqtt.min.js"></script>
-<script src="assets/game-data.js?v=20261116c"></script>
-<script src="assets/net.js?v=20261116c"></script>
-<script src="assets/games.js?v=20261116c"></script>
-<script src="assets/shake.js?v=20261116c"></script>
+<script src="assets/game-data.js?v=20261116d"></script>
+<script src="assets/net.js?v=20261116d"></script>
+<script src="assets/games.js?v=20261116d"></script>
+<script src="assets/shake.js?v=20261116d"></script>
 <script>
 const G = window.GAME;
 const $ = (id) => document.getElementById(id);
@@ -326,7 +326,7 @@ function actionHTML(me) {
     return `<div class="big">輪到你了！</div><button class="dicebtn" id="rollBtn"><span><span class="ic">🎲</span>擲骰子</span></button><div class="small">也可以搖一搖手機擲骰</div>`;
   }
   if (S.phase === 'privilege') return `${cardMini()}<div class="small">👑 首富特權進行中，請看大螢幕</div>`;
-  if (S.phase === 'bonus') return `${cardMini()}<div class="small">📱 最後加碼進行中，請看大螢幕</div>`;
+  if (S.phase === 'bonus') return `${cardMini()}<div class="small">📱 搖手機大決戰進行中，請看大螢幕</div>`;
   if (S.read && curPid() === PID) return `${cardMini() || `<div class="small">${esc(S.msg || '')}</div>`}<button class="btn wide" id="skipBtn" style="margin-top:12px;font-size:20px">看完了，繼續 👍</button><div class="small">大家都看完再按喔</div>`;
   return `<div class="turnwho">${cp ? av(cp) : ''}<div class="big">${cp ? esc(cp.name) : ''} 的回合</div></div>${cardMini() || `<div class="small">${esc(S.msg || '請看大螢幕')}</div>`}`;
 }
