@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>藝觸即發｜主畫面</title>
-<link rel="stylesheet" href="assets/style.css?v=20261113r">
+<link rel="stylesheet" href="assets/style.css?v=20261116b">
 <style>
   body { overflow: hidden; height: 100vh; }
 
@@ -488,9 +488,9 @@
 
 <script src="https://unpkg.com/mqtt@5.10.1/dist/mqtt.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-<script src="assets/game-data.js?v=20261113r"></script>
-<script src="assets/net.js?v=20261113r"></script>
-<script src="assets/broadcast.js?v=20261113r"></script>
+<script src="assets/game-data.js?v=20261116b"></script>
+<script src="assets/net.js?v=20261116b"></script>
+<script src="assets/broadcast.js?v=20261116b"></script>
 <script>
 const G = window.GAME;
 const N = G.tiles.length;
@@ -602,6 +602,15 @@ function onMsg(m) {
         const add = Math.max(0, Math.min(20 - used, m.n | 0));
         for (let i = 0; i < Math.min(m.n | 0, 6); i++) setTimeout(spawnHeart, i * 90);
         if (add) { pd.res[m.pid] = used + add; pd.total = (pd.total || 0) + add; addCoins(P(pd.pid), add, true, false); sync(); }
+      }
+      break;
+    case 'tip2':
+      if (match && (pd.kind === 'game' || pd.kind === 'realpk') && p && p.role === 'guest' && pd.players.includes(m.who) && P(m.who)) {
+        pd.tips = pd.tips || {}; pd.tipSum = pd.tipSum || {};
+        const k = m.pid + '>' + m.who, used = pd.tips[k] || 0;
+        const add = Math.max(0, Math.min(G.tipChallenge - used, m.n | 0));
+        for (let i = 0; i < Math.min(m.n | 0, 5); i++) setTimeout(spawnHeart, i * 90);
+        if (add) { pd.tips[k] = used + add; pd.tipSum[m.who] = (pd.tipSum[m.who] || 0) + add; addCoins(P(m.who), add, true, false); sync(); }
       }
       break;
     case 'ready':
@@ -924,6 +933,9 @@ async function land(p, ctx) {
 
 async function resolveCard(card, p, ctx) {
   if (!card.deck) card.deck = card.bad ? 'bad' : 'good';
+  // 抽到道具：大螢幕只說「神秘道具」，內容私下傳到當事人手機
+  const effNow = p.role === 'probation' && card.effect.alt ? card.effect.alt : card.effect;
+  if (effNow.item) card = Object.assign({}, card, { title: '🎒 神秘道具', text: '你得到一個道具！是什麼只有你的手機看得到' });
   showCard({ deck: card.deck, icon: card.icon, title: card.title, text: card.text, cat: card.cat, bad: !!card.bad }, p);
   // 壞事接著要選怎麼辦，選項出現前先讓大家看完；好事看完才發錢
   await readWait(card.bad ? Math.min(6000, readMs(card.text) - 1000) : readMs(card.text));
@@ -1183,24 +1195,19 @@ async function pkTile(p) {
     if (drinkBet) { stakeTxt += '＋🍺 輸的喝一口'; if (S.card) { S.card.text = `${p.name} vs ${t.name}・賭注：${stakeTxt}`; sync(); } }
   }
   // 抽 3 張遊戲卡，發起的人挑
-  const cards = drawPkCards();
+  let cards = drawPkCards();
   sfx('card');
-  let game = await ask({ kind: 'pick', by: 'player', pid: p.pid, title: `🎴 挑一個項目跟 ${t.name} 比！`, cards, options: cards.map(gameOpt) }, 30000, pickOne(cards));
+  const cost = G.pkSwapCost;
+  let game = await ask({ kind: 'pick', by: 'player', pid: p.pid, title: `🎴 挑一個項目跟 ${t.name} 比！`, cards, options: cards.map(gameOpt).concat(p.coins >= cost ? [{ v: 'swap', label: `💸 花 ${cost} 幣換一組`, sub: '重抽 3 張，只能換一次' }] : []) }, 30000, pickOne(cards));
+  if (game === 'swap') {
+    addCoins(p, -cost); sync();
+    setStatus(`💸 ${p.name} 花 ${cost} 幣，重抽一組！`); sfx('card'); await sleep(1200); setStatus(null);
+    cards = drawPkCards();
+    game = await ask({ kind: 'pick', by: 'player', pid: p.pid, title: `🎴 新的一組！挑一個項目跟 ${t.name} 比`, cards, options: cards.map(gameOpt) }, 30000, pickOne(cards));
+  }
   if (!cards.includes(game)) game = pickOne(cards);
   setStatus(`${p.name} 選了「${def(game).icon} ${def(game).name}」！`); sfx('fanfare');
   await sleep(1500);
-  // 被挑戰的人可以花錢換成另外兩張其中一張（付給發起的人）
-  const cost = G.pkSwapCost;
-  if (t.coins >= cost) {
-    const rest = cards.filter((g) => g !== game);
-    const v = await ask({ kind: 'pick', by: 'player', pid: t.pid, title: `${p.name} 選了「${def(game).name}」！要花 ${cost} 幣換項目嗎？`, cards, mark: game, options: [{ v: 'keep', label: '💪 接受挑戰！' }].concat(rest.map((g) => ({ v: g, label: `💸 換成 ${def(g).icon} ${def(g).name}`, sub: `付 ${cost} 幣給 ${p.name}` }))) }, 25000, 'keep');
-    if (rest.includes(v)) {
-      transfer(t, p, cost);
-      game = v;
-      setStatus(`💸 ${t.name} 花 ${cost} 幣，把項目換成「${def(game).icon} ${def(game).name}」！`); sfx('bad');
-      await sleep(2200);
-    } else { setStatus(`${t.name}：「來啊！」接受挑戰`); await sleep(1300); }
-  }
   setStatus(null);
   if (S.card) { S.card.title = `PK：${def(game).icon} ${def(game).name}`; S.card.text = `${p.name} vs ${t.name}・賭注：${stakeTxt}`; sync(); }
   const w = await pkFlow(p, t, game);
@@ -1294,7 +1301,7 @@ async function applyEff(eff, p, ctx) {
   if (eff.item) {
     const it = G.items[eff.item];
     if (p.items.length >= G.maxItems) setStatus('口袋滿了，這張只好丟掉');
-    else { p.items.push(eff.item); setStatus(`${it.icon} 獲得「${it.name}」！`); }
+    else { p.items.push(eff.item); setStatus('🎒 收進口袋了（內容保密）'); sendPrivate(p.pid, { t: 'item', item: eff.item }); }
     sfx('coin'); await sleep(1300);
   }
   if (eff.extraRoll) { ctx.extra = true; setStatus('等一下可以再擲一次！'); await sleep(1000); }
@@ -1547,13 +1554,20 @@ function pkDeckHTML(pd) {
   return `<div class="pkdeck">${pd.cards.map((g, i) => { const d = def(g); return `<div class="pkc${pd.mark === g ? ' on' : ''}" style="animation-delay:${i * 0.15}s"><div class="i">${d.icon}</div><div class="n">${esc(d.name)}</div><div class="t">${d.real ? '真人' : d.body ? '手機感應' : '手機小遊戲'}</div></div>`; }).join('')}</div>`;
 }
 function pendingHTML(pd) { return pkDeckHTML(pd) + pendingInner(pd); }
+// 董事會打賞選手的累計
+function tipLine(pd) {
+  if (!guests().length) return '';
+  const s = pd.tipSum || {};
+  const list = pd.players.filter((x) => s[x]).map((x) => `${P(x).avatar} ${esc(P(x).name)} +${s[x]}`);
+  return `<div class="pd">💸 董事會打賞：${list.length ? list.join('　') : '外賓可以在手機上幫選手加油打賞！'}</div>`;
+}
 function pendingInner(pd) {
   const left = pd.until ? `<span class="pd-timer" data-until="${pd.until}"></span>` : '';
   const nm = (pid) => { const x = P(pid); return x ? `${x.avatar} ${esc(x.name)}` : ''; };
   const btns = (cls = 'sm paper') => `<div class="opts">${pd.options.map((o) => `<button class="btn ${cls}" data-v="${esc(o.v)}">${esc(o.label)}</button>`).join('')}</div>`;
   switch (pd.kind) {
     case 'game':
-      return `<div class="live-wrap" id="liveWrap"></div><div class="opts"><button class="btn sm paper" data-v="__end">提早結束 ${left}</button></div>`;
+      return `<div class="live-wrap" id="liveWrap"></div>${tipLine(pd)}<div class="opts"><button class="btn sm paper" data-v="__end">提早結束 ${left}</button></div>`;
     case 'rush': {
       const done = pd.players.filter((x) => x in pd.res).sort((a, b) => pd.res[a] - pd.res[b]);
       const t = (x) => pd.res[x] >= 99999 ? '太早' : pd.res[x] >= 9000 ? '沒按到' : (pd.res[x] / 1000).toFixed(2) + 's';
@@ -1569,7 +1583,7 @@ function pendingInner(pd) {
       const d = def(pd.game);
       const side = (x) => { const p = P(x); return `<div class="vs-side"><span class="avatar" style="--c:${p.color}">${p.avatar}</span><div class="vs-name">${esc(p.name)}</div><div class="vs-ok">${pd.res[x] ? '✓ 已回報' : ''}</div><button class="btn paper" data-v="${x}">${esc(p.name)} 贏</button></div>`; };
       return `<div class="vs">${side(pd.players[0])}<div class="vs-mid"><div class="vs-x">VS</div><div class="vs-game">${d.icon} ${d.name}</div><div class="vs-desc">${esc(d.desc)}</div></div>${side(pd.players[1])}</div>
-        <div class="pd">比完後兩人在手機上按「誰贏了」</div>`;
+        <div class="pd">比完後兩人在手機上按「誰贏了」</div>${tipLine(pd)}`;
     }
     case 'judge':
       return `<div class="pd">${esc(pd.title)}</div>${btns('big paper')}`;
@@ -1626,7 +1640,7 @@ function renderLB() {
     return `<div class="row${p.pid === cp && inGame() ? ' cur' : ''}${fl}" id="row_${p.pid}">
       <span class="rk">${i + 1}</span>${avatarHTML(p)}
       <div style="min-width:0"><div class="nm">${esc(p.name)}</div>
-      <div class="meta">${gift}${p.items.map((it) => G.items[it].icon).join('')}${p.on ? '' : ' 📴'}</div></div>
+      <div class="meta">${gift}${p.items.length ? `🎒×${p.items.length}` : ''}${p.on ? '' : ' 📴'}</div></div>
       <span class="co">${p.coins}</span></div>`;
   }).join('');
   const gs = guests();
@@ -1999,6 +2013,7 @@ function buildGuide() {
             ${li('😇', '一樣會踩到壞事、被點名 PK，請小心')}</ul></div>
         <div class="card grole"><div class="top bg-lilac"><span class="ic">🏛️</span><div><div class="n">外賓・董事會</div><div class="g">不走棋盤，但握有生殺大權</div></div></div>
           <ul>${li('🔮', '開場猜<b>頭獎在哪一盒</b>，猜中拿「開場神預言」')}
+            ${li('📣', `有人挑戰小遊戲或 PK 時，狂按<b>打賞</b>幫選手加油（每位選手最多 ${G.tipChallenge} 幣）`)}
             ${li('🃏', '有人踩到命運格，由你從 3 張牌<b>幫他挑一張</b>')}
             ${li('💰', '有人上台表演時狂按<b>打賞</b>（每位最多 20 幣）')}
             ${li('🗳️', '<b>投票表決</b>：現場 Demo 好不好、真人 PK 誰贏')}
@@ -2030,7 +2045,7 @@ function buildGuide() {
           <div><span>1</span><span>踩到 ⚔️ 格，<b>指定</b>要挑戰誰</span></div>
           <div><span>2</span><span>選<b>賭注</b>：🎁 禮物（兩人都是正式員工）或 💰 ${G.pkStakes.join('／')} 幣</span></div>
           <div><span>3</span><span>大螢幕翻 <b>3 張遊戲卡</b>，你挑一個項目</span></div>
-          <div><span>4</span><span>對手可以花 <b>${G.pkSwapCost} 幣</b>換成另外兩張其中一張</span></div>
+          <div><span>4</span><span>不喜歡這組？可以花 <b>${G.pkSwapCost} 幣</b>重抽一組（只能換一次）</span></div>
           <div><span>5</span><span>可以加碼<b>輸的人喝一口酒</b>（雙方同意才算，贏的再 +${G.drink.pkBonus}）</span></div>
           <div><span>6</span><span>有<b>代打卡</b>的人可以找人上場，開打！</span></div>
         </div></div>

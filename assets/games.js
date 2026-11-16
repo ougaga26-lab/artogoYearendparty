@@ -218,23 +218,43 @@
       return r1(total);
     },
 
-    // 打字：分數 = 秒數
+    // 打字校稿：60 秒照著約 200 字的文稿打。分數 = 打對的字 − 打錯的字（標點、空白不算）
     async M4(R) {
-      const phrase = G.typingPhrases[Math.floor(R() * G.typingPhrases.length)];
+      const text = G.typingTexts[Math.floor(R() * G.typingTexts.length)];
+      const ok = (c) => /[\p{Script=Han}a-z0-9]/iu.test(c);
+      const orig = [...text];
+      const map = []; orig.forEach((c, i) => { if (ok(c)) map.push(i); });
+      const target = map.map((i) => orig[i].toLowerCase());
       const o = overlay();
-      o.innerHTML = head('⌨️ 打字', '一字不差打出下面這句，打對自動完成') + `<div class="mg-bar"><i></i></div><div class="mg-body" style="justify-content:flex-start">
-        <div class="mg-big" style="font-size:24px;line-height:1.4">${phrase}</div><textarea id="tx" rows="2" autocomplete="off" autocorrect="off" spellcheck="false"></textarea></div>`;
+      o.innerHTML = head('⌨️ 打字校稿', '60 秒照著文稿打，打越多越好！打錯會扣分') + `<div class="mg-bar"><i></i></div>
+        <div style="display:flex;justify-content:space-between;font-weight:900;margin-bottom:6px"><span>✅ 對 <b id="tok">0</b> 字</span><span>❌ 錯 <b id="tng">0</b></span></div>
+        <div id="doc" style="position:relative;flex:1;min-height:0;overflow:auto;background:#fff;border:3px solid var(--ink);border-radius:12px;padding:10px 12px;font-size:19px;line-height:1.7;font-weight:700">${orig.map((c, i) => `<span id="c${i}" style="color:#9aa3b2">${c}</span>`).join('')}</div>
+        <textarea id="tx" rows="3" autocomplete="off" autocorrect="off" spellcheck="false" style="margin-top:8px"></textarea>`;
       const tx = o.querySelector('#tx');
       setTimeout(() => tx.focus(), 50);
-      const t0 = now();
-      report({ stage: 'play', phrase, typed: '' });
-      tx.addEventListener('input', () => report({ typed: tx.value }));
-      return new Promise((res) => {
-        let done = false;
-        const check = () => { if (!done && tx.value.replace(/\s/g, '') === phrase.replace(/\s/g, '')) { done = true; stop(); tx.blur(); res(r1((now() - t0) / 1000)); } };
-        const stop = timer(o, 45000, () => { if (!done) { done = true; tx.blur(); res(99); } });
-        tx.addEventListener('input', check); tx.addEventListener('compositionend', check);
-      });
+      let ptr = 0, good = 0, bad = 0, painted = 0;
+      // 逐字對齊：往後找 4 個字以內，找到算對（跳過的字就不算），找不到算錯
+      const grade = () => {
+        const typed = [...tx.value].filter(ok).map((c) => c.toLowerCase());
+        let p2 = 0, g = 0, w = 0;
+        for (const c of typed) {
+          let k = -1;
+          for (let j = p2; j < Math.min(target.length, p2 + 4); j++) if (target[j] === c) { k = j; break; }
+          if (k >= 0) { g++; p2 = k + 1; } else w++;
+        }
+        ptr = p2; good = g; bad = w;
+        for (let i = 0; i < map.length; i++) { const el = o.querySelector('#c' + map[i]); const want = i < ptr ? 'var(--green)' : '#9aa3b2'; if (el.style.color !== want) el.style.color = want; }
+        if (ptr !== painted) { painted = ptr; const el = o.querySelector('#c' + map[Math.min(ptr, map.length - 1)]); if (el) { const doc = o.querySelector('#doc'); doc.scrollTop = Math.max(0, el.offsetTop - doc.clientHeight / 2); } }
+        o.querySelector('#tok').textContent = good; o.querySelector('#tng').textContent = bad;
+        report({ stage: 'play', good, bad, total: target.length, tail: tx.value.slice(-14) });
+        if (ptr >= target.length) finish();
+      };
+      let done = false, res0;
+      const finish = () => { if (done) return; done = true; stop(); tx.blur(); res0(Math.max(0, good - bad)); };
+      report({ stage: 'play', good: 0, bad: 0, total: target.length, tail: '' });
+      tx.addEventListener('input', grade); tx.addEventListener('compositionend', grade);
+      const stop = timer(o, 60000, finish);
+      return new Promise((res) => { res0 = res; });
     },
 
     // 狂點：分數 = 次數
@@ -335,8 +355,8 @@
     // 記憶：一關比一關多件作品，點出剛剛有作品的格子，點錯就結束
     // 分數 = 過了幾關 + 失敗那關答對的比例（例如 2.5 = 過 2 關，第 3 關對一半）
     async M9(R) {
-      const LV = [[3, 3, 3], [4, 3, 3], [5, 4, 4], [6, 4, 4], [7, 5, 4], [8, 5, 5], [9, 5, 5]]; // [件數, 欄, 列]
-      const ART = ['🖼️', '🗿', '🏺', '🎨', '🪞', '🎭', '📜', '🕯️', '🪆'];
+      const LV = [[4, 3, 3], [5, 4, 4], [6, 4, 4], [7, 5, 4], [8, 5, 5], [9, 5, 5], [10, 6, 5]]; // [件數, 欄, 列]
+      const ART = ['🖼️', '🗿', '🏺', '🎨', '🪞', '🎭', '📜', '🕯️', '🪆', '🎻'];
       const o = overlay();
       const t0 = now(), LIMIT = 60000;
       let score = 0;
@@ -347,13 +367,14 @@
         const cells = [...Array(cnt).keys()].sort(() => R() - 0.5).slice(0, n);
         const fs = cols >= 5 ? 28 : cols === 4 ? 34 : 44;
         const grid = (show) => `<div class="mem" style="grid-template-columns:repeat(${cols},1fr)">${Array.from({ length: cnt }, (_, i) => `<button data-i="${i}" style="font-size:${fs}px">${show && cells.includes(i) ? ART[cells.indexOf(i)] : ''}</button>`).join('')}</div>`;
-        const showMs = 1500 + n * 450;
+        const showMs = 700 + n * 260; // 只閃一下
         o.innerHTML = head('🧠 記憶', `第 ${lv + 1} 關：記住 ${n} 件作品的位置！`) + `<div class="mg-body">${grid(true)}<div class="mg-big" id="cd"></div></div>`;
-        report({ stage: 'play', mem: 'show', level: lv + 1, n, found: 0 });
+        report({ stage: 'play', mem: 'show', level: lv + 1, n, found: 0, cols, rows, cells, hits: [], miss: -1 });
         const tShow = now();
         while (now() - tShow < showMs) { o.querySelector('#cd').textContent = Math.ceil((showMs - (now() - tShow)) / 1000); await wait(100); }
         o.innerHTML = head('🧠 記憶', `第 ${lv + 1} 關：點出剛剛有作品的 ${n} 格`) + `<div class="mg-body">${grid(false)}<div class="mg-big" id="cd">0 / ${n}</div></div>`;
-        report({ mem: 'place', level: lv + 1, n, found: 0 });
+        report({ mem: 'place', level: lv + 1, n, found: 0, hits: [], miss: -1 });
+        const hits = [];
         const found = await new Promise((r) => {
           let k = 0, over = false;
           const to = setTimeout(() => { over = true; r(k); }, Math.max(1000, LIMIT - (now() - t0)) + 8000);
@@ -364,10 +385,10 @@
             if (cells.includes(i)) {
               b.classList.add('ok'); b.textContent = ART[cells.indexOf(i)]; k++;
               o.querySelector('#cd').textContent = `${k} / ${n}`;
-              report({ found: k });
+              hits.push(i); report({ found: k, hits: hits.slice() });
               if (k === n) { over = true; clearTimeout(to); r(k); }
             } else {
-              b.classList.add('no'); over = true; clearTimeout(to);
+              b.classList.add('no'); over = true; clearTimeout(to); report({ miss: i });
               try { navigator.vibrate && navigator.vibrate(150); } catch (e) {}
               o.querySelectorAll('.mem button').forEach((x) => { const j = +x.dataset.i; if (cells.includes(j) && !x.classList.contains('ok')) x.textContent = ART[cells.indexOf(j)]; });
               setTimeout(() => r(k), 900);

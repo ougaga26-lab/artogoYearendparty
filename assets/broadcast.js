@@ -27,6 +27,7 @@
   .bc-area .t { position: absolute; border: 3px dashed var(--red); border-radius: 4px; }
   .bc-area .b { position: absolute; background: var(--navy); border: 2px solid var(--ink); border-radius: 4px; transition: left .18s linear, top .18s linear; }
   .bc-dots { display: flex; gap: .35em; } .bc-dots i { width: 1.2em; height: 1.2em; border-radius: 50%; border: 2px solid var(--ink); background: #fff; } .bc-dots i.on { background: var(--yellow); }
+  .bc-mem { display: grid; gap: .25em; width: 9em; } .bc-mem i { aspect-ratio: 1; border: 2px solid var(--ink); border-radius: .3em; display: block; }
   .bc.win { box-shadow: 0 0 0 5px var(--yellow); }
   .bc-pulse { animation: bcp 1s ease-in-out infinite; } @keyframes bcp { 50% { opacity: .35; } }
   `;
@@ -49,10 +50,8 @@
         <div class="bc-meter"><i style="width:${d.sim}%"></i></div><div class="bc-big">${d.sim}%</div><div class="bc-sub">相似度</div>`;
       case 'M2': return `<div class="bc-big">${esc(d.q)} = <span style="color:var(--red)">${esc(d.input) || '?'}</span></div><div class="bc-mid">答對 ${d.score} 題</div>`;
       case 'M3': return `<div class="bc-big">第 ${d.round} / 3 關</div><div class="bc-dots">${[1, 2, 3].map((i) => `<i class="${i < d.round ? 'on' : ''}"></i>`).join('')}</div><div class="bc-mid">點錯 ${d.wrong || 0} 次</div><div class="bc-sub">找出唯一不一樣的那個字</div>`;
-      case 'M4': {
-        const ph = [...(d.phrase || '')], ty = [...(d.typed || '').replace(/\s/g, '')];
-        return `<div class="bc-type">${ph.map((c, i) => `<span class="${i >= ty.length ? 'todo' : ty[i] === c ? 'ok' : 'no'}">${esc(c)}</span>`).join('')}</div><div class="bc-sub">已打 ${Math.min(ty.length, ph.length)} / ${ph.length} 字</div>`;
-      }
+      case 'M4': return `<div class="bc-huge">${d.good || 0}<span style="font-size:.35em"> 字</span></div><div class="bc-meter"><i style="width:${Math.min(100, (d.good || 0) / (d.total || 200) * 100)}%"></i></div>
+        <div class="bc-mid">❌ 打錯 ${d.bad || 0}</div><div class="bc-sub">…${esc(d.tail || '')}</div>`;
       case 'M5': return `<div class="bc-huge">${d.n || 0}</div><div class="bc-meter"><i style="width:${Math.min(100, (d.n || 0) / 90 * 100)}%;background:var(--red)"></i></div><div class="bc-sub">10 秒狂點</div>`;
       case 'M6': return `<div class="bc-lamp" style="background:${d.light === 'green' ? 'var(--green)' : d.light === 'decoy' ? 'var(--yellow)' : d.light === 'red' ? 'var(--red)' : '#ddd'}"></div>${d.light === 'decoy' ? '<div class="bc-mid">👔 假動作！</div>' : ''}
         <div class="bc-mid">第 ${d.trial} / 3 次</div><div class="bc-sub">${(d.times || []).map((t) => t >= 1.2 ? '失誤' : t.toFixed(3) + 's').join('　') || '等變綠…'}</div>`;
@@ -65,9 +64,13 @@
         return `<div class="bc-area"><div class="t" style="left:${pc(d.target[0])};top:${pc(d.target[1])};width:${pc(d.size)};height:${pc(d.size)}"></div>
           <div class="b" style="left:${pc(d.box[0])};top:${pc(d.box[1])};width:${pc(d.size)};height:${pc(d.size)}"></div></div>`;
       }
-      case 'M9':
-        if (d.mem === 'show') return `<div class="bc-big bc-pulse">👀 第 ${d.level || 1} 關</div><div class="bc-sub">記住 ${d.n || ''} 件作品的位置</div>`;
-        return `<div class="bc-big">第 ${d.level || 1} 關</div><div class="bc-mid">找到 ${d.found || 0} / ${d.n || ''}</div><div class="bc-dots">${Array.from({ length: d.n || 0 }, (_, i) => `<i class="${i < (d.found || 0) ? 'on' : ''}"></i>`).join('')}</div>`;
+      case 'M9': {
+        if (!d.cols) return `<div class="bc-big">🧠 準備中</div>`;
+        const show = d.mem === 'show', hits = d.hits || [];
+        const cell = (i) => { const c = (d.cells || []).includes(i); const bg = show ? (c ? 'var(--yellow)' : '#fff') : hits.includes(i) ? 'var(--green)' : d.miss === i ? 'var(--red)' : '#fff'; return `<i style="background:${bg}"></i>`; };
+        return `<div class="bc-mid">第 ${d.level} 關・${show ? '👀 記住！' : `找到 ${d.found || 0} / ${d.n}`}</div>
+          <div class="bc-mem" style="grid-template-columns:repeat(${d.cols},1fr)">${Array.from({ length: d.cols * d.rows }, (_, i) => cell(i)).join('')}</div>`;
+      }
       case 'M10':
         if (d.crowd === 'show') return `<div class="bc-big bc-pulse">👥 觀察人潮中…</div>`;
         return `<div class="bc-sub">猜有幾個人？${d.opts ? '（' + d.opts.join('／') + '）' : ''}</div><div class="bc-huge">${esc(d.guess) || '?'}</div>`;

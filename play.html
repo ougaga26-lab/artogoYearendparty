@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#f9c9b5">
 <title>藝觸即發｜手機控制器</title>
-<link rel="stylesheet" href="assets/style.css?v=20261113r">
+<link rel="stylesheet" href="assets/style.css?v=20261116b">
 <style>
   body { min-height: 100svh; padding: 14px 16px calc(24px + env(safe-area-inset-bottom)); max-width: 520px; margin: 0 auto; user-select: none; -webkit-user-select: none; }
   header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
@@ -46,8 +46,10 @@
   .dicebtn:active { transform: translateY(8px); box-shadow: 0 2px 0 var(--ink); animation: none; }
   .dicebtn .ic { font-size: 76px; line-height: 1; display: block; }
   .opts { display: flex; flex-direction: column; gap: 10px; width: 100%; }
-  .opts .btn { width: 100%; font-size: 18px; padding: 13px; text-align: left; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
-  .opts .btn small { font-size: 13px; font-weight: 700; flex: none; }
+  .opts .btn { width: 100%; font-size: 18px; padding: 13px; text-align: left; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 4px 8px; }
+  .opts .btn span { min-width: 0; overflow-wrap: anywhere; }
+  .opts .btn small { font-size: 13px; font-weight: 700; flex: 1 1 auto; text-align: right; max-width: 100%; overflow-wrap: anywhere; }
+  .tipgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; } .tipgrid .bigbtn { width: 100%; height: auto; padding: 14px 6px; font-size: 18px; }
   .cardmini { width: 100%; border: 3px solid var(--ink); border-radius: 14px; padding: 12px; background: #fff; text-align: center; }
   .cardmini .t { font-weight: 900; font-size: 20px; }
   .cardmini .x { font-weight: 700; font-size: 15px; margin-top: 4px; }
@@ -112,10 +114,10 @@
 <div class="cerov hidden" id="cerov"></div>
 
 <script src="https://unpkg.com/mqtt@5.10.1/dist/mqtt.min.js"></script>
-<script src="assets/game-data.js?v=20261113r"></script>
-<script src="assets/net.js?v=20261113r"></script>
-<script src="assets/games.js?v=20261113r"></script>
-<script src="assets/shake.js?v=20261113r"></script>
+<script src="assets/game-data.js?v=20261116b"></script>
+<script src="assets/net.js?v=20261116b"></script>
+<script src="assets/games.js?v=20261116b"></script>
+<script src="assets/shake.js?v=20261116b"></script>
 <script>
 const G = window.GAME;
 const $ = (id) => document.getElementById(id);
@@ -137,7 +139,7 @@ let S = null, net = null, joinSent = false, editingNow = false;
 let form = { name: (lastProfile && lastProfile.name) || '', role: (lastProfile && lastProfile.role) || 'staff', avatar: (lastProfile && lastProfile.avatar) || null };
 let lastVib = '';
 const launched = {}, answered = {};
-let tipTaps = 0;
+let tipTaps = 0, tip2 = {};
 
 if (!ROOM) {
   app.innerHTML = '<div class="card center"><h2>找不到房間</h2><p style="font-weight:700">請用手機相機掃主畫面上的 QR Code 進來喔！</p></div>';
@@ -162,6 +164,7 @@ if (!ROOM) {
   });
   setInterval(() => send({ t: 'ping' }), 8000);
   setInterval(() => { if (tipTaps && S && S.pending && S.pending.kind === 'tip') { send({ t: 'tip', id: S.pending.id, n: tipTaps }); } tipTaps = 0; }, 450);
+  setInterval(() => { if (S && S.pending) for (const [to, n] of Object.entries(tip2)) if (n) send({ t: 'tip2', id: S.pending.id, who: to, n }); tip2 = {}; }, 450);
 }
 // 主畫面和手機的版本不一樣（手機抓到舊的快取）→ 請玩家重新整理
 function checkVersion() {
@@ -192,6 +195,11 @@ document.addEventListener('visibilitychange', () => { if (document.visibilitySta
 document.addEventListener('click', keepAwake, { once: true });
 
 function onPrivate(m) {
+  if (m.t === 'item' && G.items[m.item]) {
+    const it = G.items[m.item];
+    modal(`<div style="font-size:64px">${it.icon}</div><h2>你得到了「${it.name}」</h2><div style="font-weight:700;margin:0 0 16px">${it.desc}<br><span style="color:var(--muted)">大螢幕只顯示「神秘道具」，別說出來！</span></div><button class="btn" onclick="closeModal()">收好了 🤫</button>`);
+    vib([80, 40, 80]); return;
+  }
   if (m.t === 'peek') {
     peeks[m.gift.id] = m.gift.name; ls('wy26v2_peek_' + ROOM + PID, JSON.stringify(peeks));
     const h = S && P(m.gift.holder);
@@ -271,7 +279,8 @@ function meCard(me) {
     gift = `<div class="giftbox"><span class="gi">🧧</span><div>紅包（試用期）<small>照目前第 ${rk} 名，可以拿 ${amt} 元</small></div></div>`;
   } else {
     const g = giftOf(PID);
-    gift = g ? `<div class="giftbox"><span class="gi">🎁</span><div>${tierName(g)}${giftName(g) ? '・' + esc(giftName(g)) : '（內容保密）'}
+    const gn = S.phase === 'ended' ? null : giftName(g); // 結算時統一看大螢幕
+    gift = g ? `<div class="giftbox"><span class="gi">🎁</span><div>${tierName(g)}${gn ? '・' + esc(gn) : '（內容保密）'}
       <small>${g.locked ? '🔒 已鎖定，不會再被搶' : `被搶 ${g.steals} 次，${G.lockAfter} 次後鎖定`}</small></div></div>` : S.phase === 'ceremony' ? '<div class="giftbox"><span class="gi">🎁</span><div>還沒抽禮物<small>等一下輪到你挑盒子！</small></div></div>' : (inGame() ? '<div class="giftbox"><span class="gi">🎁</span><div>目前沒有禮物</div></div>' : '');
   }
   const items = me.items.map((it) => it === 'peek'
@@ -302,7 +311,7 @@ function actionHTML(me) {
     const red = S.final && S.final.red[PID];
     const g = giftOf(PID);
     return `<div class="small">最終名次</div><div class="rank">#${rk || '-'}</div>
-      ${red ? `<div class="big">🧧 紅包 ${red} 元</div>` : g ? `<div class="big">🎁 你帶回家的是<br>${tierName(g)}・${esc(g.name)}</div>` : ''}<div class="small">請看大螢幕拆禮物！</div>`;
+      ${red ? `<div class="big">🧧 紅包 ${red} 元</div>` : g ? `<div class="big">🎁 你帶回家的是<br>${tierName(g)}</div>` : ''}<div class="small">禮物內容請看大螢幕揭曉！</div>`;
   }
   if (pd) {
     if (pd.kind === 'game' && pd.players.includes(PID)) return `${cardMini()}<div class="big">🎮 ${pd.res && PID in pd.res ? '完成！等對手…' : '遊戲進行中'}</div>`;
@@ -485,6 +494,8 @@ function renderGuest(me) {
   else if (S.phase === 'ended') {
     const ok = S.final && S.final.bettors.includes(PID);
     act = `<div class="big">${ok ? '🏆 你押中了！<br>最強董事就是你' : '感謝董事會的參與！'}</div><div class="small">請看大螢幕拆禮物</div>`;
+  } else if (pd && (pd.kind === 'game' || pd.kind === 'realpk') && !pd.players.includes(PID)) {
+    act = `${cardMini()}<div class="big">📣 幫選手加油打賞！</div><div class="tipgrid">${pd.players.map((x) => P(x) ? `<button class="bigbtn" data-tip2="${x}"><span><span class="ic">${P(x).avatar}</span>${esc(P(x).name)}</span></button>` : '').join('')}</div><div class="small">狂按！每下 +1 幣，每位選手最多 ${G.tipChallenge} 幣</div>`;
   } else if (pd && pd.kind === 'game' && pd.players.includes(PID)) {
     act = `${cardMini()}<div class="big">🦸 代打中！</div>`;
   } else if (pd && pd.kind === 'realpk' && pd.players.includes(PID)) {
@@ -515,6 +526,7 @@ function renderGuest(me) {
   document.querySelectorAll('[data-bet]').forEach((b) => b.onclick = () => { send({ t: 'bet', target: b.dataset.bet }); vib(30); });
   document.querySelectorAll('[data-win]').forEach((b) => b.onclick = () => { send({ t: 'pkWinner', id: S.pending.id, winner: b.dataset.win }); answered[S.pending.id] = true; vib(30); render(); });
   document.querySelectorAll('[data-gb]').forEach((b) => b.onclick = () => { send({ t: 'gbet', n: +b.dataset.gb }); S.cer.gbets[PID] = +b.dataset.gb; vib(30); render(); });
+  document.querySelectorAll('[data-tip2]').forEach((b) => b.addEventListener('pointerdown', (e) => { e.preventDefault(); tip2[b.dataset.tip2] = (tip2[b.dataset.tip2] || 0) + 1; vib(15); }));
   const tb = $('tipBtn'); if (tb) tb.addEventListener('pointerdown', (e) => { e.preventDefault(); tipTaps++; vib(15); });
 }
 
